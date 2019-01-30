@@ -14,16 +14,18 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from ui_set_receiver import Ui_SetReceivers
 import os,sys 
 classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes','phenopyClasses')
 sys.path.append(classes_dir)
+
+from PyQt5.QtWidgets import (QDialog,QHeaderView,QTableWidgetItem,QApplication)
+from PyQt5.QtCore import Qt,pyqtSignal
+from ui_set_receiver import Ui_SetReceivers
+
 from validate_email import validate_email
 
 class set_receiver_dlg(QDialog,Ui_SetReceivers):
+    cellChanged = pyqtSignal(int, int, name='cellChanged')
     def __init__(self,receivers, pdict,parent=None):
         super(set_receiver_dlg,self).__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -32,7 +34,7 @@ class set_receiver_dlg(QDialog,Ui_SetReceivers):
         self.tableWidget.setColumnCount(1)
         self.tableWidget.setHorizontalHeaderLabels(['Receivers'])
         self.tableWidget.horizontalHeader()
-        self.tableWidget.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.receivers = ['']*30
         self.receivers[:len(receivers)] = receivers
         self.true_receivers = receivers
@@ -44,8 +46,15 @@ class set_receiver_dlg(QDialog,Ui_SetReceivers):
             for k in range(len(receivers)):
                 item = QTableWidgetItem(receivers[k])
                 self.tableWidget.setItem(k,0,item)
-        self.connect(self.tableWidget,SIGNAL('cellChanged(int,int)'),
-                     self.check_receivers)
+        
+        
+#        bisogna sistemare questa connection e quella dentro ui_set_receiver
+#        self.trigger.connect(self.handle_trigger)
+#        self.connect(self.tableWidget,SIGNAL('cellChanged(int,int)'),
+#                     self.check_receivers)
+        
+        self.cellChanged.connect(self.tableWidget,self.check_receivers)
+                
     def check_receivers(self):
         item = self.tableWidget.currentItem()
         row = self.tableWidget.currentRow()
@@ -55,7 +64,6 @@ class set_receiver_dlg(QDialog,Ui_SetReceivers):
                 self.buttonBox.button(self.buttonBox.Ok).setEnabled(True)
                 continue
             else:
-#                print ('ciao')
                 if len(rec) == 0:
                     continue
                 self.buttonBox.button(self.buttonBox.Ok).setEnabled(False)
@@ -70,5 +78,5 @@ class set_receiver_dlg(QDialog,Ui_SetReceivers):
         
 if __name__=='__main__':
     app = QApplication(sys.argv)
-    form = set_receiver_dlg(['ciccio@iit.it'])
+    form = set_receiver_dlg(['ciccio@iit.it'],['matteo'])
     ans = form.exec_()

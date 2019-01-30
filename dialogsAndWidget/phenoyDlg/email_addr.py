@@ -15,17 +15,20 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from passlib.hash import pbkdf2_sha256
-import ui_email_addr
-import os,sys
+import os
+import sys
 classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes','phenopyClasses')
 sys.path.append(classes_dir)
 
+from PyQt5.QtWidgets import (QLineEdit,QDialog,QApplication)
+from PyQt5.QtGui import QPalette
+from PyQt5.QtCore import (Qt,pyqtSlot)
+from passlib.hash import pbkdf2_sha256
 from validate_email import validate_email
-from smtplib import *
-from imaplib import *
+
+import ui_email_addr
+from smtplib import SMTP
+
 
 class email_addr_add(QDialog,ui_email_addr.Ui_Form):
     def __init__(self,parent=None):
@@ -42,28 +45,29 @@ class email_addr_add(QDialog,ui_email_addr.Ui_Form):
         self.spinBox.setRange(1,999)
         self.spinBox.setValue(587)
         self.lineEdit_2.setEchoMode(QLineEdit.Password)
-    @pyqtSignature("QString")
+   
+    @pyqtSlot("QString")
     def on_lineEdit_textEdited(self):
         self.checkfields()
-    @pyqtSignature("QString")
+    @pyqtSlot("QString")
     def on_lineEdit_2_textEdited(self):
         self.checkfields()
-    @pyqtSignature("QString")
+    @pyqtSlot("QString")
     def on_lineEdit_3_textEdited(self):
         self.checkfields()
-    @pyqtSignature("QString")
+    @pyqtSlot("QString")
     def on_lineEdit_4_textEdited(self):
         self.checkfields()
-    @pyqtSignature("")
+    @pyqtSlot("QString")
     def on_pushButtonOk_clicked(self):
         self.accept()
-    @pyqtSignature("")
+    @pyqtSlot("QString")
     def on_pushButton_email_clicked(self):
         try:
             smtpObj = SMTP(host=self.lineEdit_3.text(),port=self.spinBox.value())   
-            print smtpObj.ehlo()
-            print smtpObj.starttls()
-            print smtpObj.login(self.lineEdit.text(),self.lineEdit_2.text())
+            print(smtpObj.ehlo())
+            print(smtpObj.starttls())
+            print(smtpObj.login(self.lineEdit.text(),self.lineEdit_2.text()))
             message = """From: From Person %s
 To: To Person %s
 Subject: Test email
@@ -109,15 +113,16 @@ This is a test e-mail message."""%(self.lineEdit.text(),self.lineEdit_4.text())
                       'port': self.spinBox.value(),
                       'receivers': [self.lineEdit.text()]}
         QDialog.accept(self)
-    @pyqtSignature("")
+    
+    @pyqtSlot("QString")
     def on_pushButton_clicked(self):
         self.reject()
 if __name__ == '__main__':
-#def main():
+
     app = QApplication(sys.argv)
     form = email_addr_add()
     ans = form.exec_()
-    print ans
-#    app.exec_()
+    print(ans)
+    app.exec_()
     
 #main()

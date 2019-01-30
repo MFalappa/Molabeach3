@@ -14,22 +14,20 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
-from PyQt4.QtCore import QTimer, QSize
-from PyQt4.QtGui import QPixmap, QLayout, QSizePolicy, QWidget, QDialog,\
-    QApplication, QHBoxLayout, QImage, QFont
+from PyQt5.QtWidgets import (QWidget,QApplication)
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import (QPixmap ,QImage, QFont)
 import ui_hopper_widget
 import sys
 import os
+import binascii
 path_img = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'images')
-from messageLib import *
-from time import clock
+
 
 class hopper_widget(QWidget, ui_hopper_widget.Ui_hopper_widget):
     def __init__(self, side, parent=None):
         super(hopper_widget, self).__init__(parent)
         self.setupUi(self)
-#        specerItem = QSpacerItem(20,40,QSizePolicy.Minimum,QSizePolicy.Expanding)
         self.lightOff = QPixmap.fromImage(QImage(os.path.join(path_img,'LightOff_50.png')))
         self.lightOff = self.lightOff.scaled(QSize(30,30))
         self.lightOn = QPixmap.fromImage(QImage(os.path.join(path_img,'LightOn_50.png')))
@@ -73,8 +71,6 @@ class hopper_widget(QWidget, ui_hopper_widget.Ui_hopper_widget):
             self.nose_out_msg = 33
         self.groupBox_hopper.setFixedSize(150, 130)
 
-#        QTimer.singleShot(5100,lambda x = 'Off': self.set_icon_light(x))
-#        print 'GB size',self.groupBox_hopper.size()
     def set_icon_light(self, On_Off):
         if On_Off is 'Off':
             self.label_light.setPixmap(self.lightOff)
@@ -84,11 +80,9 @@ class hopper_widget(QWidget, ui_hopper_widget.Ui_hopper_widget):
     def set_icon_nose(self, In_Out):
         if In_Out is 'In':
             self.label_NP.setPixmap(self.nose_In)
-#            self.label_NP.setFixedHeight(50)
             self.label_4.setText('Nose In')
         else:
             self.label_NP.clear()
-#            self.label_NP.setFixedHeight(50)
             self.label_4.setFont(self.font)
             self.label_4.setText('Nose Out')
             
@@ -99,7 +93,6 @@ class hopper_widget(QWidget, ui_hopper_widget.Ui_hopper_widget):
             self.label_light.setPixmap(self.lightOn)
     
     def analyze_CAN_msg(self, msg):
-#        print msg.data[6] 
         if msg.data[6] is self.light_on_msg:
             self.set_icon_light('On')
 
@@ -117,8 +110,6 @@ class hopper_widget(QWidget, ui_hopper_widget.Ui_hopper_widget):
 
         elif msg.data[6] is self.noise_off_msg:
             self.label_noise.setText('Off')
-
-#        print clock() - t0
         
     def analyze_XBee_msg(self, msg):
         try:
@@ -146,54 +137,11 @@ class hopper_widget(QWidget, ui_hopper_widget.Ui_hopper_widget):
             return None
         
             
-class testdlg(QDialog):
-    def __init__(self, parent=None):
-        super(testdlg,self).__init__(parent)
-        layout = QHBoxLayout()
-#        scroll_area = QScrollArea()
-        self.hopper_widget = hopper_widget('Left')
-#        self.hopper_widget.resize(QSize(292,178))
-#        self.setSizePolicy(QSizePolicy(QSizePolicy.Fixed,
-#                                                     QSizePolicy.Fixed))
-#        scroll_area.setWidget(self.hopper_widget)
-        layout.addWidget(self.hopper_widget)
-#        self.resize(size)
-        self.setLayout(layout)
-        Msg = pycanusb.CANMsg()
-        Msg.id = 127
-        Msg.len = 8
-        Msg.data[6] = 22
-        
-        Msg1 = pycanusb.CANMsg()
-        Msg1.id = 127
-        Msg1.len = 8
-        Msg1.data[6] = 28
-        
-        Msg2 = pycanusb.CANMsg()
-        Msg2.id = 127
-        Msg2.len = 8
-        Msg2.data[6] = 29
-        
-        Msg3 = pycanusb.CANMsg()
-        Msg3.id = 127
-        Msg3.len = 8
-        Msg3.data[6] = 23
-        
-        QTimer.singleShot(4000, lambda x = Msg1: self.hopper_widget.analyze_CAN_msg(x))
-        QTimer.singleShot(4000, lambda x = Msg: self.hopper_widget.analyze_CAN_msg(x))
-        QTimer.singleShot(8000, lambda x = Msg2: self.hopper_widget.analyze_CAN_msg(x))
-        QTimer.singleShot(10000, lambda x = Msg3: self.hopper_widget.analyze_CAN_msg(x))
-#
 def main():
     app = QApplication(sys.argv)
     form = hopper_widget('Left')
-#    form = testdlg()
     form.show()
-#    print form.size()
     app.exec_()
-    print form.groupBox_hopper.size()
+    print(form.groupBox_hopper.size())
 if __name__ == '__main__':
     main()
-#    
-
-#main()

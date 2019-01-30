@@ -14,10 +14,9 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
-from cage_widget import * 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import * 
+from PyQt5.QtWidgets import (QWidget,QGridLayout,QDialog,
+                             QHBoxLayout,QScrollArea,QApplication)
+from cage_widget import cage_widget 
 import sys
 import numpy as np
 
@@ -26,7 +25,7 @@ class multi_cageWidget(QWidget):
         super(multi_cageWidget,self).__init__(parent)
         gird_layout = QGridLayout()
         i = 0
-        for key in np.sort(cage_widget_dict.keys()):
+        for key in np.sort(list(cage_widget_dict.keys())):
             gird_layout.addWidget(cage_widget_dict[key],i//2+1,i%2+1)
             i+=1
         self.setLayout(gird_layout)
@@ -37,13 +36,12 @@ class testdlg_1(QDialog):
         cage_d = {}
         for k in range(5):
             cage_d[k] = cage_widget(cage_id=k)
-            print 'ciao'
+            print('ciao')
         m_cage = multi_cageWidget(cage_d)
         layout = QHBoxLayout()
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = m_cage
-#        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 380, 247))
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         layout.addWidget(self.scrollArea)
         self.setLayout(layout)

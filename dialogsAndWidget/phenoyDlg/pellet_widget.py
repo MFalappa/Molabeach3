@@ -17,10 +17,10 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 
 
 import ui_pellet_widget
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtWidgets import (QWidget,QSizePolicy,QLabel,QHBoxLayout,QApplication)
+from PyQt5.QtGui import QFont
 import sys
-from messageLib import *
+import binascii
 
 class pellet_widget(QWidget, ui_pellet_widget.Ui_pellet_widget):
     def __init__(self, side='Left', pellet_num=0, MODE=0, parent=None):
@@ -29,7 +29,6 @@ class pellet_widget(QWidget, ui_pellet_widget.Ui_pellet_widget):
         self.setupUi(self)
         self.abort_num = 0
         
-#        self.layout.addWidget(self.label_not_released)
         self.groupBox_pellet.setFixedSize(150, 130)
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                        QSizePolicy.MinimumExpanding))
@@ -49,8 +48,7 @@ class pellet_widget(QWidget, ui_pellet_widget.Ui_pellet_widget):
             self.pellet_rel_msg = 51 # uso 24 (center light on) al posto di 15 (ACT_TRIAL)
             self.groupBox_pellet.setTitle('Trial Info')
             label_not_released = QLabel('Abort Release:')
-#            label_not_released.setFixedHeight(50)
-#            label_not_released.setFixedWidth(100)
+
             self.abort_label = QLabel('0')
             self.label_2.setText('Trials num:')
             font = QFont()
@@ -64,9 +62,8 @@ class pellet_widget(QWidget, ui_pellet_widget.Ui_pellet_widget):
             self.verticalLayout_3.addLayout(hlayout)
         self.pellet_num = pellet_num
         self.label_pelletnum.setText('%d'%self.pellet_num)
-        print self.groupBox_pellet.size()
-#        self.label_pelletnum.setFixedHeight(50)
-#        self.label_pelletnum.setFixedWidth(100)
+#        print(self.groupBox_pellet.size())
+
 
     def update_labels(self, msg):
         if msg.data[6] == self.pellet_rel_msg:
@@ -102,10 +99,8 @@ class pellet_widget(QWidget, ui_pellet_widget.Ui_pellet_widget):
         
 def main():
     app = QApplication(sys.argv)
-#    form = hopper_widget()
     form = pellet_widget(side='Center')
     form.show()
     app.exec_()
 if __name__ == '__main__':
     main()
-#main()

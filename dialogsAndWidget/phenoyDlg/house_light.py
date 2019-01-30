@@ -216,7 +216,7 @@ def main():
     form.show()
 #    print form.size()
     app.exec_()
-    print form.groupBox_hopper.size()
+    print(form.groupBox_hopper.size())
 if __name__ == '__main__':
     main()
 #    

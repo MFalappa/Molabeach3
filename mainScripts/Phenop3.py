@@ -5,9 +5,16 @@ Created on Wed Jan 30 09:03:32 2019
 
 @author: Matte
 """
+read_program_dlg
+load_program_dlg
+start_box_dlg
+stop_box_dlg
+autentication_dlg
 import sys
 import os
 import binascii
+import serial
+import numpy as np
 file_dir = os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(os.path.join(file_dir,'classes','phenopyClasses'))
 sys.path.append(os.path.join(file_dir,'classes','analysisClasses'))
@@ -19,21 +26,34 @@ import_dir = os.path.join(file_dir,'import')
 image_dir = os.path.join(file_dir,'images')
 
 from serial.tools import list_ports
-from send_email_thread import send_email_thread
 from subprocess32 import Popen
+from start_reading_thread import (recievingXBeeThread,ZigBee_thread,
+                                  parsing_XBee_log,parsing_can_log)
 from sys import executable
+
+from send_email_thread import send_email_thread
+from set_receiver_dlg import set_receiver_dlg
+from email_addr import email_addr_add
+
+from cage_widget import cage_widget
+from multiple_cage_widget import multi_cageWidget
+
+from Modify_Dataset_GUI import OrderedDict,action_Reply_Struct
+
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication,QPushButton,QLabel,
                              QDialog,QHBoxLayout,QVBoxLayout,QTextBrowser,
                              QSpacerItem,QSizePolicy,QDockWidget,QListWidget,
-                             RightDockWidgetArea)
-from PyQt5.QtCore import (pyqtSignal,pyqtSlot,QTimer,QSettings)
+                             QAction,QMessageBox,QScrollArea)
+from PyQt5.QtCore import (pyqtSignal,pyqtSlot,QTimer,QSettings,Qt)
+from PyQt5.QtGui import QIcon
 
 
 
 class find_device_or_analysis(QDialog):
     def __init__(self, sampleRate=10, canusb=None, xbee = None, arduino = None, parent=None):
         super(find_device_or_analysis,self).__init__(parent)
+        
         self.parent = parent
         self.canusb = canusb
         self.xbee = xbee
@@ -84,8 +104,11 @@ class find_device_or_analysis(QDialog):
         if not self.arduino:
             button_lightCtrl.setEnabled(False) 
 
-#        self.serialPort = serialPort
-#        self.address_dict = OrderedDict()
+        
+        
+        self.serialPort = None
+        self.thread = ZigBee_thread(None,parent=self)
+        self.thread.addNewDevice.connect(self.add_text)
  
         CloseButton.clicked.connect(self.closeMainWindow)
         StartButton_CAN.clicked.connect(self.startThread_can)
@@ -96,54 +119,45 @@ class find_device_or_analysis(QDialog):
         self.stopFind_Button.clicked.connect(self.stopThread)
         
         
-#        self.thread = ZigBee_thread(serialPort,parent=self)
-#        self.thread.addNewDevice.connect(self.add_text)
-        
 #==============================================================================
 #       To connect: first Phenopy search if canusb or xbee are available
 #       then you can choose which mode activate
 #==============================================================================
-        
     @pyqtSlot()
     def startThread_can(self):
-        self.MODE = 0
-#        if not self.canReader.isRunning():
-#            self.clearList()
-#        try:
-#            self.canReader.startReading()
-#            if self.canReader.isRunning():
-#                pass
-#        except:
-#            pass
-    
+        self.MODE = 0 
+        self.serialPort = serial.Serial(self.canusb, baudrate=500000,timeout=1)
+
     @pyqtSlot()             
     def startThread_xbee(self):
         self.MODE = 1
-#        if not self.thread.isRunning():
-#            print('Thread started')
-#            self.clearList()
-#            self.thread.start()
+        self.serialPort = serial.Serial(self.xbee, baudrate=19200,timeout=1)
+        self.thread = ZigBee_thread(self.serialPort,parent=self)
+        self.thread.addNewDevice.connect(self.add_text)
+        self.address_dict = OrderedDict()
         
+        if not self.thread.isRunning():
+            self.clearList()
+            self.thread.start()
+            self.source_address = self.address_dict
+
     @pyqtSlot()
     def startAnalysis(self):
         self.parent.launch_online_analysis()
      
     @pyqtSlot()
     def closeMainWindow(self):
-        print('ciao')
-#        self.canReader.stopReading
-#        if self.canReader.isRunning():
-#            self.canReader.terminate()
-#            self.canReader._readTimer.timeout.disconnect()
-#        self.accept()
+        if self.MODE == 0:
+            print('to be implemented')
+        elif self.MODE == 1:
+            if self.thread.readThread.isRunning() or self.thread.isRunning():
+                self.thread.terminate()
+            self.serialPort.close()
+            self.accept()
         
-#        print(self.thread.readThread.isRunning(), self.thread.isRunning())
-#        if self.thread.readThread.isRunning() or self.thread.isRunning():
-#            self.thread.terminate()
-#        self.serialPort.close()
-#        self.accept()
+        return self.MODE, self.serialPort, self.address_dict
         
-    def add_text(self, msg):
+    def add_text(self, msg): 
         if self.MODE == 0:
             if msg.id - 1792 > 127 or msg.id - 1792 < 0: # only keep alive are 1792 + cage ID 
                                                          # to characterize it use the fact that
@@ -158,22 +172,21 @@ class find_device_or_analysis(QDialog):
                         (self.device_num,ID,string))
             Dict = {ID:ID}
             self.address_dict.update(Dict)
+        
         elif self.MODE == 1:
-            ID = list(Dict.keys())[0]
+            ID = list(msg.keys())[0]
             self.device_num += 1
-            string_Address = binascii.hexlify(Dict[ID])
+            string_Address = binascii.hexlify(msg[ID])
             self.textBrowser.append('<font color="red">%d.\t</font><b>ID:</b> %s\t<b>Address:</b> %s\n'%\
                         (self.device_num,ID,string_Address))
-            self.address_dict.update(Dict)
+            self.address_dict.update(msg)
         
 
     
     @pyqtSlot()
     def stopThread(self):
         if self.MODE == 0:
-            self.canReader.stopReading()
-            if self.canReader.isRunning():
-                self.canReader.terminate()
+            print('to be implemented')
         elif self.MODE == 1:
             self.thread.terminate()
 
@@ -183,10 +196,7 @@ class find_device_or_analysis(QDialog):
         self.address_dict.clear()
         self.textBrowser.clear()
         if self.MODE == 0:
-            self.canReader.stopReading()
-            if self.canReader.isRunning():
-                self.canReader.terminate()
-        
+            print('to be implemented')
         elif self.MODE == 1:
             if self.thread.isRunning():
                 self.thread.terminate()
@@ -239,6 +249,7 @@ class Msg_Server(QMainWindow):
         self.timer_stack = QTimer()                  # timer per inviare nuovamente il messaggio
 
 
+
 #        self.write_if_stack   # controlla se ci sono mex in stack e li manda
 #        self.connect(self.timer_stack, SIGNAL('timeout()'),
 
@@ -247,17 +258,42 @@ class Msg_Server(QMainWindow):
 #        else:
 #            self.check_status_every = check_status_every
             
-        self.IDList = list(self.source_address.keys())
         
+        
+        
+        dialog = find_device_or_analysis(canusb=self.can, xbee = self.xbee, arduino = self.arduino, parent=self)
+        dialog.show()
+        
+        if not dialog.exec_():
+            return None  
+        
+        self.MODE = dialog.MODE
+        self.serialPort = dialog.serialPort
+        self.source_address = dialog.address_dict
+        
+        if self.MODE == 0:
+            print('ci devo lavorare')
+            self.parsing_log = parsing_can_log
+            self.Reader.startReading()
+            self.forwardToGUI = self.forwardToGUICAN
+            
+        elif self.MODE == 1:
+            self.Reader = recievingXBeeThread(self.serialPort)
+            self.Reader.recieved.connect(self.recieveMsg)
+            self.Reader.start()
+            self.parsing_log = parsing_XBee_log
+            self.forwardToGUI = self.forwardToGUIXbee
+            
+        self.IDList = list(self.source_address.keys())
         
         settings = QSettings()
         logDockWidgetRight = QDockWidget("Info", parent=self)
         logDockWidgetRight.setObjectName("LogDockWidgetRight")
-        logDockWidgetRight.setAllowedAreas(RightDockWidgetArea)
+        logDockWidgetRight.setAllowedAreas(Qt.RightDockWidgetArea)
         logDockWidgetRight.setMaximumWidth(300)
         self.listWidgetRight = QListWidget()
         logDockWidgetRight.setWidget(self.listWidgetRight)
-        self.addDockWidget(RightDockWidgetArea,logDockWidgetRight)
+        self.addDockWidget(Qt.RightDockWidgetArea,logDockWidgetRight)
         self.dict_cage_widget = {}
         self.addCage_widget()
         
@@ -286,11 +322,10 @@ class Msg_Server(QMainWindow):
                                                            self.start_box,
                                                            'Alt+R', None,
                                                            "Start Recording")
-                                                 
         self.MenuEdit = self.menuBar().addMenu("&Edit")
         
         try:
-            self.pdict = np.load(os.path.join(os.curdir, 'pdict.npy')).all()
+            self.pdict = np.load(os.path.join(os.curdir,'pdict.npy')).all()
             self.receivers = self.pdict['receivers']
         except:
             self.pdict = {}
@@ -305,7 +340,7 @@ class Msg_Server(QMainWindow):
         self.fileSetReceiverAction = self.createAction("Set Receivers", self.setReceivers,None, None,"Set email receivers")
         self.launchMessageGUIAction = self.createAction("&Message GUI", self.start_message_gui, None, None, "Lunch message dialog")
         self.launchArduinoGUIAction = self.createAction("&Light Controller", self.startLightController, None, None, "Lunch light controller")
-#
+
         self.fileMenu.addActions([self.fileSetSavePathAction,#self.fileStartAction,
                                   self.fileStartStandAloneAction,self.fileStopAction])
         self.MenuEdit.addActions([self.launchMessageGUIAction,self.fileSetSenderAction,self.fileSetReceiverAction,self.launchArduinoGUIAction])
@@ -317,32 +352,16 @@ class Msg_Server(QMainWindow):
         self.launch_anal_action = self.createAction("Start Analysis",self.launch_online_analysis, None,None, "Start analyzing data")
         self.menuAnalysis.addActions([self.launch_anal_action])
         self.menuHelp = self.menuBar().addMenu('&Help')
-        self.menuHelp.createActions("matteo.falappa@libero.it",None,None,None,"edoardo.balzani87@gmail.com",None,None,None,"IIT, January 2019",None,None,None)
+#        self.menuHelp.createActions("matteo.falappa@libero.it",None,None,None,"edoardo.balzani87@gmail.com",None,None,None,"IIT, January 2019",None,None,None)
 
         
         if len(list(self.pdict.keys()))==0:
             self.upload_Program_ation.setEnable(False)
         
-        if not self.MODE:
-            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  ## Importazione di una delle due librerie in corso d'opera
+#        if not self.MODE:
+#            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  ## Importazione di una delle due librerie in corso d'opera
         
-        
-#        self.online_analysis_dlg = MainWindow()
     
-#    def sendOneTest(self):
-#        try:
-#            Id = self.IDList[0]
-#            msg = Start_Stop_Trial_Msg(Id,False,True,
-#                                           self.source_address[Id],
-#                                           MODE=self.MODE)
-#            answ = getAnsw(msg, self.MODE)
-#            self.stack_list += [[msg, answ]]
-#            self.sendMessage(msg)
-            
-#        except:
-#            pass
-        
-        
     
     def launch_online_analysis(self):
         if (not self.Phenopy) or not (self.Phenopy.poll() is None):
@@ -361,7 +380,7 @@ class Msg_Server(QMainWindow):
         self.launchMessageGUIAction.setEnabled(False)
         dialog = load_program_dlg(self.IDList,parent=self)
         dialog.show()
-    
+   
     def addCage_widget(self):
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
@@ -369,7 +388,6 @@ class Msg_Server(QMainWindow):
             self.dict_cage_widget[Id] = cage_widget(MODE=self.MODE, cage_id=Id)
         m_cage = multi_cageWidget(self.dict_cage_widget,parent=self)
         self.scrollArea.setWidget(m_cage)
-
         self.setCentralWidget(self.scrollArea)
         
     def get_not_recording_box(self):
@@ -378,7 +396,7 @@ class Msg_Server(QMainWindow):
             if not self.dict_cage_widget[box].isRec:
                 newList += [box]
         return newList
-        
+ 
     def get_recording_box(self):
         newList = []
         for box  in self.IDList:
@@ -392,7 +410,6 @@ class Msg_Server(QMainWindow):
         dlg.show()
         dlg.start_signal.connect(self.Start_StandAlone)
 
-        
     def Start_StandAlone(self,msg_list,IDList):
         ## AGGIUNGI UN REFRESH CAGE WIDGET
         dialog = autentication_dlg(self.pdict)
@@ -401,14 +418,14 @@ class Msg_Server(QMainWindow):
         self.__password = dialog.edit_psw.text()
      
         self.finalizing = False
-        for Id in IDList: # lanciare solo per gabbie selezionate
+        for Id in IDList: 
             self.timerSaveDict[Id] = QTimer()
         for ind in range(len(IDList)):
             self.logString[IDList[ind]] = ''
             self.infoString[IDList[ind]] = ''
             self.dict_cage_widget[Id].clear()
-            self.connect(self.timerSaveDict[IDList[ind]],SIGNAL('timeout()'),
-                         lambda Id = IDList[ind] : self.saveLog(Id))
+#            self.connect(self.timerSaveDict[IDList[ind]],SIGNAL('timeout()'),
+#                         lambda Id = IDList[ind] : self.saveLog(Id))
             self.timerSaveDict[IDList[ind]].start(120000+ind*8000)
             self.fileNames[IDList[ind]] = str(IDList[ind])+'.tmpcsv'
 
@@ -425,16 +442,15 @@ class Msg_Server(QMainWindow):
         
     
     def StopServer(self,msg_list,IDList):
-        for key in list(self.block_num.keys()):
-            self.block_num[key] = 0
-
-        for Id in IDList:
-            self.saveLog(Id)
-        self.finalizing = True
-        self.add_stack(msg_list)
-        self.fileStartStandAloneAction.setEnabled(True)
+        if self.MODE == 0:
+            print('ci devo lavorare')
+        elif self.MODE == 1:
+            for Id in IDList:
+                self.saveLog(Id)
+            self.finalizing = True
+            self.add_stack(msg_list)
+            self.fileStartStandAloneAction.setEnabled(True)
     
-        
     def recieveMsg(self,message):
         try:
             Type, Id, log = self.parsing_log(message)
@@ -445,7 +461,6 @@ class Msg_Server(QMainWindow):
         if not Type in ['Info','Log','Timer','Changed_address']:
             return
             
-        
         self.check_answ(message) 
       
         boxList = self.get_recording_box()
@@ -509,13 +524,12 @@ class Msg_Server(QMainWindow):
         if tip is not None:
             action.setToolTip(tip)
             action.setStatusTip(tip)
-        if slot is not None:
-            self.connect(action, SIGNAL(signal), slot)
+##        if slot is not None:
+##            action.triggered.connect(self.)
+##            self.connect(action, SIGNAL(signal), slot)
         if checkable:
             action.setCheckable(True)
         return action   
-
-        
 
     def setSender(self):
         if len(list(self.pdict.keys())):
@@ -533,79 +547,33 @@ class Msg_Server(QMainWindow):
             self.fileStartStandAloneAction.setEnabled(False)
             
     def setReceivers(self):
-        dialog = set_receiver_dlg(self.pdict['receivers'],self.pdict,
-                                  self)
+        dialog = set_receiver_dlg(self.pdict['receivers'],self.pdict,self)
         dialog.show()
+   
+    def sendMessage(self,msg): 
+        print('manda un messaggio')
+#        try:
+#            print('Write message:',binascii.hexlify(msg))
+#        except: 
+#            print('Write message:',msg)
+#        
+#        self.serialPort.write(msg)
+#        return 
+
         
-    
-    def sendMessage(self,msg):   
-        try:
-            print('Write message:',binascii.hexlify(msg))
-        except: 
-            print('Write message:',msg)
-        
-        self.serialPort.write(msg)
-        return 
-        
-    def connectAdapter(self):
-        """
-            Connecting to the adapter via pycanusb.py 
-        """
-        try:
-            
-            self.serialPort = pycanusb.CanUSB(bitrate='500')
-            self.mode = 'CAN'
-            self.MODE = 0
-            dialog = find_device_CAN(canusb=self.serialPort,parent=self)
-            dialog.show()
-            if not dialog.exec_():
-                print('ci prov')
-                return False
-            self.source_address = dialog.address_dict
-            
-        except AttributeError:
-            print('Exception handling') # aggiungo dialogo selezione com port 
-            
-            p = enumerate_serial_ports()
-            for port in p:
-                if '\\Device\\VCP' in port[1]:
-                    self.wifi = True
-                    print('Try to open serial port')
-                    self.serialPort = serial.Serial(port[0], baudrate=19200,
-                                                    timeout=1)
-                    dialog = find_device_Xbee(self.serialPort,parent=self)
-                    dialog.show()
-                    if not dialog.exec_():
-                        return False
-                    self.source_address = dialog.address_dict
-                    
-            
-            self.mode = 'XBee'
-            self.MODE = 1
-        try:
-            for key in list(self.source_address.keys()):
-                self.block_num[key] = 0
-        except AttributeError:
-            self.source_address = {}
-            self.serialPort = None
-            dialog = not_find_can_or_xbee(parent=self)
-            dialog.show()
-            if not dialog.exec_():
-                return False
-#        print('Serial Port: ',self.serialPort)
-        return True
-        
+     
     def saveLog(self,Id):
-        self.timerSaveDict[Id].stop()
-        tmp = os.path.join(self.dict_cage_widget[Id].path2save,self.fileNames[Id])
-        fh = open(tmp,'a')        
-        fh.write(self.logString[Id])
-        fh.close()
-        self.logString[Id] = ''
-        self.infoString[Id] = ''
-        if not self.finalizing:
-            self.timerSaveDict[Id].start(1800000)
-        
+        print('salva il log')
+#        self.timerSaveDict[Id].stop()
+#        tmp = os.path.join(self.dict_cage_widget[Id].path2save,self.fileNames[Id])
+#        fh = open(tmp,'a')        
+#        fh.write(self.logString[Id])
+#        fh.close()
+#        self.logString[Id] = ''
+#        self.infoString[Id] = ''
+#        if not self.finalizing:
+#            self.timerSaveDict[Id].start(1800000)
+#        
     def setSavePath(self):
         if os.path.exists(self.saveFolderPath):
             pt = self.saveFolderPath
@@ -614,90 +582,99 @@ class Msg_Server(QMainWindow):
         dlg = change_dir_prog(self.IDList,parent=self,dir2save=pt)
         dlg.show()
         dlg.update_dir_signal.connect(self.update_dirs)
-        
+#        
     def update_dirs(self,lisId,Dir):
        for Id in lisId:
             self.dict_cage_widget[Id].setPath2save(Dir)
-                      
+                    
     def add_stack(self, list_of_msg):
-        DT = 50
-        if not self.stack_list:
-            self.stack_counter = 0
-        for msg in list_of_msg:
-            answ = getAnsw(msg, self.MODE)
-            self.stack_list += [[msg, answ]]
-        if not self.timer_stack.isActive():
-            self.timer_stack.start(DT)
-    
+        print('aggiorna la dir')
+#        DT = 50
+#        if not self.stack_list:
+#            self.stack_counter = 0
+#        for msg in list_of_msg:
+#            answ = getAnsw(msg, self.MODE)
+#            self.stack_list += [[msg, answ]]
+#        if not self.timer_stack.isActive():
+#            self.timer_stack.start(DT)
+#    
     def write_if_stack(self):
-        MAXCOUNTER = 10
-        DT = 1500
-        if self.stack_counter <= MAXCOUNTER:
-            if self.stack_list:
-                self.sendMessage(self.stack_list[0][0])
-                self.timer_stack.stop()
-                self.timer_stack.start(DT)
-                self.stack_counter += 1
-            else:
-                self.stack_counter = 0
-                self.timer_stack.stop()
-        else:
-            if self.stack_list:
-                msg = self.stack_list.pop(0)[0]
-                self.write_if_stack()
-                self.stack_counter = 0
-                string = 'Cannot send a message\n' + stringFromMsg(msg)
-                dialog = QMessageBox(QMessageBox.Warning,'Cannot send a message',string,
-                                QMessageBox.Ok,parent=self)
-                dialog.show()
-    
-    def check_answ(self, msg):
-        self.timer_stack.stop()
-        if not self.stack_list:
-            return
-        cka = checkAnsw(self.stack_list[0], self.MODE)
-#        if self.MODE and msg.has_key('rf_data'):
-#            print('rf_data check answ: ', msg['rf_data'],self.stack_list[0][1],cka.check(msg))
-#        elif self.MODE:
-#            print('check answ: ', msg, self.stack_list[0][1],cka.check(msg))
+        print('aggiorna la dir')
+
+#        MAXCOUNTER = 10
+#        DT = 1500
+#        if self.stack_counter <= MAXCOUNTER:
+#            if self.stack_list:
+#                self.sendMessage(self.stack_list[0][0])
+#                self.timer_stack.stop()
+#                self.timer_stack.start(DT)
+#                self.stack_counter += 1
+#            else:
+#                self.stack_counter = 0
+#                self.timer_stack.stop()
 #        else:
-#            print('check answ: ', msg.dataAsHexStr(),self.stack_list[0][1],cka.check(msg))
-        if cka.check(msg):
-            self.stack_list.pop(0)
-            self.stack_counter = 0
-            self.write_if_stack()
-    
+#            if self.stack_list:
+#                msg = self.stack_list.pop(0)[0]
+#                self.write_if_stack()
+#                self.stack_counter = 0
+#                string = 'Cannot send a message\n' + stringFromMsg(msg)
+#                dialog = QMessageBox(QMessageBox.Warning,'Cannot send a message',string,
+#                                QMessageBox.Ok,parent=self)
+#                dialog.show()
+#    
+    def check_answ(self, msg):
+        print('guarda la risposta')
+
+#        self.timer_stack.stop()
+#        if not self.stack_list:
+#            return
+#        cka = checkAnsw(self.stack_list[0], self.MODE)
+##        if self.MODE and msg.has_key('rf_data'):
+##            print('rf_data check answ: ', msg['rf_data'],self.stack_list[0][1],cka.check(msg))
+##        elif self.MODE:
+##            print('check answ: ', msg, self.stack_list[0][1],cka.check(msg))
+##        else:
+##            print('check answ: ', msg.dataAsHexStr(),self.stack_list[0][1],cka.check(msg))
+#        if cka.check(msg):
+#            self.stack_list.pop(0)
+#            self.stack_counter = 0
+#            self.write_if_stack()
+#    
     def start_message_gui(self):
-        bl = self.get_not_recording_box()
-        box_list = []
-        for ID in bl:
-            box_list += [(ID,self.source_address[ID])]
-        self.microsystemGUI = msg_sender_gui(box_list=box_list, MODE=self.MODE, parent=self)
-        self.microsystemGUI.sendGUImessage.connect(self.sendGUIMessage)
-        self.microsystemGUI.show()
-        self.launchMessageGUIAction.setEnabled(False)
-        self.read_Program_ation.setEnabled(False)
-        self.upload_Program_ation.setEnabled(False)
-    
+        print('fai qualcosa la dir')
+
+#        bl = self.get_not_recording_box()
+#        box_list = []
+#        for ID in bl:
+#            box_list += [(ID,self.source_address[ID])]
+#        self.microsystemGUI = msg_sender_gui(box_list=box_list, MODE=self.MODE, parent=self)
+#        self.microsystemGUI.sendGUImessage.connect(self.sendGUIMessage)
+#        self.microsystemGUI.show()
+#        self.launchMessageGUIAction.setEnabled(False)
+#        self.read_Program_ation.setEnabled(False)
+#        self.upload_Program_ation.setEnabled(False)
+#    
     def sendGUIMessage(self,msg_list):
-        self.add_stack(msg_list)
+        print('fai qualcosa la dir')
+#        self.add_stack(msg_list)
         
     def closeEvent(self, event):
-        if self.Phenopy:
-            self.Phenopy.kill()
-        settings = QSettings()
-        settings.setValue("MainWindow/Geometry", 
-                          self.saveGeometry())
-        settings.setValue("MainWindow/State", 
-                          self.saveState())
-       
-        settings.setValue('SaveDirectory',self.saveFolderPath)
-        if len(list(self.pdict.keys())):
-            np.save(os.path.join(os.curdir,'pdict.npy'),self.pdict)
-        if self.MODE:
-            self.Reader.terminate()
-            if self.serialPort:
-                self.serialPort.close()
+#        if self.Phenopy:
+#            self.Phenopy.kill()
+#        settings = QSettings()
+#        settings.setValue("MainWindow/Geometry", 
+#                          self.saveGeometry())
+#        settings.setValue("MainWindow/State", 
+#                          self.saveState())
+#       
+#        settings.setValue('SaveDirectory',self.saveFolderPath)
+#        if len(list(self.pdict.keys())):
+#            np.save(os.path.join(os.curdir,'pdict.npy'),self.pdict)
+#        if self.MODE:
+#            self.Reader.terminate()
+#            if self.serialPort:
+#                self.serialPort.close()
+        print('close event')
         super(Msg_Server,self).close()
         
     def startLightController(self):
@@ -718,11 +695,7 @@ class Msg_Server(QMainWindow):
 #            self.arduinoGui = timerGui(15,port,baud=9600,parent=self)
 #        self.arduinoGui.show()
         
-        dialog = find_device_or_analysis(canusb=self.can, xbee = self.xbee, arduino = self.arduino, parent=self)
-        dialog.show()
-        
-        if not dialog.exec_():
-            return None
+
 #            return ValueError('Unable to connect to adapter')
 
 def main():

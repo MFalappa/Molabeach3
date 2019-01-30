@@ -14,9 +14,12 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
+
+from serial.tools import list_ports
 import serial
-from myPyXBee import enumerate_serial_ports
-from time import sleep
+from time import sleep    
+            
+     
 # baudmap
 BAUDMAP = {'10k':b'S0', '20k':b'S1', '50k':b'S2', '100k':b'S3', '125k':b'S4', '250k':b'S5', '500k':b'S6', '800k':b'S7', '1M':b'S8'}
 
@@ -30,17 +33,27 @@ OPEN = b'O\r'
 CLOSE = b'C\r'
 
 canbaud = b'S6'
-for p in enumerate_serial_ports():
-    if 'VCP' in p[1]:
-        break
-canPort = serial.Serial(p[0],baudrate=500000,timeout=1)
+
+for val in list_ports.comports():
+    port = val[0]
+    descr = val[1]
+        
+    if 'CANUSB' in descr:
+        p = port
+            
+    if 'XBee' in descr:
+        p = port
+
+canPort = serial.Serial(p,baudrate=19200,timeout=1) #xbee
+#canPort = serial.Serial(p,baudrate=500000,timeout=1) can
+
 res = canPort.write(CLOSE) # res == 2 tutto ok
-#
+
 baudres=canPort.write(canbaud+CR)
 
 res = canPort.write(OPEN)
 
-canPort.write(bytearray('t60A20100\r')) # switch to operational
+canPort.write(bytearray('t60A20100\r', 'utf8')) # switch to operational
 totprint = 1
 i=0
 while True:
@@ -52,13 +65,14 @@ while True:
     while byte!=CR:
         byte = canPort.read()
         byteARRAY += byte
-    print byteARRAY
+    print(byteARRAY)
     if i >=totprint:
         break
     i+=1
 
-print '%d heart bit plotted'%totprint
-canPort.write(bytearray('t60A82301120505010100\r'))
-sleep(3)
-canPort.write(bytearray('t60A82301120500000000\r'))
+print('%d heart bit plotted'%totprint)
+canPort.write(bytearray('t60A82301120505010100\r', 'utf8'))
+print('aspetto')
+sleep(6)
+canPort.write(bytearray('t60A82301120500000000\r', 'utf8'))
 canPort.close()
