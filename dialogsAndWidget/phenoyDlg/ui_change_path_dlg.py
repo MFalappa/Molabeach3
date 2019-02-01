@@ -6,49 +6,47 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui,QtWidgets
+
+
+def _fromUtf8(s):
+    return s
 
 try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
+    _encoding = QtWidgets.QApplication.UnicodeUTF8
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+        return QtWidgets.QApplication.translate(context, text, disambig)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.resize(485, 258)
-        self.layoutWidget = QtGui.QWidget(Dialog)
+        self.layoutWidget = QtWidgets.QWidget(Dialog)
         self.layoutWidget.setGeometry(QtCore.QRect(12, 12, 463, 226))
         self.layoutWidget.setObjectName(_fromUtf8("layoutWidget"))
-        self.horizontalLayout_4 = QtGui.QHBoxLayout(self.layoutWidget)
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.layoutWidget)
         self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
-        self.groupBox_select = QtGui.QGroupBox(self.layoutWidget)
+        self.groupBox_select = QtWidgets.QGroupBox(self.layoutWidget)
         font = QtGui.QFont()
         font.setPointSize(10)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_select.setFont(font)
         self.groupBox_select.setObjectName(_fromUtf8("groupBox_select"))
-        self.verticalLayout_2 = QtGui.QVBoxLayout(self.groupBox_select)
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.groupBox_select)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.scrollArea = QtGui.QScrollArea(self.groupBox_select)
+        self.scrollArea = QtWidgets.QScrollArea(self.groupBox_select)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
-        self.scrollAreaWidgetContents = QtGui.QWidget()
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
         self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 124, 177))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
-        self.verticalLayout_4 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
-        self.checkBox_select_all = QtGui.QCheckBox(self.scrollAreaWidgetContents)
+        self.checkBox_select_all = QtWidgets.QCheckBox(self.scrollAreaWidgetContents)
         font = QtGui.QFont()
         font.setPointSize(8)
         font.setBold(False)
@@ -60,15 +58,15 @@ class Ui_Dialog(object):
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.verticalLayout_2.addWidget(self.scrollArea)
         self.horizontalLayout_4.addWidget(self.groupBox_select)
-        self.verticalLayout_3 = QtGui.QVBoxLayout()
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_3.addItem(spacerItem)
-        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.horizontalLayout_3 = QtGui.QHBoxLayout()
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
-        self.label_2 = QtGui.QLabel(self.layoutWidget)
+        self.label_2 = QtWidgets.QLabel(self.layoutWidget)
         font = QtGui.QFont()
         font.setPointSize(10)
         font.setBold(True)
@@ -76,34 +74,34 @@ class Ui_Dialog(object):
         self.label_2.setFont(font)
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.horizontalLayout_3.addWidget(self.label_2)
-        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
-        self.horizontalLayout_2 = QtGui.QHBoxLayout()
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        self.pushButton_search = QtGui.QPushButton(self.layoutWidget)
+        self.pushButton_search = QtWidgets.QPushButton(self.layoutWidget)
         self.pushButton_search.setObjectName(_fromUtf8("pushButton_search"))
         self.horizontalLayout_2.addWidget(self.pushButton_search)
-        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem2)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
-        self.lineEdit_search = QtGui.QLineEdit(self.layoutWidget)
+        self.lineEdit_search = QtWidgets.QLineEdit(self.layoutWidget)
         self.lineEdit_search.setMinimumSize(QtCore.QSize(300, 0))
         self.lineEdit_search.setObjectName(_fromUtf8("lineEdit_search"))
         self.verticalLayout.addWidget(self.lineEdit_search)
-        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem3)
-        self.pushButton_done = QtGui.QPushButton(self.layoutWidget)
+        self.pushButton_done = QtWidgets.QPushButton(self.layoutWidget)
         self.pushButton_done.setObjectName(_fromUtf8("pushButton_done"))
         self.horizontalLayout.addWidget(self.pushButton_done)
-        self.pushButton_apply = QtGui.QPushButton(self.layoutWidget)
+        self.pushButton_apply = QtWidgets.QPushButton(self.layoutWidget)
         self.pushButton_apply.setObjectName(_fromUtf8("pushButton_apply"))
         self.horizontalLayout.addWidget(self.pushButton_apply)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_3.addLayout(self.verticalLayout)
-        spacerItem4 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_3.addItem(spacerItem4)
         self.horizontalLayout_4.addLayout(self.verticalLayout_3)
 

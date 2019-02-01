@@ -15,8 +15,11 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
  
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import (QDialog,QButtonGroup,QCheckBox,
+                             QSpacerItem,QSizePolicy,QApplication,QFileDialog)
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt,pyqtSignal
+
 import os,sys
 classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes','phenopyClasses')
 sys.path.append(classes_dir)
@@ -44,7 +47,7 @@ class change_dir_prog(Ui_Dialog,QDialog):
         self.dictChecker = {}
         self.box_group = QButtonGroup(parent=self)
         self.box_group.setExclusive(False)
-        font = QtGui.QFont()
+        font = QFont()
         font.setPointSize(8)
         font.setBold(False)
         font.setWeight(50)
@@ -58,12 +61,18 @@ class change_dir_prog(Ui_Dialog,QDialog):
         spaceritem = QSpacerItem(0,0, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout_2.addSpacerItem(spaceritem)
         
-        self.connect(self.lineEdit_search,SIGNAL('textChanged(const QString&)'),self.setDirEnable)
-        self.connect(self.pushButton_search,SIGNAL('clicked()'),self.search_dir)
-        self.connect(self.pushButton_apply,SIGNAL('clicked()'),self.emit_signal_dir)
-        self.connect(self.box_group,SIGNAL('buttonClicked (QAbstractButton*)'),self.box_checked)
-        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.select_all_clicked)
-        self.connect(self.pushButton_done,SIGNAL('clicked()'),self.close)
+#        self.connect(self.lineEdit_search,SIGNAL('textChanged(const QString&)'),self.setDirEnable)
+#        self.connect(self.pushButton_search,SIGNAL('clicked()'),self.search_dir)
+#        self.connect(self.pushButton_apply,SIGNAL('clicked()'),self.emit_signal_dir)
+#        self.connect(self.box_group,SIGNAL('buttonClicked (QAbstractButton*)'),self.box_checked)
+#        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.select_all_clicked)
+#        self.connect(self.pushButton_done,SIGNAL('clicked()'),self.close)        
+        self.lineEdit_search.textChanged.connect(self.setDirEnable)
+        self.pushButton_search.clicked.connect(self.search_dir)
+        self.pushButton_apply.clicked.connect(self.emit_signal_dir)
+        self.box_group.buttonClicked.connect(self.box_checked)
+        self.checkBox_select_all.clicked.connect(self.select_all_clicked)
+        self.pushButton_done.clicked.connect(self.close)
         
     def select_all_clicked(self,tof):
         if tof:
@@ -96,7 +105,7 @@ class change_dir_prog(Ui_Dialog,QDialog):
         
     def get_checked(self):
         checked_list = []
-        for Id in self.dictChecker.keys():
+        for Id in list(self.dictChecker.keys()):
             if self.dictChecker[Id].isChecked():
                 checked_list += [Id]
         return checked_list
@@ -105,12 +114,12 @@ class change_dir_prog(Ui_Dialog,QDialog):
         self.update_dir_signal.emit(self.get_checked(),self.lineEdit_search.text())
     
     def test(self,l,d):
-        print l
-        print d
+        print(l)
+        print(d)
 def main():
     import sys
     app = QApplication(sys.argv)
-    form = change_dir_prog(range(20))
+    form = change_dir_prog(list(range(20)))
     form.show()
     app.exec_()
 

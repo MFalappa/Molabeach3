@@ -20,14 +20,17 @@ classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'
 lib_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libraries')
 sys.path.append(classes_dir)
 sys.path.append(lib_dir)
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import (QDialog,QButtonGroup,QCheckBox,QSpacerItem,
+                             QFileDialog,QSizePolicy,QApplication)
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt
 from ui_read_prog_gui import Ui_Dialog
+
 from messageLib import *
 from check_prog import *
 from Parser import parsing_Funct
 from uploadProg_gui import *
-from readProg_gui import *
+from readProg_gui import readProgram
 import datetime as dt
 
 class read_program_dlg(Ui_Dialog,QDialog):
@@ -46,7 +49,7 @@ class read_program_dlg(Ui_Dialog,QDialog):
         self.dictChecker = {}
         self.box_group = QButtonGroup(parent=self)
         self.box_group.setExclusive(False)
-        font = QtGui.QFont()
+        font = QFont()
         font.setPointSize(8)
         font.setBold(False)
         font.setWeight(50)
@@ -65,11 +68,16 @@ class read_program_dlg(Ui_Dialog,QDialog):
         self.pushButton_save.setEnabled(False)
         
         # Connect check box
-        self.connect(self.box_group,SIGNAL('buttonClicked (QAbstractButton*)'),self.box_checked)
-        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.select_all_clicked)
-        self.connect(self.pushButton_readprog,SIGNAL('clicked()'),self.readprog)
-        self.connect(self.pushButton_close,SIGNAL('clicked()'),self.close)
-        self.connect(self.pushButton_save,SIGNAL('clicked()'),self.save)
+        self.box_group.buttonClicked.connect(self.box_checked)
+        self.checkBox_select_all.clicked.connect(self.select_all_clicked)
+        self.pushButton_readprog.clicked.connect(self.readprog)
+        self.pushButton_close.clicked.connect(self.close)
+        self.pushButton_save.clicked.connect(self.save)
+#        self.connect(self.box_group,SIGNAL('buttonClicked (QAbstractButton*)'),self.box_checked)
+#        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.select_all_clicked)
+#        self.connect(self.pushButton_readprog,SIGNAL('clicked()'),self.readprog)
+#        self.connect(self.pushButton_close,SIGNAL('clicked()'),self.close)
+#        self.connect(self.pushButton_save,SIGNAL('clicked()'),self.save)
         
     def readprog(self):
         self.textBrowser__transl.setText('')

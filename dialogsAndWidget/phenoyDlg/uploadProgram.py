@@ -43,30 +43,30 @@ class uploadProgram(QDialog):
             Connecting to the adapter via pycanusb.py 
         """
         self.canusb = pycanusb.CanUSB(bitrate='500')
-        print('CanUSB: ',self.canusb)
+        print(('CanUSB: ',self.canusb))
         Msg = Switch_to_Operational_State_Msg()
         QTimer.singleShot(50,lambda msg = Msg : self.initialization(Msg))
         
     
     def initialization(self,msg):
         self.canusb.write(msg)
-        print 'Initialized'
+        print('Initialized')
         self.Label.setText('Initialized')
         
     def recieveMsg(self,msg):
-        print 'Recieved msg: %s'%msg.dataAsHexStr()
+        print('Recieved msg: %s'%msg.dataAsHexStr())
         self.Label.setText('Recieved msg: %s'%msg.dataAsHexStr())
         if msg.data[3] == self.reply:
             try:
                 self.commandList.pop(0)
                 self.uploadProg(self.commandList[0])
             except IndexError:
-                print 'Finished Uploading'
+                print('Finished Uploading')
                 self.Label.setText('Finished Uploading')
                 self.accept()
                 
     def uploadProg(self,msg):
-        print 'Uploading msg: %s'%msg.dataAsHexStr()
+        print('Uploading msg: %s'%msg.dataAsHexStr())
         self.Label.setText('Uploading msg: %s'%msg.dataAsHexStr())
         self.reply = msg.data[3]
         self.canusb.write(msg)
@@ -80,9 +80,9 @@ if __name__=='__main__':
 #    app = QApplication(sys.argv)
 #    dlg = uploadProgram(CommandList)
 
-    file_name = 'C:\Users\MFalappa\Desktop\Microsystem\sw\\Program_switch_probes.txt'
+    file_name = 'C:\\Users\MFalappa\Desktop\Microsystem\sw\\Program_switch_probes.txt'
     tof, sentence = check_prog(file_name)
-    print sentence
+    print(sentence)
     if tof:
         CommandList = parsing_Funct(file_name,15)
         app = QApplication(sys.argv)

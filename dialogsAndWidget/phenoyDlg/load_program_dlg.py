@@ -15,10 +15,12 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
  
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import (QSpacerItem,QSizePolicy,QDialog,QCheckBox,
+                             QFileDialog,QApplication,QButtonGroup)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
+
 from ui_load_program_dlg import Ui_Dialog
-from messageLib import *
 import os,sys
 classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes','phenopyClasses')
 library_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libraries')
@@ -26,9 +28,9 @@ library_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'
 sys.path.append(classes_dir)
 sys.path.append(library_dir)
 
-from check_prog import *
+from check_prog import check_prog
 from Parser import parsing_Funct
-from uploadProg_gui import *
+from uploadProg_gui import uploadProgram_gui
 
 
         
@@ -46,7 +48,7 @@ class load_program_dlg(Ui_Dialog,QDialog):
         self.dictChecker = {}
         self.box_group = QButtonGroup(parent=self)
         self.box_group.setExclusive(False)
-        font = QtGui.QFont()
+        font = QFont()
         font.setPointSize(8)
         font.setBold(False)
         font.setWeight(50)
@@ -60,12 +62,15 @@ class load_program_dlg(Ui_Dialog,QDialog):
         spaceritem = QSpacerItem(0,0, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout_2.addSpacerItem(spaceritem)
         
-        self.connect(self.lineEdit_search,SIGNAL('textChanged(const QString&)'),self.setLoadEnabled)
-        self.connect(self.pushButton_search,SIGNAL('clicked()'),self.search_prg)
-        self.connect(self.pushButton_load,SIGNAL('clicked()'),self.load_prg)
-        self.connect(self.box_group,SIGNAL('buttonClicked (QAbstractButton*)'),self.box_checked)
-        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.select_all_clicked)
-        self.connect(self.pushButton_close,SIGNAL('clicked()'),self.close)
+#        self.connect(self.lineEdit_search,SIGNAL('textChanged(const QString&)'),self.setLoadEnabled)
+        self.lineEdit_search.textChanged.connect(self.setLoadEnabled)
+        self.pushButton_search.clicked.connect(self.search_prg)
+        self.pushButton_load.clicked.connect(self.load_prg)
+        self.box_group.buttonClicked.connect(self.box_checked)
+#        self.connect(self.box_group,SIGNAL('buttonClicked (QAbstractButton*)'),self.box_checked)
+        self.checkBox_select_all.clicked.connect(self.select_all_clicked)
+#        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.select_all_clicked)
+        self.pushButton_close.clicked.connect(self.close)
         
     def select_all_clicked(self,tof):
         if tof:
@@ -80,7 +85,7 @@ class load_program_dlg(Ui_Dialog,QDialog):
     
         
     def search_prg(self):
-        pathToText = unicode(QFileDialog.getOpenFileName(self,"Program to upload",os.path.curdir,"Programs available (*.txt *.prg)"))
+        pathToText = str(QFileDialog.getOpenFileName(self,"Program to upload",os.path.curdir,"Programs available (*.txt *.prg)"))
         self.lineEdit_search.setText(pathToText)
             
     
@@ -101,7 +106,7 @@ class load_program_dlg(Ui_Dialog,QDialog):
         
     def get_checked(self):
         checked_list = []
-        for Id in self.dictChecker.keys():
+        for Id in list(self.dictChecker.keys()):
             if self.dictChecker[Id].isChecked():
                 checked_list += [Id]
         return checked_list
@@ -115,9 +120,9 @@ class load_program_dlg(Ui_Dialog,QDialog):
                 isLast = Id == checked_list[-1]
                 dialog = uploadProgram_gui(msg_list,Id,isLast=isLast,parent=self.parent)
                 dialog.exec_()
-            except Exception,e:
-                print e
-                print Id, 'First message', msg_list[0]
+            except Exception as e:
+                print(e)
+                print(Id, 'First message', msg_list[0])
     
     def closeEvent(self,event):
         self.parent.read_Program_ation.setEnabled(True)
@@ -128,7 +133,7 @@ class load_program_dlg(Ui_Dialog,QDialog):
 def main():
     import sys
     app = QApplication(sys.argv)
-    form = load_program_dlg(range(20))
+    form = load_program_dlg(list(range(20)))
     form.show()
     app.exec_()
 

@@ -5,11 +5,6 @@ Created on Wed Jan 30 09:03:32 2019
 
 @author: Matte
 """
-read_program_dlg
-load_program_dlg
-start_box_dlg
-stop_box_dlg
-autentication_dlg
 import sys
 import os
 import binascii
@@ -34,11 +29,19 @@ from sys import executable
 from send_email_thread import send_email_thread
 from set_receiver_dlg import set_receiver_dlg
 from email_addr import email_addr_add
-
+from arduinoGui import timerGui
 from cage_widget import cage_widget
 from multiple_cage_widget import multi_cageWidget
 
-from Modify_Dataset_GUI import OrderedDict,action_Reply_Struct
+#from microsystemGUI import *
+from credential_dlg import autentication_dlg
+from load_program_dlg import load_program_dlg
+from read_program_gui import read_program_dlg
+from start_box_dlg import start_box_dlg
+from stop_box_dlg import stop_box_dlg
+from change_dir_prog import change_dir_prog
+
+from Modify_Dataset_GUI import OrderedDict
 
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication,QPushButton,QLabel,
@@ -249,17 +252,17 @@ class Msg_Server(QMainWindow):
         self.timer_stack = QTimer()                  # timer per inviare nuovamente il messaggio
 
 
-
+#===============================================================================
+        #questo va sistemato
 #        self.write_if_stack   # controlla se ci sono mex in stack e li manda
+#        self.timer_stack.timeout.connect()
 #        self.connect(self.timer_stack, SIGNAL('timeout()'),
 
 #        if check_status_every is None:
 #            self.check_status_every = 4*3600*1000
 #        else:
 #            self.check_status_every = check_status_every
-            
-        
-        
+#===============================================================================           
         
         dialog = find_device_or_analysis(canusb=self.can, xbee = self.xbee, arduino = self.arduino, parent=self)
         dialog.show()
@@ -352,12 +355,14 @@ class Msg_Server(QMainWindow):
         self.launch_anal_action = self.createAction("Start Analysis",self.launch_online_analysis, None,None, "Start analyzing data")
         self.menuAnalysis.addActions([self.launch_anal_action])
         self.menuHelp = self.menuBar().addMenu('&Help')
+        #questo pure non funziona, da errore
 #        self.menuHelp.createActions("matteo.falappa@libero.it",None,None,None,"edoardo.balzani87@gmail.com",None,None,None,"IIT, January 2019",None,None,None)
 
         
         if len(list(self.pdict.keys()))==0:
             self.upload_Program_ation.setEnable(False)
         
+# sistemare quando hai sistemato anche la lettura da canusb
 #        if not self.MODE:
 #            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  ## Importazione di una delle due librerie in corso d'opera
         
@@ -563,17 +568,16 @@ class Msg_Server(QMainWindow):
         
      
     def saveLog(self,Id):
-        print('salva il log')
-#        self.timerSaveDict[Id].stop()
-#        tmp = os.path.join(self.dict_cage_widget[Id].path2save,self.fileNames[Id])
-#        fh = open(tmp,'a')        
-#        fh.write(self.logString[Id])
-#        fh.close()
-#        self.logString[Id] = ''
-#        self.infoString[Id] = ''
-#        if not self.finalizing:
-#            self.timerSaveDict[Id].start(1800000)
-#        
+        self.timerSaveDict[Id].stop()
+        tmp = os.path.join(self.dict_cage_widget[Id].path2save,self.fileNames[Id])
+        fh = open(tmp,'a')        
+        fh.write(self.logString[Id])
+        fh.close()
+        self.logString[Id] = ''
+        self.infoString[Id] = ''
+        if not self.finalizing:
+            self.timerSaveDict[Id].start(1800000)
+       
     def setSavePath(self):
         if os.path.exists(self.saveFolderPath):
             pt = self.saveFolderPath
@@ -655,7 +659,7 @@ class Msg_Server(QMainWindow):
 #        self.upload_Program_ation.setEnabled(False)
 #    
     def sendGUIMessage(self,msg_list):
-        print('fai qualcosa la dir')
+        print('manda messaggio gui')
 #        self.add_stack(msg_list)
         
     def closeEvent(self, event):
@@ -678,26 +682,16 @@ class Msg_Server(QMainWindow):
         super(Msg_Server,self).close()
         
     def startLightController(self):
-        print('arduino')
-#        if not self.arduinoGui:
-#            found = False
-#            for val in list_ports.comports():
-#                port = val[0]
-#                descr = val[1]
-#                if 'ARDUINO' in descr.upper():
-#                    found = True
-#                    break
-#            if not found:
-#                print( 'Did not found an arduino conected')
-##                QMessageBox.warning(self, 'Serial connection error', 'Could not find Arduino connected', buttons = QMessageBox.Ok, defaultButton = QMessageBox.NoButton)
-#                port = None
-#                return
-#            self.arduinoGui = timerGui(15,port,baud=9600,parent=self)
-#        self.arduinoGui.show()
+        if not self.arduinoGui:
+            try:
+                self.arduinoGui = timerGui(15,self.arduino,baud=9600,parent=self)
+                self.arduinoGui.show()
+            except:
+                print( 'Did not found an arduino conected')
+                QMessageBox.warning(self, 'Serial connection error', 'Could not find Arduino connected', buttons = QMessageBox.Ok, defaultButton = QMessageBox.NoButton)
+                return ValueError('Unable to connect to adapter')
         
-
-#            return ValueError('Unable to connect to adapter')
-
+        
 def main():
 
     port_can = None

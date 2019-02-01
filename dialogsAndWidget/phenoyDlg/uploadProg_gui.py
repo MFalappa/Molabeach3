@@ -58,7 +58,7 @@ class uploadProgram_gui(QDialog):
         super(uploadProgram_gui, self).exec_()
         
     def recieveMsg(self,msg):
-        print 'Recieved msg: %s'%msg.dataAsHexStr()
+        print('Recieved msg: %s'%msg.dataAsHexStr())
         if msg.data[3] == self.reply:
             try:
                 self.commandList.pop(0)
@@ -74,7 +74,7 @@ class uploadProgram_gui(QDialog):
                     msg.setWindowTitle("Uploading successful")
                     msg.setStandardButtons(QMessageBox.Ok)
                     msg.exec_()
-                print 'Finished Uploading'
+                print('Finished Uploading')
                 self.Label.setText('Finished Uploading')
                 self.accept()
                 self.canReader.received.disconnect()
@@ -84,7 +84,7 @@ class uploadProgram_gui(QDialog):
             
 
     def uploadProg(self,msg):
-        print 'Uploading msg: %s'%msg.dataAsHexStr()
+        print('Uploading msg: %s'%msg.dataAsHexStr())
         self.reply = msg.data[3]
         self.parent.serialPort.write(msg)
     

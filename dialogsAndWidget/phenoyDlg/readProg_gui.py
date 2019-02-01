@@ -24,8 +24,8 @@ import pycanusb
 import canportreader
 from msgview import *
 from messageLib import *
-from PyQt4.QtCore import QTimer,Qt
-from PyQt4.QtGui import QDialog,QApplication,QLabel,QHBoxLayout,QVBoxLayout,QProgressBar
+from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QDialog,QApplication,QLabel,QVBoxLayout,QProgressBar
 from read_output_prg import *
 #from Parser import parsing_Funct
 #from time import sleep
