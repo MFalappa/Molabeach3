@@ -14,16 +14,18 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
+import os
 import serial
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from time import sleep
+from PyQt5.QtWidgets import (QLabel,QMainWindow,QGridLayout,QWidget,QScrollArea,
+                             QPushButton,QVBoxLayout,QSpacerItem,QSizePolicy,
+                             QHBoxLayout,QFileDialog,QMessageBox,QApplication)
+from PyQt5.QtCore import (QThread,pyqtSignal,QTimer,QReadWriteLock)
+from PyQt5.QtGui import QFont
 import datetime
 import sys
 sys.path.append('/Users/Matte/Python_script/Phenopy/libraries/messageLib')
-from house_light import *
-from stop_box_dlg_arduino import *
+from house_light import house_light
+from stop_box_dlg_arduino import stop_box_dlg_arduino
 
 class readSerial(QThread):
     msgReceived = pyqtSignal(bytes, name='messageReceived')
@@ -137,9 +139,10 @@ class timerGui(QMainWindow):
         self.checkTimerThread.setUpDict(self.switchTime, self.loopIdx, self.loopMinutes)
         self.checkTimerThread.sendMsg.connect(self.write)
         
-        self.connect(buttonStart,SIGNAL('clicked()'),self.startArduino)
-        self.connect(self.buttonStop,SIGNAL('clicked()'),self.stopThread)
-        self.connect(self.buttonSavePath,SIGNAL('clicked()'),self.setPath)
+        buttonStart.clicked.connect(self.startArduino)
+        self.buttonStop.clicked.connect(self.stopThread)
+        self.buttonSavePath.clicked.connect(self.setPath)
+        
         centralWidget = QWidget()
         centralWidget.setLayout(layout)
         self.setCentralWidget(centralWidget)
@@ -163,7 +166,7 @@ class timerGui(QMainWindow):
             self.loopMinutes.update(loopMinutes)
             newLightStatus = ''
             for k in range(self.numBox):
-                if k in lightStatus.keys():
+                if k in list(lightStatus.keys()):
                     newLightStatus += '%d'%lightStatus[k]
                 else:
                     newLightStatus += self.lightStatus[k]
@@ -175,7 +178,7 @@ class timerGui(QMainWindow):
             self.startCycle.update(switchTime)
         
             # set change icon set/unset
-            for k in loopMinutes.keys():
+            for k in list(loopMinutes.keys()):
                 self.boxDict[k].set_cycle(True, switchTime[k])
         finally:
             self.lock.unlock()
@@ -210,7 +213,7 @@ class timerGui(QMainWindow):
             idx = boxToStart[k]
             if self.startCycle[idx] < now:
                 QMessageBox.warning(self, 'Error in start timer', 'Could not start timer for box %d since the starting time precedes current time'%idx, buttons = QMessageBox.Ok, defaultButton = QMessageBox.NoButton)
-                print 'Current time is posterior to start loop for box %d'%k
+                print('Current time is posterior to start loop for box %d'%k)
                 removeBox += 1
                 continue
             try:
@@ -225,11 +228,7 @@ class timerGui(QMainWindow):
         
         if len(boxToStart) == removeBox:
             return
-#        # time to check switch status
-#        if not self.checkTimeTimer.isActive():
-#            self.checkTimeTimer.timeout.connect(self.checkSwitchLight)
-#            self.checkTimeTimer.start(100)
-        # start reading
+
         self.buttonStop.setEnabled(True)
         
         if self.reader:
@@ -240,7 +239,6 @@ class timerGui(QMainWindow):
             self.fhSave.write('Box\tSWitch_Type\tTime\n')
         if self.fhSave.closed:
             self.fhSave = open(os.path.join(self.savePath,'timerLog.txt'),'a')
-        
         
         
         # switch leds
@@ -287,13 +285,13 @@ class timerGui(QMainWindow):
                     msg += self.lightStatus[k]
             # check if any box is still light-cycling
             countRec = 0
-            for box in self.boxDict.keys():
+            for box in list(self.boxDict.keys()):
                 countRec += self.boxDict[box].isRecording
             # stop tread
             if self.reader:
                 self.write(bytearray(msg,'utf-8'))
             else:
-                print msg
+                print(msg)
                 
             self.lightStatus = msg
             # if no box are cycling, stop check timer, disable stop button
@@ -312,8 +310,8 @@ class timerGui(QMainWindow):
 
         
     def parseMessage(self, msg):
-        print msg
-        print("Message Parsed:", msg)
+        print(msg)
+        print(("Message Parsed:", msg))
         now = datetime.datetime.now()
         if len(msg) != self.numBox:
             return
@@ -334,7 +332,7 @@ class timerGui(QMainWindow):
     def write(self,msg):
         if self.reader:
             self.reader.serial.write(msg)
-        print( 'Writing',msg)
+        print(( 'Writing',msg))
     
     def closeEvent(self,event):
         if not self.reader:
@@ -375,11 +373,11 @@ class checkSwitchTime(QThread):
             anyswitch = False
             for k in range(self.numBox):
                 
-                if not k in self.switchTime.keys():
+                if not k in list(self.switchTime.keys()):
                     statusList[k] = '0'
                     continue
                 if now >= self.switchTime[k]:
-                    print('Switch led %d at %s'%(k,now.isoformat()))
+                    print(('Switch led %d at %s'%(k,now.isoformat())))
                     anyswitch = True
                     
                     self.loopIdx[k] = (self.loopIdx[k] + 1) % len(self.loopMinutes[k])

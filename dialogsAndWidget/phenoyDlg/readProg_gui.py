@@ -72,10 +72,10 @@ class readProgram(QDialog):
     
     def initialization(self,msg):
         self.canusb.write(msg)
-        print 'Initialized'
+        print('Initialized')
         
     def recieveMsg(self,msg):
-        print 'Recieved msg: %s'%msg.dataAsHexStr()
+        print('Recieved msg: %s'%msg.dataAsHexStr())
         if msg.data[3] == self.reply and self.reply==37:
             self.ProgLen = 16**2 * msg.data[5] + msg.data[4]
             self.progress.setMaximum(self.ProgLen - 1)
@@ -121,9 +121,9 @@ if __name__=='__main__':
     dlg.show()
     app.exec_()
     newList=[]
-    fh = open('C:\Users\ebalzani\IIT\Dottorato\Matte\Color Preference\Data\\27-6 to 28-6\\change_color_prog_uploaded.txt','w')
+    fh = open('C:\\Users\ebalzani\IIT\Dottorato\Matte\Color Preference\Data\\27-6 to 28-6\\change_color_prog_uploaded.txt','w')
     for msg in dlg.ListOfMsg:
-        print msg.dataAsHexStr(),msg.data[4]
+        print(msg.dataAsHexStr(),msg.data[4])
         fh.write(msg.dataAsHexStr()+'\n')
     fh.close()
     dlg.close()

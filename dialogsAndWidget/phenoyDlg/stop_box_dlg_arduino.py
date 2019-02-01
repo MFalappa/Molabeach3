@@ -18,8 +18,13 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import os,sys
 sys.path.append(os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libraries'))
 sys.path.append(os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes','phenopyClasses'))
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+
+from PyQt5.QtWidgets import (QSpacerItem,QSizePolicy,QButtonGroup,QApplication,
+                             QDialog,QCheckBox)
+
+from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QFont
+
 from ui_stop_box_dlg import *
 
 class stop_box_dlg_arduino(Ui_Dialog,QDialog):
@@ -42,7 +47,7 @@ class stop_box_dlg_arduino(Ui_Dialog,QDialog):
         self.dictRec = {}
         self.box_group = QButtonGroup(parent=self)
         self.box_group.setExclusive(False)
-        font = QtGui.QFont()
+        font = QFont()
         font.setPointSize(8)
         font.setBold(False)
         font.setWeight(50)
@@ -53,9 +58,12 @@ class stop_box_dlg_arduino(Ui_Dialog,QDialog):
             self.verticalLayout_4.addWidget(self.dictRec[box])
             self.dictRec[box].setChecked(True)
         
-        self.connect(self.pushButton_stop,SIGNAL('clicked()'),self.emit_signal_stop)
-        self.connect(self.pushButton_cancel,SIGNAL('clicked()'),self.close)
-        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.all_click)
+        self.pushButton_stop.clicked.connect(self.emit_signal_stop)
+        self.pushButton_cancel.clicked.connect(self.close)
+#        self.connect(self.pushButton_stop,SIGNAL('clicked()'),self.emit_signal_stop)
+#        self.connect(self.pushButton_cancel,SIGNAL('clicked()'),self.close)
+        self.checkBox_select_all.clicked.connect(self.all_click)
+#        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.all_click)
         
         
 
@@ -73,7 +81,7 @@ class stop_box_dlg_arduino(Ui_Dialog,QDialog):
         
     def get_checked(self):
         checked_list = []
-        for box in self.dictRec.keys():
+        for box in list(self.dictRec.keys()):
             if self.dictRec[box].isChecked():
                 checked_list += [box]
         return checked_list
@@ -84,12 +92,12 @@ class stop_box_dlg_arduino(Ui_Dialog,QDialog):
         self.close()
     
     def test(self,recordinBox):
-        print recordinBox
+        print(recordinBox)
      
 def main():
     import sys
     app = QApplication(sys.argv)
-    form = stop_box_dlg_arduino(range(16))
+    form = stop_box_dlg_arduino(list(range(16)))
     form.show()
     app.exec_()
 

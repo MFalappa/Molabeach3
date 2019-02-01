@@ -14,16 +14,16 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
+from PyQt5.QtWidgets import (QLabel,QWidget,QVBoxLayout,QSpacerItem,
+                             QSizePolicy,QHBoxLayout,QGroupBox,QApplication,QDateTimeEdit)
+from PyQt5.QtCore import (pyqtSignal,QDateTime,QSize,Qt,QMetaObject)
+from PyQt5.QtGui import QFont,QPixmap,QImage
 
-from PyQt4.QtCore import QTimer, QSize,pyqtSignal,QMetaObject,QDateTime
-from PyQt4 import QtCore
-from PyQt4.QtGui import QSpacerItem,QPixmap,QDateTimeEdit, QLabel, QSizePolicy, QWidget, QDialog, QApplication, QImage, QFont,QGroupBox,QVBoxLayout,QHBoxLayout
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
+
+
+def _fromUtf8(s):
+    return s
 
 try:
     _encoding = QApplication.UnicodeUTF8
@@ -35,8 +35,7 @@ except AttributeError:
 import sys
 import os
 path_img = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'images')
-from time import clock
-from setupLightCycle import *
+from setupLightCycle import setupLightCycle
 
 
 class doubleClickGroupBox(QGroupBox):
@@ -88,7 +87,7 @@ class house_light(QWidget):
         self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.label_light = QLabel(self.groupBox_hopper)
-        self.label_light.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_light.setAlignment(Qt.AlignCenter)
         self.label_light.setObjectName(_fromUtf8("label_light"))
         self.verticalLayout.addWidget(self.label_light)
         self.horizontalLayout_2 = QHBoxLayout()
@@ -104,7 +103,7 @@ class house_light(QWidget):
         self.verticalLayout_3.addWidget(self.groupBox_hopper)
 
         self.retranslateUi(house_light)
-        QtCore.QMetaObject.connectSlotsByName(self)
+        QMetaObject.connectSlotsByName(self)
         #############################
     
         
@@ -193,32 +192,12 @@ class house_light(QWidget):
     def updateBox(self,loopMinutes,lightStatus,switchTime):
         self.updateDictSignal.emit(loopMinutes,lightStatus,switchTime)
             
-class testdlg(QDialog):
-    def __init__(self, parent=None):
-        super(testdlg,self).__init__(parent)
-        layout = QHBoxLayout()
-#        scroll_area = QScrollArea()
-        self.hopper_widget = hopper_widget(1)
-#        self.hopper_widget.resize(QSize(292,178))
-#        self.setSizePolicy(QSizePolicy(QSizePolicy.Fixed,
-#                                                     QSizePolicy.Fixed))
-#        scroll_area.setWidget(self.hopper_widget)
-        layout.addWidget(self.hopper_widget)
-#        self.resize(size)
-        self.setLayout(layout)
-        
-        
-#
+
 def main():
     app = QApplication(sys.argv)
     form = house_light(1,16)
-#    form = testdlg()
     form.show()
-#    print form.size()
     app.exec_()
     print(form.groupBox_hopper.size())
 if __name__ == '__main__':
     main()
-#    
-
-#main()

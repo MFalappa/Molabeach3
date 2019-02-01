@@ -85,7 +85,7 @@ class read_program_dlg(Ui_Dialog,QDialog):
         self.pushButton_save.setEnabled(True)
         
     def save(self):
-        path = unicode(QFileDialog.getExistingDirectory(self,"Select save folder",os.path.curdir))        
+        path = str(QFileDialog.getExistingDirectory(self,"Select save folder",os.path.curdir))        
         for Id in self.IDList:
             if self.dictChecker[Id].isChecked():
                 now = dt.datetime.now()
@@ -120,7 +120,7 @@ class read_program_dlg(Ui_Dialog,QDialog):
 def main():
     import sys
     app = QApplication(sys.argv)
-    form = read_program_dlg(range(20))
+    form = read_program_dlg(list(range(20)))
     form.show()
     app.exec_()
 
