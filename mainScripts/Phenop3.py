@@ -22,8 +22,9 @@ image_dir = os.path.join(file_dir,'images')
 
 from serial.tools import list_ports
 from subprocess32 import Popen
-from start_reading_thread import (recievingXBeeThread,ZigBee_thread,
-                                  parsing_XBee_log,parsing_can_log)
+from xbee_thread import (recievingXBeeThread,ZigBee_thread,parsing_XBee_log)
+from canUsb_thread import (recievingCanUsbThread,canUsb_thread,parsing_can_log)
+
 from sys import executable
 
 from send_email_thread import send_email_thread
@@ -33,16 +34,15 @@ from arduinoGui import timerGui
 from cage_widget import cage_widget
 from multiple_cage_widget import multi_cageWidget
 
-#from microsystemGUI import *
-from credential_dlg import autentication_dlg
-from load_program_dlg import load_program_dlg
-from read_program_gui import read_program_dlg
-from start_box_dlg import start_box_dlg
-from stop_box_dlg import stop_box_dlg
-from change_dir_prog import change_dir_prog
+#from microsystemGUI3 import msg_sender_gui
+#from credential_dlg import autentication_dlg
+#from load_program_dlg import load_program_dlg
+#from read_program_gui import read_program_dlg
+#from start_box_dlg import start_box_dlg
+#from stop_box_dlg import stop_box_dlg
+#from change_dir_prog import change_dir_prog
 
 from Modify_Dataset_GUI import OrderedDict
-
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication,QPushButton,QLabel,
                              QDialog,QHBoxLayout,QVBoxLayout,QTextBrowser,
@@ -98,8 +98,8 @@ class find_device_or_analysis(QDialog):
         self.setLayout(vlayout)
         self.device_num = 0
         
-        if not self.canusb:
-            StartButton_CAN.setEnabled(False) 
+#        if not self.canusb:
+#            StartButton_CAN.setEnabled(False) 
         
         if not self.xbee:
             StartButton_Xbee.setEnabled(False)
@@ -112,6 +112,7 @@ class find_device_or_analysis(QDialog):
         self.serialPort = None
         self.thread = ZigBee_thread(None,parent=self)
         self.thread.addNewDevice.connect(self.add_text)
+        self.address_dict = OrderedDict()
  
         CloseButton.clicked.connect(self.closeMainWindow)
         StartButton_CAN.clicked.connect(self.startThread_can)
@@ -129,7 +130,15 @@ class find_device_or_analysis(QDialog):
     @pyqtSlot()
     def startThread_can(self):
         self.MODE = 0 
-        self.serialPort = serial.Serial(self.canusb, baudrate=500000,timeout=1)
+        self.thread = canUsb_thread(self.canusb,parent=self)
+        self.thread.start()
+        self.thread.addNewDevice.connect(self.add_text)
+        
+        if not self.thread.isRunning():       
+            self.clearList()
+            self.thread.start()
+            self.source_address = self.address_dict
+        
 
     @pyqtSlot()             
     def startThread_xbee(self):
@@ -137,7 +146,6 @@ class find_device_or_analysis(QDialog):
         self.serialPort = serial.Serial(self.xbee, baudrate=19200,timeout=1)
         self.thread = ZigBee_thread(self.serialPort,parent=self)
         self.thread.addNewDevice.connect(self.add_text)
-        self.address_dict = OrderedDict()
         
         if not self.thread.isRunning():
             self.clearList()
@@ -151,7 +159,10 @@ class find_device_or_analysis(QDialog):
     @pyqtSlot()
     def closeMainWindow(self):
         if self.MODE == 0:
-            print('to be implemented')
+            if self.thread.isRunning():
+                self.thread.terminate()
+            self.serialPort.close()
+            self.accept()
         elif self.MODE == 1:
             if self.thread.readThread.isRunning() or self.thread.isRunning():
                 self.thread.terminate()
@@ -162,10 +173,10 @@ class find_device_or_analysis(QDialog):
         
     def add_text(self, msg): 
         if self.MODE == 0:
-            if msg.id - 1792 > 127 or msg.id - 1792 < 0: # only keep alive are 1792 + cage ID 
-                                                         # to characterize it use the fact that
-                                                         # 1792 <= 1792 + cage ID <= 1792 + 127
+            print('qui non ci passo???')
+            if msg.id - 1792 > 127 or msg.id - 1792 < 0: 
                 return
+            
             ID = msg.id - 1792
             string = msg.dataAsHexStr()
             if ID in list(self.address_dict.keys()):
@@ -184,39 +195,25 @@ class find_device_or_analysis(QDialog):
                         (self.device_num,ID,string_Address))
             self.address_dict.update(msg)
         
-
     
     @pyqtSlot()
     def stopThread(self):
-        if self.MODE == 0:
-            print('to be implemented')
-        elif self.MODE == 1:
-            self.thread.terminate()
+        self.thread.terminate()
+        
 
     @pyqtSlot()
     def clearList(self):
         self.device_num = 0
         self.address_dict.clear()
         self.textBrowser.clear()
-        if self.MODE == 0:
-            print('to be implemented')
-        elif self.MODE == 1:
-            if self.thread.isRunning():
-                self.thread.terminate()
-            self.thread.address_dict.clear()
+        if self.thread.isRunning():
+            self.thread.terminate()
+        self.thread.address_dict.clear()
      
     @pyqtSlot()
     def closeEvent(self,b):
-        if self.MODE == 0:
-            self.canReader.stopReading()
-            self.canusb._CanUSB__canusb_Close(self.canusb._CanUSB__handle)
-            del self.canusb
-            if self.canReader.isRunning():
-                self.canReader.terminate()
-        
-        elif self.MODE == 1:
-            if self.thread.isRunning():
-                self.thread.terminate()
+        if self.thread.isRunning():
+            self.thread.terminate()
         else:
             self.close()
 
@@ -275,7 +272,9 @@ class Msg_Server(QMainWindow):
         self.source_address = dialog.address_dict
         
         if self.MODE == 0:
-            print('ci devo lavorare')
+            self.Reader = recievingCanUsbThread(self.serialPort)
+            self.Reader.recieved.connect(self.recieveMsg)
+            self.Reader.start()
             self.parsing_log = parsing_can_log
             self.Reader.startReading()
             self.forwardToGUI = self.forwardToGUICAN
@@ -645,19 +644,17 @@ class Msg_Server(QMainWindow):
 #            self.write_if_stack()
 #    
     def start_message_gui(self):
-        print('fai qualcosa la dir')
-
-#        bl = self.get_not_recording_box()
-#        box_list = []
-#        for ID in bl:
-#            box_list += [(ID,self.source_address[ID])]
-#        self.microsystemGUI = msg_sender_gui(box_list=box_list, MODE=self.MODE, parent=self)
-#        self.microsystemGUI.sendGUImessage.connect(self.sendGUIMessage)
-#        self.microsystemGUI.show()
-#        self.launchMessageGUIAction.setEnabled(False)
-#        self.read_Program_ation.setEnabled(False)
-#        self.upload_Program_ation.setEnabled(False)
-#    
+        bl = self.get_not_recording_box()
+        box_list = []
+        for ID in bl:
+            box_list += [(ID,self.source_address[ID])]
+        self.microsystemGUI = msg_sender_gui(box_list=box_list, MODE=self.MODE, parent=self)
+        self.microsystemGUI.sendGUImessage.connect(self.sendGUIMessage)
+        self.microsystemGUI.show()
+        self.launchMessageGUIAction.setEnabled(False)
+        self.read_Program_ation.setEnabled(False)
+        self.upload_Program_ation.setEnabled(False)
+    
     def sendGUIMessage(self,msg_list):
         print('manda messaggio gui')
 #        self.add_stack(msg_list)
@@ -707,6 +704,7 @@ def main():
             
         if 'XBee' in descr:
             port_xbee = port
+            print(port_xbee)
             
         if 'ARDUINO' in descr.upper():
             port_arduino = port
