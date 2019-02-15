@@ -41,7 +41,7 @@ from read_program_gui import read_program_dlg
 from start_box_dlg import start_box_dlg
 from stop_box_dlg import stop_box_dlg
 from change_dir_prog import change_dir_prog
-
+from checkAnsw import getAnsw,checkAnsw
 from Modify_Dataset_GUI import OrderedDict
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication,QPushButton,QLabel,
@@ -147,6 +147,7 @@ class find_device_or_analysis(QDialog):
         self.MODE = 1
         self.serialPort = serial.Serial(self.xbee, baudrate=19200,timeout=1)
         self.thread = ZigBee_thread(self.serialPort,parent=self)
+        self.thread.start()
         self.thread.addNewDevice.connect(self.add_text)
         
         if not self.thread.isRunning():
@@ -241,7 +242,7 @@ class Msg_Server(QMainWindow):
         self.timerSaveDict = {}     # DIZIONARIO DI TIMERS SHIFTATI PER IL SALVATAGGIO
         self.fileNames = {}         # NOMI DEI FILE DA SALVARE
         self.block_num = {}         # NUMERO ABORT TRIAL X CAGE
-        self.Phenopy = None
+        self.Phenopy3 = None
         
         #   Creo oggetti per stack di messaggi da inviare
         self.stack_list = []                         # contiene id, msg, e identificatore risposta
@@ -362,6 +363,8 @@ class Msg_Server(QMainWindow):
         last_release = QAction("IIT, January 2019", self) 
         self.menuHelp.addActions([creator1,creator2,last_release])
 
+        if dialog.arduino is None:
+            self.launchArduinoGUIAction.setEnabled(False)
         
         if len(list(self.pdict.keys()))==0:
             self.upload_Program_ation.setEnable(False)
@@ -373,8 +376,8 @@ class Msg_Server(QMainWindow):
     
     
     def launch_online_analysis(self):
-        if (not self.Phenopy) or not (self.Phenopy.poll() is None):
-            self.Phenopy = Popen([executable,os.path.join(file_dir,'mainAnalysis.py')])
+        if (not self.Phenopy3) or not (self.Phenopy3.poll() is None):
+            self.Phenopy3 = Popen([executable,os.path.join(file_dir,'mainAnalysis.py')])
         
     def read_program(self):
         self.read_Program_ation.setEnabled(False)
@@ -433,6 +436,7 @@ class Msg_Server(QMainWindow):
             self.logString[IDList[ind]] = ''
             self.infoString[IDList[ind]] = ''
             self.dict_cage_widget[Id].clear()
+            self.timerSaveDict[IDList[ind]].timeout.connect(lambda Id = IDList[ind] : self.saveLog(Id))
 #            self.connect(self.timerSaveDict[IDList[ind]],SIGNAL('timeout()'),
 #                         lambda Id = IDList[ind] : self.saveLog(Id))
             self.timerSaveDict[IDList[ind]].start(120000+ind*8000)
@@ -565,8 +569,8 @@ class Msg_Server(QMainWindow):
 #        except: 
 #            print('Write message:',msg)
 #        
-#        self.serialPort.write(msg)
-#        return 
+        self.serialPort.write(msg)
+        return 
 
         
      
@@ -589,8 +593,7 @@ class Msg_Server(QMainWindow):
         dlg = change_dir_prog(self.IDList,parent=self,dir2save=pt)
         dlg.show()
         dlg.update_dir_signal.connect(self.update_dirs)
-        
-#        
+                
     def update_dirs(self,lisId,Dir):
        for Id in lisId:
             self.dict_cage_widget[Id].setPath2save(Dir)
@@ -600,15 +603,14 @@ class Msg_Server(QMainWindow):
             self.dict_cage_widget[Id].setBacteryLevel(level)
                     
     def add_stack(self, list_of_msg):
-        print('aggiorna la dir')
-#        DT = 50
-#        if not self.stack_list:
-#            self.stack_counter = 0
-#        for msg in list_of_msg:
-#            answ = getAnsw(msg, self.MODE)
-#            self.stack_list += [[msg, answ]]
-#        if not self.timer_stack.isActive():
-#            self.timer_stack.start(DT)
+        DT = 50
+        if not self.stack_list:
+            self.stack_counter = 0
+        for msg in list_of_msg:
+            answ = getAnsw(msg, self.MODE)
+            self.stack_list += [[msg, answ]]
+        if not self.timer_stack.isActive():
+            self.timer_stack.start(DT)
 #    
     def write_if_stack(self):
         print('aggiorna la dir')
@@ -635,22 +637,20 @@ class Msg_Server(QMainWindow):
 #                dialog.show()
 #    
     def check_answ(self, msg):
-        print('guarda la risposta')
-
-#        self.timer_stack.stop()
-#        if not self.stack_list:
-#            return
-#        cka = checkAnsw(self.stack_list[0], self.MODE)
-##        if self.MODE and msg.has_key('rf_data'):
-##            print('rf_data check answ: ', msg['rf_data'],self.stack_list[0][1],cka.check(msg))
-##        elif self.MODE:
-##            print('check answ: ', msg, self.stack_list[0][1],cka.check(msg))
-##        else:
-##            print('check answ: ', msg.dataAsHexStr(),self.stack_list[0][1],cka.check(msg))
-#        if cka.check(msg):
-#            self.stack_list.pop(0)
-#            self.stack_counter = 0
-#            self.write_if_stack()
+        self.timer_stack.stop()
+        if not self.stack_list:
+            return
+        cka = checkAnsw(self.stack_list[0], self.MODE)
+#        if self.MODE and msg.has_key('rf_data'):
+#            print('rf_data check answ: ', msg['rf_data'],self.stack_list[0][1],cka.check(msg))
+#        elif self.MODE:
+#            print('check answ: ', msg, self.stack_list[0][1],cka.check(msg))
+#        else:
+#            print('check answ: ', msg.dataAsHexStr(),self.stack_list[0][1],cka.check(msg))
+        if cka.check(msg):
+            self.stack_list.pop(0)
+            self.stack_counter = 0
+            self.write_if_stack()
 #    
     def start_message_gui(self):
         print('lancio la gui')
@@ -668,12 +668,11 @@ class Msg_Server(QMainWindow):
         self.upload_Program_ation.setEnabled(False)
     
     def sendGUIMessage(self,msg_list):
-        print('manda messaggio gui')
-#        self.add_stack(msg_list)
+        self.add_stack(msg_list)
         
     def closeEvent(self, event):
-#        if self.Phenopy:
-#            self.Phenopy.kill()
+#        if self.Phenopy3:
+#            self.Phenopy3.kill()
 #        settings = QSettings()
 #        settings.setValue("MainWindow/Geometry", 
 #                          self.saveGeometry())

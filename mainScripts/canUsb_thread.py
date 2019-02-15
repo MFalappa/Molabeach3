@@ -12,6 +12,7 @@ file_dir = os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__fi
 sys.path.append(os.path.join(file_dir,'libraries'))
 from PyQt5.QtCore import pyqtSignal,QThread,QTimer
 from Modify_Dataset_GUI import OrderedDict
+from time import sleep
 #import binascii
 from serial.tools import list_ports
 
@@ -72,6 +73,7 @@ class recievingCanUsbThread(QThread):
         super(recievingCanUsbThread,self).__init__()
         self.serialPort = serialPort
         
+        
     def startReading(self):
         if not self.isRunning():
             self.start()
@@ -90,20 +92,35 @@ class recievingCanUsbThread(QThread):
         self.exec_()
         
     def connectCanUsb(self):
-        print('sono connesso con can')
         self.canUsb = serial.Serial(self.serialPort, baudrate=500000,timeout=1)
-        
-#
+        print('va connesso con readSerial')
         
     def readSerial(self):
-        print('to be implemented')
-#        self.timer.stop()
-#        byte = self.canUsb.read_until(b'\r')
-#        
-#        print(byte)
-#        byte = b't70D17F\r'
-#        print(byte)
+        self.timer.stop()
+        byte = self.canUsb.read() 
+        if byte is not b'':
+            if byte[0] == 116:
+                print('qui')
+                while byte[-1] != 13:
+                    print('qua')
+                    byte += self.canUsb.read()
+                
+                msg = CANMsg()
+                msg.id = int(byte[1:4],16)
+                if not msg.id in list(self.address_dict.keys()):
+                    msg.len = int(byte[4:5],16)
+                    byteNew = byte[-3:-1] + b'0'*(16-2*msg.len)
+                    list_msg = []
+                    for kk in range(0,len(byteNew),2):
+                        list_msg += [int(byteNew[kk:kk+2],16)]
+                    X = (c_ubyte * 8)(*[c_ubyte(c) for c in list_msg])
+                    print(X)
+                    msg.data = X
+                    self.addNewDevice.emit(msg)
 
+        self.timer = QTimer()    
+        self.timer.timeout.connect(self.add_new_address)
+        self.timer.start(1)
 
     def terminate(self):
         if self.isRunning() == True:
@@ -123,49 +140,47 @@ class canUsb_thread(QThread):
         self.address_dict = OrderedDict()
         
     def run(self):
-        self.canUsb = serial.Serial(self.serialPort, baudrate=500000,timeout=1)        
+        self.canUsb = serial.Serial(self.serialPort, baudrate=500000,timeout=0)
         self.timer = QTimer()
         self.timer.timeout.connect(self.add_new_address)
-        self.timer.start(500)
+        self.timer.start(1)
         self.exec_()
         
     def terminate(self):
+        self.timer.stop()
         if self.isRunning() == True:
             self.exit()
-            self.timer.stop() 
             print('all disconnected')
         super(canUsb_thread,self).terminate()
         
     def add_new_address(self):
-        val = self.canUsb.write(CLOSE)
-        print(val)
-        val = self.canUsb.write(OPEN)
-        print(val)
-        val = self.canUsb.write(setupBytes)
-        print(val)
-        inwait = self.canUsb.inWaiting()
-        print(inwait)
-        if inwait:
-            self.timer.stop()
-            print('sto leggedo')
-            byte = self.canUsb.read_until(b'\r') 
-    #        byte = b't70D17F\r'
-            print(byte)
-            if byte is b'':
-                print('niente')
-                return
-            else:
-                if byte[0] == 116:
-                    msg = CANMsg()
-                    msg.id = int(byte[1:4],16)
-                    if not msg.id in list(self.address_dict.keys()):
-                        msg.len = 8
-                        msg_tr = (c_ubyte * 8)(*[c_ubyte(c) for c in byte[:8]])
-                        msg.data = msg_tr         
-    #                    msg.data[0] = 7  
-                        self.addNewDevice.emit(msg)
-    
-    
+        self.timer.stop()
+        byte = self.canUsb.read() 
+        if byte is not b'':
+            if byte[0] == 116:
+                print('qui')
+                while byte[-1] != 13:
+                    print('qua')
+                    byte += self.canUsb.read()
+                
+                msg = CANMsg()
+                msg.id = int(byte[1:4],16)
+                if not msg.id in list(self.address_dict.keys()):
+                    msg.len = int(byte[4:5],16)
+                    byteNew = byte[-3:-1] + b'0'*(16-2*msg.len)
+                    list_msg = []
+                    for kk in range(0,len(byteNew),2):
+                        list_msg += [int(byteNew[kk:kk+2],16)]
+                    X = (c_ubyte * 8)(*[c_ubyte(c) for c in list_msg])
+                    print(X)
+                    msg.data = X
+                    self.addNewDevice.emit(msg)
+
+        self.timer = QTimer()    
+        self.timer.timeout.connect(self.add_new_address)
+        self.timer.start(1)
+
+ 
 def parsing_can_log(message):
     print('io sono il messaggio lanciato')
     print(message)
@@ -217,14 +232,41 @@ if __name__ == "__main__":
     CLOSE = b'C\r'
     
     canbaud = b'S6'
-    
+
     for val in list_ports.comports():
         port = val[0]
         descr = val[1]
+#        print(descr)
+#        print(port)
+#        print('==')
         
         if 'CANUSB' in descr:
             print(descr)
             port_can = port
+            
+    ser = serial.Serial(port_can, baudrate=500000,timeout=1)
+    
+  
+    res = ser.write(CLOSE) # res == 2 tutto ok
+    print(res)
+    print(ser.inWaiting())
+
+    baudres=ser.write(canbaud+CR)
+#    ser.write(b'700')
+    res = ser.write(OPEN)
+#    ser.write(bytearray(b't60D20100\r')) # switch to operational
+    print(ser.inWaiting())
+    print(ser.read_until(CR))
+    
+                        
+#                print(msg)
+#                if self.first:
+#                    self.canUsb.write(b'60D10100')
+#                    sleep(5)
+#                    self.canUsb.write(b't60D82301120505010100\r')
+#                    
+#                    self.first = False
+
 
     
    

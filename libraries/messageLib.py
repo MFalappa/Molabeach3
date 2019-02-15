@@ -44,7 +44,7 @@ class XBeeMsg(object):
 #                        print('errore')
                         self.xbeeForm['rf_data'] += binascii.unhexlify(base_repr(i,16,1))
                 
-            self.xbeeForm['rf_data'] += (14-len(self.xbeeForm['rf_data']))*b'\xff'
+            self.xbeeForm['rf_data'] += (14-len(self.xbeeForm['rf_data']))*'\xff'
             self.xbeeForm['rf_data'] = bytearray(self.xbeeForm['rf_data'])
             self.xbeeForm['options'] = bytearray(b'\x00')
     
