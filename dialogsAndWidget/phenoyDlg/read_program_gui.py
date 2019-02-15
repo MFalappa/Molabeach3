@@ -29,7 +29,6 @@ from ui_read_prog_gui import Ui_Dialog
 from messageLib import *
 from check_prog import *
 from Parser import parsing_Funct
-from uploadProg_gui import *
 from readProg_gui import readProgram
 import datetime as dt
 

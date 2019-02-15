@@ -145,7 +145,7 @@ def hexString_to_int(hex_string_list):
     for string in hex_string_list:
         int_list += [ int(string[2*5:2*5+2],16)]
         if len(int_list) <5:
-            print string
+            print(string)
     return int_list
     
 def create_program(int_list):
@@ -153,11 +153,11 @@ def create_program(int_list):
     prog_str = ''
     k = 0
     while k < len(int_list):
-        print k
+        print(k)
         func_name = dict_function[int_list[k]]
         param_num = dict_input[int_list[k]]
         param_str = ''
-        for j in xrange(param_num):
+        for j in range(param_num):
             k += 1
             param_str += ' %d'%int_list[k]
         if func_name == 'END_LOOP_LOCAL_TRIAL':
@@ -169,13 +169,13 @@ def create_program(int_list):
 
 
 if __name__ == '__main__':
-    list_hex = np.loadtxt('C:\Users\ebalzani\IIT\myPython\\canusb_project\Programmi\\Prog_Peak_Uploaded.txt',
+    list_hex = np.loadtxt('/Users/Matte/Desktop/Prog_Peak_Uploaded.txt',
                           dtype='S100')
     new_list_hex = []
     for a in list_hex:
         new_list_hex += [''.join(a)]
     int_list = hexString_to_int(new_list_hex)
     program_transl = create_program(int_list)
-#    fh = open('C:\Users\ebalzani\IIT\Dottorato\Matte\Color Preference\Data\\27-6 to 28-6\\change_color_prog_transl.txt','w')
+#    fh = open('/Users/Matte/Desktop/Program_Example_transl.txt','w')
 #    fh.write(program_transl)
 #    fh.close()

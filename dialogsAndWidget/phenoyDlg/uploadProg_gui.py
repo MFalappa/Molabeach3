@@ -14,15 +14,8 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-import pycanusb
-import canportreader 
-from msgview import *
-from messageLib import *
-from PyQt4.QtCore import QTimer
-from PyQt4.QtGui import QDialog,QApplication,QLabel,QVBoxLayout,QProgressBar,QMessageBox
-import sys
-from Parser import parsing_Funct
-from check_prog import check_prog
+from PyQt5.QtWidgets import (QLabel,QDialog,QVBoxLayout,QProgressBar,QMessageBox)
+from PyQt5.QtCore import QTimer
 
 class uploadProgram_gui(QDialog):
     def __init__(self,commandList, devId, isLast=False,parent=None):
@@ -50,8 +43,6 @@ class uploadProgram_gui(QDialog):
         self.setLayout(layout)
         
 
-		
-    
     def exec_(self):
         #▒ insert progress bar
         QTimer.singleShot(50,lambda msg = self.commandList[0] : self.uploadProg(msg))
@@ -81,8 +72,7 @@ class uploadProgram_gui(QDialog):
                 self.canReader.received.connect(self.parent.recieveMsg)
                 self.close()
                 
-            
-
+                
     def uploadProg(self,msg):
         print('Uploading msg: %s'%msg.dataAsHexStr())
         self.reply = msg.data[3]

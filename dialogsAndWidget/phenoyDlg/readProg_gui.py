@@ -20,15 +20,12 @@ lib_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libr
 classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes','phenopyClasses')
 sys.path.append(lib_dir)
 sys.path.append(classes_dir)
-import pycanusb
-import canportreader
-from msgview import *
-from messageLib import *
+
+from messageLib import read_Size_Log_and_Prog,read_External_EEPROM
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QDialog,QApplication,QLabel,QVBoxLayout,QProgressBar
-from read_output_prg import *
-#from Parser import parsing_Funct
-#from time import sleep
+from PyQt5.QtWidgets import QDialog,QApplication,QLabel,QVBoxLayout,QProgressBar
+from read_output_prg import (create_program,hexString_to_int)
+
 class readProgram(QDialog):
     def __init__(self,row_dict,transl_dict,parent=None,Id=127):
         super(readProgram, self).__init__(parent)
@@ -75,7 +72,7 @@ class readProgram(QDialog):
         print('Initialized')
         
     def recieveMsg(self,msg):
-        print('Recieved msg: %s'%msg.dataAsHexStr())
+#        print('Recieved msg: %s'%msg.dataAsHexStr())
         if msg.data[3] == self.reply and self.reply==37:
             self.ProgLen = 16**2 * msg.data[5] + msg.data[4]
             self.progress.setMaximum(self.ProgLen - 1)
@@ -110,18 +107,18 @@ class readProgram(QDialog):
             self.Index +=1
             
 if __name__=='__main__':  
-    import numpy as np     
+#    from Parser import parsing_Funct
 #    CommandList = []
 #    CommandList += [switch_Lights_Msg(128,1,2,5)]
 #    CommandList += [ReleaseFood_Msg(128,'Right')]
 #    CommandList += [switch_Lights_Msg(128,0,0,0)]
-#    CommandList = parsing_Funct('C:\Users\ebalzani\Desktop\labview\Program_Example_2.prg',128)
+#    CommandList = parsing_Funct('/Users/Matte/Desktop/Program_Example.prg',128)
     app = QApplication(sys.argv)
     dlg =readProgram({},{},Id=1)
     dlg.show()
     app.exec_()
     newList=[]
-    fh = open('C:\\Users\ebalzani\IIT\Dottorato\Matte\Color Preference\Data\\27-6 to 28-6\\change_color_prog_uploaded.txt','w')
+    fh = open('/Users/Matte/Desktop/Program_Example.txt','w')
     for msg in dlg.ListOfMsg:
         print(msg.dataAsHexStr(),msg.data[4])
         fh.write(msg.dataAsHexStr()+'\n')

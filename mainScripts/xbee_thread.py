@@ -22,7 +22,7 @@ import binascii
 
 
 class recievingXBeeThread(QThread):
-    recieved = pyqtSignal(dict, name='xBeeMsgReceived')
+    received = pyqtSignal(dict, name='xBeeMsgReceived')
     def __init__(self, serialPort, parent=None):
         super(recievingXBeeThread,self).__init__()
         self.serialPort = serialPort
@@ -37,7 +37,7 @@ class recievingXBeeThread(QThread):
             self.exit()
             self.wait()      
     def emitSignal(self, msg):
-        self.recieved.emit(msg) 
+        self.received.emit(msg) 
         
     def run(self):
         self.setPriority(QThread.HighestPriority)
@@ -67,7 +67,7 @@ class ZigBee_thread(QThread):
         
 
     def run(self):
-        self.readThread.recieved.connect(self.add_new_address)
+        self.readThread.received.connect(self.add_new_address)
         self.setPriority(QThread.HighestPriority)
         self.readThread.start()
         self.exec_()
@@ -75,7 +75,7 @@ class ZigBee_thread(QThread):
     def terminate(self):
         self.readThread.terminate()
         try:
-            self.readThread.recieved.disconnect()
+            self.readThread.received.disconnect()
         except TypeError:
             pass
         super(ZigBee_thread,self).terminate()

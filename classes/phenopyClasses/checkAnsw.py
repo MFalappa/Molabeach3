@@ -24,8 +24,8 @@ import binascii
 from pycanusb import CANMsg
 from myPyXBee import *
 import serial
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from time import sleep
 
 """
@@ -45,9 +45,9 @@ class checkAnsw(object):
         self.MODE = MODE
     
     def __repr__(self):
-        print 'Object of class checkAnsw\nMessage: '
-        print self.msg_list
-        print 'Mode: ',self.MODE
+        print('Object of class checkAnsw\nMessage: ')
+        print(self.msg_list)
+        print('Mode: ',self.MODE)
         
     def check(self, msg):
         if self.MODE:
@@ -100,8 +100,8 @@ def  canGetAnsw(msg):
     elif msg.data[0] is 64: #READ
         data_list  = [67, msg.data[1], msg.data[2], msg.data[3], 0, 0, 0, 0]
     else:
-        raise ValueError, "Must be a Get/Set type of message, msg.data[0] = 35 or 64!"
-    for i in xrange(8):
+        raise ValueError("Must be a Get/Set type of message, msg.data[0] = 35 or 64!")
+    for i in range(8):
         answ.data[i] = data_list[i]
     return answ
 
@@ -119,7 +119,7 @@ def xbeeGetAnsw(msg):
             func = 1
         return XBeeMsg([master_Id, Id, func], xbeemsg['source_addr'])
     except:
-        raise ValueError, 'Message of incorrect format...'
+        raise ValueError('Message of incorrect format...')
         
     
 #class parsing_xbee_log_test(QDialog):

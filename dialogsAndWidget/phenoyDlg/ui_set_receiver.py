@@ -57,6 +57,9 @@ class Ui_SetReceivers(object):
 
         self.retranslateUi(SetReceivers)
         
+        self.buttonBox.accepted.connect(SetReceivers.accept)
+        self.buttonBox.rejected.connect(SetReceivers.reject)
+        
 #        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), SetReceivers.accept)
 #        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), SetReceivers.reject)
         QtCore.QMetaObject.connectSlotsByName(SetReceivers)

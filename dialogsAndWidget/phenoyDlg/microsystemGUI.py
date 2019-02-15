@@ -15,9 +15,10 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 
- 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import (QMainWindow, QApplication,QButtonGroup,
+                             QSpacerItem,QSizePolicy)
+from PyQt5.QtCore import (pyqtSignal,Qt,QObject)
+
 from ui_microsystemGui import Ui_MainWindow
 import os, sys
 
@@ -385,7 +386,7 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
         self.check_box_dictionary = {} 
         self.checkBox_select_all = QCheckBox("Select All")
         self.verticalLayout_18.addWidget(self.checkBox_select_all)
-        for box in self.sa_dictionary.keys():
+        for box in list(self.sa_dictionary.keys()):
             box_widget = QCheckBox("Box %d"%box)
             self.check_box_dictionary[box] = box_widget
             self.verticalLayout_18.addWidget(box_widget)
@@ -395,15 +396,15 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
     
     def select_all_clicked(self,tof):
         if tof:
-            for Id in self.sa_dictionary.keys():
+            for Id in list(self.sa_dictionary.keys()):
                 self.check_box_dictionary[Id].setChecked(True)
         else:
-            for Id in self.sa_dictionary.keys():
+            for Id in list(self.sa_dictionary.keys()):
                 self.check_box_dictionary[Id].setChecked(False)
         
     def check_box_id(self):
         self.list_checked = []
-        for box in self.sa_dictionary.keys():
+        for box in list(self.sa_dictionary.keys()):
             if self.check_box_dictionary[box].isChecked():
                 self.list_checked += [box]
                 
@@ -463,11 +464,11 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
     def update_table_xbee(self,message,read_write):
         if type(message) is bytearray:
             message = XbeeMsg_from_Bytearray(message)
-        if message.has_key('rf_data'):
+        if 'rf_data' in message:
             try:
                 msg_type,box,txt = parsing_XBee_log(message)
-            except ValueError,e:
-                print e
+            except ValueError as e:
+                print(e)
                 return
             self.tableWidget.insertRow(self.tableWidget.rowCount())       
             self.tableWidget.setItem(self.tableWidget.rowCount()-1,0,QTableWidgetItem('%d'%box))
@@ -479,10 +480,10 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
     
     def prova_lista_msg(self,message_list):
         for msg in message_list:
-            print 'Messaggio inviato o rievuto con successo', msg.dataAsHexStr()
+            print('Messaggio inviato o rievuto con successo', msg.dataAsHexStr())
             
     def closeEvent(self,events):
-        print 'close event'
+        print('close event')
         self.parent.launchMessageGUIAction.setEnabled(True)
         self.parent.read_Program_ation.setEnabled(True)
         self.parent.upload_Program_ation.setEnabled(True)

@@ -34,13 +34,13 @@ from arduinoGui import timerGui
 from cage_widget import cage_widget
 from multiple_cage_widget import multi_cageWidget
 
-#from microsystemGUI3 import msg_sender_gui
-#from credential_dlg import autentication_dlg
-#from load_program_dlg import load_program_dlg
-#from read_program_gui import read_program_dlg
-#from start_box_dlg import start_box_dlg
-#from stop_box_dlg import stop_box_dlg
-#from change_dir_prog import change_dir_prog
+from microsystemGUI3 import msg_sender_gui
+from credential_dlg import autentication_dlg
+from load_program_dlg import load_program_dlg
+from read_program_gui import read_program_dlg
+from start_box_dlg import start_box_dlg
+from stop_box_dlg import stop_box_dlg
+from change_dir_prog import change_dir_prog
 
 from Modify_Dataset_GUI import OrderedDict
 
@@ -68,6 +68,11 @@ class find_device_or_analysis(QDialog):
         CloseButton = QPushButton('Continue', parent = self)
         StartButton_CAN = QPushButton('Start Search CAN', parent = self)
         StartButton_Xbee = QPushButton('Start Search XBEE', parent = self)
+        
+        first_layout = QVBoxLayout()
+        first_layout.addWidget(StartButton_CAN)
+        first_layout.addWidget(StartButton_Xbee)
+        
         self.stopFind_Button = QPushButton('Stop Search', parent=self)
         clearButton = QPushButton('Clear', parent=self)
         self.sampleRate = sampleRate
@@ -89,8 +94,7 @@ class find_device_or_analysis(QDialog):
         hlayout.addLayout(vlayout2)
         vlayout.addLayout(hlayout)
         
-        layout.addWidget(StartButton_CAN)
-        layout.addWidget(StartButton_Xbee)
+        layout.addLayout(first_layout)
         layout.addWidget(self.stopFind_Button)
         layout.addWidget(clearButton)
         layout.addWidget(CloseButton)
@@ -98,8 +102,8 @@ class find_device_or_analysis(QDialog):
         self.setLayout(vlayout)
         self.device_num = 0
         
-#        if not self.canusb:
-#            StartButton_CAN.setEnabled(False) 
+        if not self.canusb:
+            StartButton_CAN.setEnabled(False) 
         
         if not self.xbee:
             StartButton_Xbee.setEnabled(False)
@@ -107,7 +111,6 @@ class find_device_or_analysis(QDialog):
         if not self.arduino:
             button_lightCtrl.setEnabled(False) 
 
-        
         
         self.serialPort = None
         self.thread = ZigBee_thread(None,parent=self)
@@ -121,7 +124,6 @@ class find_device_or_analysis(QDialog):
         button_analysis.clicked.connect(self.startAnalysis)
         button_lightCtrl.clicked.connect(self.parent.startLightController)
         self.stopFind_Button.clicked.connect(self.stopThread)
-        
         
 #==============================================================================
 #       To connect: first Phenopy search if canusb or xbee are available
@@ -161,7 +163,6 @@ class find_device_or_analysis(QDialog):
         if self.MODE == 0:
             if self.thread.isRunning():
                 self.thread.terminate()
-            self.serialPort.close()
             self.accept()
         elif self.MODE == 1:
             if self.thread.readThread.isRunning() or self.thread.isRunning():
@@ -173,7 +174,6 @@ class find_device_or_analysis(QDialog):
         
     def add_text(self, msg): 
         if self.MODE == 0:
-            print('qui non ci passo???')
             if msg.id - 1792 > 127 or msg.id - 1792 < 0: 
                 return
             
@@ -281,7 +281,7 @@ class Msg_Server(QMainWindow):
             
         elif self.MODE == 1:
             self.Reader = recievingXBeeThread(self.serialPort)
-            self.Reader.recieved.connect(self.recieveMsg)
+            self.Reader.received.connect(self.recieveMsg)
             self.Reader.start()
             self.parsing_log = parsing_XBee_log
             self.forwardToGUI = self.forwardToGUIXbee
@@ -342,20 +342,25 @@ class Msg_Server(QMainWindow):
         self.fileSetReceiverAction = self.createAction("Set Receivers", self.setReceivers,None, None,"Set email receivers")
         self.launchMessageGUIAction = self.createAction("&Message GUI", self.start_message_gui, None, None, "Lunch message dialog")
         self.launchArduinoGUIAction = self.createAction("&Light Controller", self.startLightController, None, None, "Lunch light controller")
-
         self.fileMenu.addActions([self.fileSetSavePathAction,#self.fileStartAction,
                                   self.fileStartStandAloneAction,self.fileStopAction])
         self.MenuEdit.addActions([self.launchMessageGUIAction,self.fileSetSenderAction,self.fileSetReceiverAction,self.launchArduinoGUIAction])
+        
         self.menuProgram = self.menuBar().addMenu('P&rogram')
         self.read_Program_ation = self.createAction("Read Program",self.read_program, None,None, "Read program")
         self.upload_Program_ation = self.createAction("Upload Program",self.upload_program, None,None,"Upload program")
         self.menuProgram.addActions([self.read_Program_ation,self.upload_Program_ation])                     
+        
         self.menuAnalysis = self.menuBar().addMenu('&Online Analysis')
         self.launch_anal_action = self.createAction("Start Analysis",self.launch_online_analysis, None,None, "Start analyzing data")
         self.menuAnalysis.addActions([self.launch_anal_action])
+        
         self.menuHelp = self.menuBar().addMenu('&Help')
-        #questo pure non funziona, da errore
-#        self.menuHelp.createActions("matteo.falappa@libero.it",None,None,None,"edoardo.balzani87@gmail.com",None,None,None,"IIT, January 2019",None,None,None)
+        
+        creator1 = QAction("edoardo.balzani87@gmail.com", self) 
+        creator2 = QAction("mfalappa@outlook.com", self) 
+        last_release = QAction("IIT, January 2019", self) 
+        self.menuHelp.addActions([creator1,creator2,last_release])
 
         
         if len(list(self.pdict.keys()))==0:
@@ -528,9 +533,8 @@ class Msg_Server(QMainWindow):
         if tip is not None:
             action.setToolTip(tip)
             action.setStatusTip(tip)
-##        if slot is not None:
-##            action.triggered.connect(self.)
-##            self.connect(action, SIGNAL(signal), slot)
+        if slot is not None:
+            action.triggered.connect(slot)
         if checkable:
             action.setCheckable(True)
         return action   
@@ -585,10 +589,15 @@ class Msg_Server(QMainWindow):
         dlg = change_dir_prog(self.IDList,parent=self,dir2save=pt)
         dlg.show()
         dlg.update_dir_signal.connect(self.update_dirs)
+        
 #        
     def update_dirs(self,lisId,Dir):
        for Id in lisId:
             self.dict_cage_widget[Id].setPath2save(Dir)
+            
+    def update_bactery(self,lisId,level):
+       for Id in lisId:
+            self.dict_cage_widget[Id].setBacteryLevel(level)
                     
     def add_stack(self, list_of_msg):
         print('aggiorna la dir')
@@ -644,10 +653,13 @@ class Msg_Server(QMainWindow):
 #            self.write_if_stack()
 #    
     def start_message_gui(self):
+        print('lancio la gui')
         bl = self.get_not_recording_box()
         box_list = []
         for ID in bl:
             box_list += [(ID,self.source_address[ID])]
+            print(ID)
+            print(self.source_address[ID])
         self.microsystemGUI = msg_sender_gui(box_list=box_list, MODE=self.MODE, parent=self)
         self.microsystemGUI.sendGUImessage.connect(self.sendGUIMessage)
         self.microsystemGUI.show()
@@ -718,10 +730,6 @@ def main():
     form.show()
     app.exec_()
     return form
-
-    
-    
-    
 
     
 if __name__== '__main__':

@@ -48,12 +48,11 @@ class set_receiver_dlg(QDialog,Ui_SetReceivers):
                 self.tableWidget.setItem(k,0,item)
         
         
-#        bisogna sistemare questa connection e quella dentro ui_set_receiver
-#        self.trigger.connect(self.handle_trigger)
+        self.tableWidget.cellChanged.connect(self.check_receivers)
 #        self.connect(self.tableWidget,SIGNAL('cellChanged(int,int)'),
 #                     self.check_receivers)
         
-        self.cellChanged.connect(self.tableWidget,self.check_receivers)
+      
                 
     def check_receivers(self):
         item = self.tableWidget.currentItem()
@@ -68,6 +67,7 @@ class set_receiver_dlg(QDialog,Ui_SetReceivers):
                     continue
                 self.buttonBox.button(self.buttonBox.Ok).setEnabled(False)
                 return
+            
     def accept(self):
         self.true_receivers = []
         for rec in self.receivers:

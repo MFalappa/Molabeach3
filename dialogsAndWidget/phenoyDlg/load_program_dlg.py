@@ -63,6 +63,7 @@ class load_program_dlg(Ui_Dialog,QDialog):
         self.verticalLayout_2.addSpacerItem(spaceritem)
         
 #        self.connect(self.lineEdit_search,SIGNAL('textChanged(const QString&)'),self.setLoadEnabled)
+        
         self.lineEdit_search.textChanged.connect(self.setLoadEnabled)
         self.pushButton_search.clicked.connect(self.search_prg)
         self.pushButton_load.clicked.connect(self.load_prg)
@@ -91,6 +92,7 @@ class load_program_dlg(Ui_Dialog,QDialog):
     
     def setLoadEnabled(self):
         path = self.lineEdit_search.text()
+        path = path[2:-38]
         if os.path.exists(path) and (path.endswith('.prg') or path.endswith('.txt')):
             tof, sentence = check_prog(path)
             if tof:
@@ -113,6 +115,7 @@ class load_program_dlg(Ui_Dialog,QDialog):
     
     def load_prg(self):
         path = self.lineEdit_search.text()
+        path = path[2:-38]
         checked_list = self.get_checked()
         for Id in checked_list:
             msg_list = parsing_Funct(path,Id)

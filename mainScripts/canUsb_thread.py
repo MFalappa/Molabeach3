@@ -10,7 +10,6 @@ import os
 import serial
 file_dir = os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(os.path.join(file_dir,'libraries'))
-from PyQt5.QtWidgets import QApplication,QDialog,QHBoxLayout,QPushButton
 from PyQt5.QtCore import pyqtSignal,QThread,QTimer
 from Modify_Dataset_GUI import OrderedDict
 #import binascii
@@ -26,6 +25,8 @@ OPEN = b'O\r'
 # Close command for CanUSB
 CLOSE = b'C\r' 
 canbaud = b'S6'
+
+setupBytes = canbaud + CR
 
 from ctypes import (c_uint,c_ubyte,Structure)
 class CANMsg(Structure):
@@ -122,8 +123,7 @@ class canUsb_thread(QThread):
         self.address_dict = OrderedDict()
         
     def run(self):
-        self.canUsb = serial.Serial(self.serialPort, baudrate=500000,timeout=1)
-        print('mi sono connesso')
+        self.canUsb = serial.Serial(self.serialPort, baudrate=500000,timeout=1)        
         self.timer = QTimer()
         self.timer.timeout.connect(self.add_new_address)
         self.timer.start(500)
@@ -132,39 +132,43 @@ class canUsb_thread(QThread):
     def terminate(self):
         if self.isRunning() == True:
             self.exit()
-            self.wait() 
+            self.timer.stop() 
             print('all disconnected')
         super(canUsb_thread,self).terminate()
         
     def add_new_address(self):
-        print('sto cercando il device')
-        self.timer.stop()
-        self.canUsb.write(canbaud+CR)
-        byte = self.canUsb.read_until(b'\r') 
-        byte = b't70D17F\r'
-        print(byte)
-        
-        if byte is b'':
-            self.timer.start(500)
-            return
-        else:
-            if byte[0] == 116:
-                msg = CANMsg()
-                msg.id = int(byte[1:4],16)
-                if not msg.id in list(self.address_dict.keys()):
-                    msg.len = byte.bytesize
-                    msg_tr = (c_ubyte * 8)(*[c_ubyte(c) for c in byte[:8]])
-                    msg.data = msg_tr         
-#                    msg.data[0] = 7  
-                    self.addNewDevice.emit(msg)
-                    self.timer.start(500)
-                else:
-                    self.timer.start(500)
+        val = self.canUsb.write(CLOSE)
+        print(val)
+        val = self.canUsb.write(OPEN)
+        print(val)
+        val = self.canUsb.write(setupBytes)
+        print(val)
+        inwait = self.canUsb.inWaiting()
+        print(inwait)
+        if inwait:
+            self.timer.stop()
+            print('sto leggedo')
+            byte = self.canUsb.read_until(b'\r') 
+    #        byte = b't70D17F\r'
+            print(byte)
+            if byte is b'':
+                print('niente')
+                return
             else:
-                self.timer.start(500)
+                if byte[0] == 116:
+                    msg = CANMsg()
+                    msg.id = int(byte[1:4],16)
+                    if not msg.id in list(self.address_dict.keys()):
+                        msg.len = 8
+                        msg_tr = (c_ubyte * 8)(*[c_ubyte(c) for c in byte[:8]])
+                        msg.data = msg_tr         
+    #                    msg.data[0] = 7  
+                        self.addNewDevice.emit(msg)
     
     
 def parsing_can_log(message):
+    print('io sono il messaggio lanciato')
+    print(message)
     if message.data[0] is 76 and message.data[1] is 1:
         Id = message.id - 640
         return 'Log', Id, '%d\t%d\n'%(int(message.dataAsHexStr()[4:12],16),
@@ -195,9 +199,9 @@ def parsing_can_log(message):
             return 'Time',Id, '%d:%d:%d'%(message.data[7],message.data[6],
                                    message.data[5])
     else:
-        print('Not recognize data')
-        print(message,'\n')
-#        raise ValueError
+#        print('Not recognize data')
+#        print(message,'\n')
+        raise ValueError
   
 
     

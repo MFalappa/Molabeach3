@@ -18,9 +18,9 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import os,sys
 lib_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'libraries')
 sys.path.append(lib_dir)
-import numpy as np
 from Parser import parsing_Funct
 import re
+
 NO_INPUT_COMMANDS = ['START_TRIAL','END_TRIAL',
 'LOOP_LOCAL_TRIAL','END_LOOP_LOCAL_TRIAL' ,'END_LOCAL_TRIAL','BLOCK_ELSE_IF',
 'START_TRIAL_TIMER','RESET_TRIGGER','RGB_LEFT_OFF',
@@ -33,13 +33,14 @@ NO_INPUT_COMMANDS = ['START_TRIAL','END_TRIAL',
 'IS_PRESENCE_MID','IS_PRESENCE_RIGHT','IS_LIGHT_LEFT','IS_LIGHT_MID',
 'IS_LIGHT_RIGHT',
 'IS_TIMEOUT_REACHED','RELEASE_PELLET_LEFT',
-'RELEASE_PELLET_RIGHT','DUMMY_TEST','END_BLOCK_IF']
+'RELEASE_PELLET_RIGHT','DUMMY_TEST','END_BLOCK_IF','CO_INIT_RANDOM_MC_INDEX']
 
 TWO_INPUT_COMMANDS = ['IS_COUNTER_GREATER','IS_COUNTER_LESSER',
                       'IS_COUNTER_EQUAL','COUNTER_INIT','ACTION_TTL']
 
 ONE_INPUT_COMMANDS = ['RGB_LEFT_ON','RGB_MID_ON','RGB_RIGHT_ON','FIXED_DELAY',
-                      'FIXED_DELAY_ITI','RANDOM_DELAY_ITI','COUNTER_INC','IS_RANDOM_MC_STEP']
+                      'FIXED_DELAY_ITI','RANDOM_DELAY_ITI','COUNTER_INC',
+                      'IS_RANDOM_MC_STEP','MARK_ACTION','IS_RANDOM_MC_INDEX']
 def INT_INPUT_CHECK(inputs):
     for i in inputs:
         if not re.match('^[0-9]+$',i):
@@ -91,8 +92,8 @@ def check_prog(path_to_file):
     command_sequence = []
     try:
         parsing_Funct(path_to_file,1)
-    except ValueError, funcName:
-        print 'Function %s not known'%funcName
+    except ValueError as funcName:
+        print('Function %s not known'%funcName)
         return False, 'Function %s not known'%funcName
     fh = open(path_to_file,'r')
 #==============================================================================
@@ -130,6 +131,8 @@ def check_prog(path_to_file):
             tof, error = CO_set_TRIAL_MAX_NUMBER_CHECK(inputs)
         elif command == 'CO_set_PROBABILITY_ARRAY':
             tof, error = CO_set_PROBABILITY_ARRAY_CHECK(inputs)
+        elif command == 'CO_INIT_RANDOM_MC_INDEX':
+            tof, error = True, 'No errors'
         tof, error = INT_INPUT_CHECK(inputs)
         if not tof:
             fh.close()
@@ -139,9 +142,9 @@ def check_prog(path_to_file):
 #==============================================================================
 #     Check START TRIAL
 #==============================================================================
-    print 'check start'
+#    print('check start')
     while True:
-        print '-%s-'%line
+#        print('-%s-'%line)
         for char in line:
             if char == '\t':
                 line = line.lstrip('\t')
@@ -224,7 +227,7 @@ def check_prog(path_to_file):
                     break
         command = line.split(' ')[0].split('\t')[0]
         command_sequence += [command]
-#        print 'riga',line,command, command_sequence
+
         inputs = line.split(' ')[1:]
         if command in NO_INPUT_COMMANDS and len(inputs) > 0:
             fh.close()
@@ -260,8 +263,8 @@ def check_prog(path_to_file):
 
         line = fh.readline()
         line = line.rstrip('\n')
-#    print '\n\n',command_sequence[-3:]
-#    print block_if_num
+
+
     if command_sequence[-1] != 'END_TRIAL':
         return False, command_sequence[-1] + ': ' + 'Program must end with END_TRIAL'
     if block_if_num > 0:
@@ -280,6 +283,6 @@ def check_prog(path_to_file):
     return True, 'No errors encountered'
         
 if __name__ == '__main__':
-    path_to_file = 'C:\Users\ebalzani\IIT\Dottorato\Matte\Decision Making\\test_decision_making.prg'
+    path_to_file = '/Users/Matte/Desktop/tmp/test_decision_making.prg'
     d = check_prog(path_to_file)
-    print d
+#    print(d)

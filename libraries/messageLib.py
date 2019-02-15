@@ -14,7 +14,7 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-import pycanusb
+from canUsb_thread import CANMsg
 from numpy import base_repr, binary_repr
 import binascii
 import datetime
@@ -40,15 +40,16 @@ class XBeeMsg(object):
                 else:
                     try:
                         self.xbeeForm['rf_data'] += binascii.unhexlify(base_repr(i,16))
-                    except TypeError:
+                    except:
+#                        print('errore')
                         self.xbeeForm['rf_data'] += binascii.unhexlify(base_repr(i,16,1))
                 
-            self.xbeeForm['rf_data'] += (14-len(self.xbeeForm['rf_data']))*'\xff'
+            self.xbeeForm['rf_data'] += (14-len(self.xbeeForm['rf_data']))*b'\xff'
             self.xbeeForm['rf_data'] = bytearray(self.xbeeForm['rf_data'])
             self.xbeeForm['options'] = bytearray(b'\x00')
     
     def has_key(self,key):
-        return key in self.xbeeForm.keys()
+        return key in list(self.xbeeForm.keys())
         
     def __getitem__(self,key):
         return self.xbeeForm[key]
@@ -71,7 +72,7 @@ class XBeeMsg(object):
         API_ID_Mes = bytearray(b'\x00')
         Count_Mes = bytearray(b'\x01')
         useful = bytearray()
-        print self.xbeeForm
+        print(self.xbeeForm)
         useful = (API_ID_Mes + Count_Mes + self.xbeeForm['source_addr'] 
                     + self.xbeeForm['options'] + self.xbeeForm['rf_data'])
         chks = self.calcCheckSum(useful)
@@ -104,7 +105,7 @@ def XbeeMsg_from_Bytearray(byte_msg):
 #    cksum = binascii.hexlify(byte_msg[28:29])
 #    print rf_data,cksum
     msg_list = [int(rf_data[:4],16), int(rf_data[4:8],16)]
-    for i in xrange(8,20,2):
+    for i in range(8,20,2):
         if int(rf_data[i:i+2],16) is 255:
             break
         msg_list += [int(rf_data[i:i+2],16)]
@@ -116,7 +117,7 @@ def set_subject(Id,sbj_num,source_address=None,MODE=0):
     if MODE:
         return set_subject_Xbee(Id,sbj_num,source_address)
     Data = [35,2,18,32,sbj_num,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -128,7 +129,7 @@ def set_exp_id(Id,exp_num,source_address=None,MODE=0):
     if MODE:
         return set_exp_id_xbee(Id,exp_num,source_address)
     Data = [35,2,18,33,exp_num,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -139,7 +140,7 @@ def set_phase(Id,phase,source_address=None,MODE=0):
     if MODE:
         return set_phase_xbee(Id,phase,source_address)
     Data = [35,2,18,34,phase,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -150,7 +151,7 @@ def set_box_id(Id,new_id,source_address=None,MODE=0):
     if MODE:
         return set_box_id_xbee(Id,new_id,source_address)
     Data = [35,2,18,35,new_id,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -159,7 +160,7 @@ def set_box_id(Id,new_id,source_address=None,MODE=0):
     
 def set_threshold_sensor(Id,l_c_r,thres,source_address=None,MODE=0):
     if MODE:
-        raise ValueError, 'No threshold sensor message implemented for xbee'
+        raise ValueError('No threshold sensor message implemented for xbee')
     if l_c_r == 'l':
         code = 16
     elif l_c_r == 'c':
@@ -167,7 +168,7 @@ def set_threshold_sensor(Id,l_c_r,thres,source_address=None,MODE=0):
     elif l_c_r == 'r':
         code = 18
     Data = [35,2,18,code,thres%(16**2),thres//16**2,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -176,10 +177,10 @@ def set_threshold_sensor(Id,l_c_r,thres,source_address=None,MODE=0):
 
 def get_noise_freq(Id,source_address=None,MODE=0):
     if MODE:
-        raise ValueError, 'No nosie frequency message implemented for xbee'
+        raise ValueError('No nosie frequency message implemented for xbee')
     
     Data = [64,2,18,20,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -188,13 +189,13 @@ def get_noise_freq(Id,source_address=None,MODE=0):
     
 def set_noise_freq(Id,mod,freq,source_address=None,MODE=0):
     if MODE:
-        raise ValueError, 'No nosie frequency message implemented for xbee'
+        raise ValueError('No nosie frequency message implemented for xbee')
     if mod < 0 or mod > 1:
-        raise ValueError, 'mod must be 0 or 1'
+        raise ValueError('mod must be 0 or 1')
 #    if freq < 1 or freq > 255:
 #        raise ValueError, 'freq must be between 1 and 255'
     Data = [35,2,18,20,mod,freq%(16**2),freq//16**2,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -219,10 +220,10 @@ def switch_Lights_Msg(Id,Left,Center,Right,source_address=None, MODE=0):
             Center in [0,1,2,3,4,5,6,7]):
         raise ValueError
         
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     Data  = [35,1,18,5,Left,Center,Right,0] # Decimal based of  [0x23,0x1,0x12,0x5,0xLeft,0xCenter,0xRight,0x0]
     for ind in Index:
         Msg.data[ind] = Data[ind]
@@ -244,10 +245,10 @@ def switch_Noise_Msg(Id,Left,Center,Right,source_address=None, MODE=0):
             Center in [0,1]):
         raise ValueError
         
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     Data = [35,1,18,2,Left,Center,Right,0] # Decimal based of  [0x23,0x1,0x12,0x5,0xLeft,0xCenter,0xRight,0x0]
     for ind in Index:
         Msg.data[ind] = Data[ind]
@@ -259,10 +260,10 @@ def ReleaseFood_Msg(Id,Right_or_Left,source_address=None, MODE=0):
     """
     if MODE:
         return ReleaseFood_Msg_Xbee(Id,Right_or_Left,source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     if not Right_or_Left:
         Data = [35,1,18,0,0,0,0,0] 
     else:
@@ -279,10 +280,10 @@ def Enable_Active_Poke_Control_Msg(Id,Active_or_Inactive,source_address=None,
     if MODE:
         return Enable_Active_Poke_Control_Msg_Xbee(Id,Active_or_Inactive,
                                                    source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     if Active_or_Inactive:
         Active_or_Inactive = 1
     else:
@@ -300,10 +301,10 @@ def Start_Stop_Trial_Msg(Id,Start_or_Stop,Stand_Alone=False,
     if MODE:
         return Start_Stop_Trial_Msg_Xbee(Id,Start_or_Stop,Stand_Alone=Stand_Alone,
                          source_address=source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     if Start_or_Stop:
         Data = [35,1,18,64,int(Stand_Alone),0,0,0]
     else:
@@ -315,10 +316,10 @@ def Start_Stop_Trial_Msg(Id,Start_or_Stop,Stand_Alone=False,
 def Read_RealTime_Msg(Id,source_address=None, MODE=0):
     if MODE:
         return Read_RealTime_Msg_Xbee(Id, source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     Data = [64,1,18,65,0,0,0,0]
     for ind in Index:
         Msg.data[ind] = Data[ind]
@@ -327,10 +328,10 @@ def Read_RealTime_Msg(Id,source_address=None, MODE=0):
 def Get_Bactery_Level_Msg(Id,source_address=None, MODE=0):
     if MODE:
         return get_bactery_level_Xbee(Id,source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     Data = [64,2,18,21,0,0,0,0]
     for ind in Index:
         Msg.data[ind] = Data[ind]
@@ -339,10 +340,10 @@ def Get_Bactery_Level_Msg(Id,source_address=None, MODE=0):
 def Read_Date_Msg(Id,source_address=None, MODE=0):
     if MODE:
         return Read_Date_Msg_Xbee(Id,source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     Data = [64,2,18,5,0,0,0,0]
     for ind in Index:
         Msg.data[ind] = Data[ind]
@@ -350,13 +351,13 @@ def Read_Date_Msg(Id,source_address=None, MODE=0):
 
 def Set_Date_Msg(Id,day,month,year,week_day,source_address=None, MODE=0):
     if MODE:
-        raise ValueError, 'Data can be set only via CAN bus'
+        raise ValueError('Data can be set only via CAN bus')
     if year > 99 or week_day > 7:
-        raise ValueError, 'Year must be between 0 and 99 and week day must be a positive integer between 1 and 7'
-    Msg = pycanusb.CANMsg()
+        raise ValueError('Year must be between 0 and 99 and week day must be a positive integer between 1 and 7')
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     Data = [35,2,18,5,day,month,year,week_day]
     for ind in Index:
         Msg.data[ind] = Data[ind]
@@ -366,11 +367,11 @@ def Set_Date_Msg(Id,day,month,year,week_day,source_address=None, MODE=0):
 def Read_Time_Msg(Id,source_address=None, MODE=0):
     if MODE:
         return Read_Time_Msg_Xbee(Id,source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     Data = [64,2,18,6,0,0,0,0]
     for ind in Index:
         Msg.data[ind] = Data[ind]
@@ -378,11 +379,11 @@ def Read_Time_Msg(Id,source_address=None, MODE=0):
 
 def Set_Time_Msg(Id,millisec,second,minute,hour,source_address=None, MODE=0):
     if MODE:
-        raise ValueError, 'Time can be set only via CAN bus'
-    Msg = pycanusb.CANMsg()
+        raise ValueError('Time can be set only via CAN bus')
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    Index = range(8)
+    Index = list(range(8))
     Data = [35,2,18,6,millisec,second,minute,hour]
     for ind in Index:
         Msg.data[ind] = Data[ind]
@@ -404,7 +405,7 @@ def Msg_Recieved_String(self, msg,source_address=None):
 def Switch_to_Operational_State_Msg(MODE=0):
     if MODE:
         return Switch_to_Operational_State_Msg_Xbee()
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = 0
     Msg.len = 2
     Data = [1,0]
@@ -415,7 +416,7 @@ def Switch_to_Operational_State_Msg(MODE=0):
 def set_Mean_Distribution_ITI(Id,mean,source_address=None, MODE=0):
     if MODE:
         return set_Mean_Distribution_ITI_Xbee(Id,mean,source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,83,mean%16**2,(mean%16**4)//16**2,
@@ -427,7 +428,7 @@ def set_Mean_Distribution_ITI(Id,mean,source_address=None, MODE=0):
 def set_Max_Trial_Num(Id,Max,source_address=None, MODE=0):
     if MODE:
         return set_Max_Trial_Num_Xbee(Id,Max,source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,80,Max%16**2,(Max%16**4)//16**2,
@@ -439,7 +440,7 @@ def set_Max_Trial_Num(Id,Max,source_address=None, MODE=0):
 def set_Trial_Timeout_ms(Id,ms,source_address=None, MODE=0):
     if MODE:
         return set_Trial_Timeout_ms_Xbee(Id,ms,source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,81,int(ms)%(16**2),int(ms)//(16**2),0,0]
@@ -451,7 +452,7 @@ def set_Probability_Array(Id,probArray,source_address=None,MODE=0):
     if MODE:
         return set_Probability_Array_Xbee(Id,probArray,source_address)
     if len(probArray)>20:
-        raise ValueError,'You can choose at max 20 different probability'
+        raise ValueError('You can choose at max 20 different probability')
     MsgList = []
     arrayInd = 0
     try:
@@ -463,7 +464,7 @@ def set_Probability_Array(Id,probArray,source_address=None,MODE=0):
                 array = list(array) + [0,0]
             elif len(array) == 2:
                 array = list(array) + [0]
-            Msg = pycanusb.CANMsg()
+            Msg = CANMsg()
             Msg.id = Id +1536
             Msg.len = 8
             Data = [35,2,18,82,arrayInd,array[0],array[1],array[2]]
@@ -478,9 +479,9 @@ def set_Probability_Array(Id,probArray,source_address=None,MODE=0):
 
 def get_ic2_Status(Id,source_address=None,MODE=0):
     if MODE:
-        raise ValueError, 'No ic2 status message implemented for xbee'
+        raise ValueError('No ic2 status message implemented for xbee')
     Data = [64,1,18,48,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -489,7 +490,7 @@ def get_ic2_Status(Id,source_address=None,MODE=0):
 
 def get_threshold_sensor(Id,l_c_r,source_address=None,MODE=0):
     if MODE:
-        raise ValueError, 'No threshold sensor message implemented for xbee'
+        raise ValueError('No threshold sensor message implemented for xbee')
     if l_c_r == 'l':
         code = 16
     elif l_c_r == 'c':
@@ -497,7 +498,7 @@ def get_threshold_sensor(Id,l_c_r,source_address=None,MODE=0):
     elif l_c_r == 'r':
         code = 18
     Data = [64,2,18,code,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -506,9 +507,9 @@ def get_threshold_sensor(Id,l_c_r,source_address=None,MODE=0):
 
 def get_subject(Id,source_address=None,MODE=0):
     if MODE:
-        raise ValueError, 'No subject message implemented for xbee'
+        raise ValueError('No subject message implemented for xbee')
     Data = [64,2,18,32,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -517,9 +518,9 @@ def get_subject(Id,source_address=None,MODE=0):
 
 def get_exp_id(Id,source_address=None,MODE=0):
     if MODE:
-        raise ValueError, 'No subject message implemented for xbee'
+        raise ValueError('No subject message implemented for xbee')
     Data = [64,2,18,33,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -528,9 +529,9 @@ def get_exp_id(Id,source_address=None,MODE=0):
 
 def get_phase(Id,source_address=None,MODE=0):
     if MODE:
-        raise ValueError, 'No subject message implemented for xbee'
+        raise ValueError('No subject message implemented for xbee')
     Data = [64,2,18,34,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -539,9 +540,9 @@ def get_phase(Id,source_address=None,MODE=0):
 
 def get_box_id(Id,source_address=None,MODE=0):
     if MODE:
-        raise ValueError, 'No subject message implemented for xbee'
+        raise ValueError('No subject message implemented for xbee')
     Data = [64,2,18,35,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -553,7 +554,7 @@ def get_trial_number(Id,source_address=None,MODE=0):
     if MODE:
         return get_trial_number_Xbee(Id,source_address)
     Data = [64,2,18,36,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -564,7 +565,7 @@ def get_trial_max_number(Id,source_address=None,MODE=0):
     if MODE:
         return get_trial_max_number_Xbee(Id,source_address)
     Data = [64,2,18,80,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -576,7 +577,7 @@ def get_trial_timeout(Id,source_address=None,MODE=0):
     if MODE:
         return get_trial_timeout_Xbee(Id,source_address=source_address)
     Data = [64,2,18,81,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -585,9 +586,9 @@ def get_trial_timeout(Id,source_address=None,MODE=0):
 
 def get_firmware_version(Id,source_address=None,MODE=0):
     if MODE:
-        raise ValueError, 'Not Yet implemented for Xbee'
+        raise ValueError('Not Yet implemented for Xbee')
     Data = [64,10,16,0,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -598,7 +599,7 @@ def get_mean_distribution(Id,source_address=None,MODE=0):
     if MODE:
         return get_mean_distribution_Xbee(Id,source_address=source_address)
     Data = [64,2,18,83,0,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -607,11 +608,11 @@ def get_mean_distribution(Id,source_address=None,MODE=0):
 
 def get_Probability_Array(Id,index,source_address=None,MODE=0):
     if index > 17:
-        raise ValueError, 'Index between 0 and 17'
+        raise ValueError('Index between 0 and 17')
     if MODE:
         return get_probability_array_Xbee(Id,index,source_address)
     Data = [64,2,18,82,index,0,0,0]
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     for ind in range(8):
@@ -619,7 +620,7 @@ def get_Probability_Array(Id,index,source_address=None,MODE=0):
     return Msg
 
 def program_Start_Trial(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id + 1536
     Msg.len = 8
     Data = [35,2,18,96,row,0,0,0]
@@ -628,7 +629,7 @@ def program_Start_Trial(Id,row):
     return Msg 
     
 def program_Reset_Trigger(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,8,0,0]
@@ -637,7 +638,7 @@ def program_Reset_Trigger(Id,row):
     return Msg
     
 def program_event_Trigger(Id,row,L_M_R):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if L_M_R == 'L':
@@ -647,13 +648,13 @@ def program_event_Trigger(Id,row,L_M_R):
     elif L_M_R == 'R':
         Data = [35,2,18,96,row,35,0,0]
     else:
-        raise ValueError,'L_M_R must contain a string with \'L\'/\'M\'/\'R\''
+        raise ValueError('L_M_R must contain a string with \'L\'/\'M\'/\'R\'')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 
 def program_event_Poke(Id,row,L_M_R):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if L_M_R == 'L':
@@ -663,13 +664,13 @@ def program_event_Poke(Id,row,L_M_R):
     elif L_M_R == 'R':
         Data = [35,2,18,96,row,32,0,0]
     else:
-        raise ValueError,'L_M_R must contain a string with \'L\'/\'M\'/\'R\''
+        raise ValueError('L_M_R must contain a string with \'L\'/\'M\'/\'R\'')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
     
 def program_Start_Trial_Timer(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,7,0,0]
@@ -678,7 +679,7 @@ def program_Start_Trial_Timer(Id,row):
     return Msg
 
 def program_if_Random_MC(Id,row,Index):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,50,Index,0]
@@ -687,11 +688,11 @@ def program_if_Random_MC(Id,row,Index):
     return Msg
 
 def program_Light_On(Id,row,L_M_R,color):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
-    if color not in range(1,8):
-        raise ValueError,'color must be an integer between 1 and 7!'
+    if color not in list(range(1,8)):
+        raise ValueError('color must be an integer between 1 and 7!')
     if L_M_R == 'L':
         Data = [35,2,18,96,row,10,color,0]
     elif L_M_R == 'M':
@@ -699,22 +700,22 @@ def program_Light_On(Id,row,L_M_R,color):
     elif L_M_R == 'R':
         Data = [35,2,18,96,row,14,color,0]
     else:
-        raise ValueError,'L_M_R must contain a string with \'L\'/\'M\'/\'R\''
+        raise ValueError('L_M_R must contain a string with \'L\'/\'M\'/\'R\'')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 
 def program_manage_RGB(Id,row,color_L=0,color_M=0,color_R=0):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,9,color_L+16*color_M,color_R]
-    if color_L not in range(0,8):
-        raise ValueError,'color must be an integer between 0 and 7!'
-    if color_M not in range(0,8):
-        raise ValueError,'color must be an integer between 0 and 7!'
-    if color_R not in range(0,8):
-        raise ValueError,'color must be an integer between 0 and 7!'
+    if color_L not in list(range(0,8)):
+        raise ValueError('color must be an integer between 0 and 7!')
+    if color_M not in list(range(0,8)):
+        raise ValueError('color must be an integer between 0 and 7!')
+    if color_R not in list(range(0,8)):
+        raise ValueError('color must be an integer between 0 and 7!')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
@@ -723,7 +724,7 @@ def program_Fix_Delay(Id,row,ms):
     """
         ms = int, millisec of delay
     """
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,40,ms%(16**2),ms//(16**2)]
@@ -732,7 +733,7 @@ def program_Fix_Delay(Id,row,ms):
     return Msg
 
 def program_Light_Off(Id,row,L_M_R):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if L_M_R == 'L':
@@ -742,13 +743,13 @@ def program_Light_Off(Id,row,L_M_R):
     elif L_M_R == 'R':
         Data = [35,2,18,96,row,15,0,0]
     else:
-        raise ValueError,'L_M_R must contain a string with \'L\'/\'M\'/\'R\''
+        raise ValueError('L_M_R must contain a string with \'L\'/\'M\'/\'R\'')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 
 def program_Loop_Local_Trial(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,3,0,0]
@@ -757,7 +758,7 @@ def program_Loop_Local_Trial(Id,row):
     return Msg
 
 def program_If_Trigger(Id,row,L_M_R):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if L_M_R == 'L':
@@ -767,13 +768,13 @@ def program_If_Trigger(Id,row,L_M_R):
     elif L_M_R == 'R':
         Data = [35,2,18,96,row,59,0,0]
     else:
-        raise ValueError,'L_M_R must be \'L\',\'M\' or \'R\''
+        raise ValueError('L_M_R must be \'L\',\'M\' or \'R\'')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 
 def program_Release_Pellet(Id,row,L_R):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if L_R == 'L':
@@ -781,13 +782,13 @@ def program_Release_Pellet(Id,row,L_R):
     elif L_R == 'R':
         Data = [35,2,18,96,row,81,0,0]
     else:
-        raise ValueError,'L_R must be \'L\' or \'R\''
+        raise ValueError('L_R must be \'L\' or \'R\'')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 
 def program_End_Local_Trial(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,5,0,0]
@@ -796,7 +797,7 @@ def program_End_Local_Trial(Id,row):
     return Msg
 
 def program_End_Block_If(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,2,0,0]
@@ -805,7 +806,7 @@ def program_End_Block_If(Id,row):
     return Msg
 
 def program_End_Loop_Local_Trial(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,4,0,0]
@@ -814,7 +815,7 @@ def program_End_Loop_Local_Trial(Id,row):
     return Msg
     
 def program_Else_Block_If(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,6,0,0]
@@ -824,29 +825,29 @@ def program_Else_Block_If(Id,row):
 
 
 def program_Fixed_Delay_ITI(Id,row,ms):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if not (type(ms) is int and ms>10):
-        raise ValueError,'ms must be an iteger quantity >10'
+        raise ValueError('ms must be an iteger quantity >10')
     Data = [35,2,18,96,row,41,ms%(16**2),ms//(16**2)]
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 
 def program_Random_Delay_ITI(Id,row,sec):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if not (type(sec) is int and sec >= 0):
-        raise ValueError,'sec must be an iteger quantity >=0'
+        raise ValueError('sec must be an iteger quantity >=0')
     Data = [35,2,18,96,row,42,sec%(16**2),sec//(16**2)]
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
     
 def program_End_Trial(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,1,0,0]
@@ -855,7 +856,7 @@ def program_End_Trial(Id,row):
     return Msg 
 
 def program_Counter_Init(Id,row,counterInd,Ind0):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,70,counterInd,Ind0]
@@ -863,7 +864,7 @@ def program_Counter_Init(Id,row,counterInd,Ind0):
         Msg.data[ind] = Data[ind]
     return Msg
 def program_Counter_Inc(Id,row,counterInd):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,71,counterInd,0]
@@ -872,7 +873,7 @@ def program_Counter_Inc(Id,row,counterInd):
     return Msg
     
 def program_If_Light(Id,row,L_M_R):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if L_M_R == 'L':
@@ -882,12 +883,12 @@ def program_If_Light(Id,row,L_M_R):
     elif L_M_R == 'R':
         Data = [35,2,18,96,row,65,0,0]
     else:
-        raise ValueError,'L_R must be \'L\', \'M\' or \'R\''
+        raise ValueError('L_R must be \'L\', \'M\' or \'R\'')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 def program_If_Presence(Id,row,L_M_R):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if L_M_R == 'L':
@@ -897,13 +898,13 @@ def program_If_Presence(Id,row,L_M_R):
     elif L_M_R == 'R':
         Data = [35,2,18,96,row,62,0,0]
     else:
-        raise ValueError,'L_R must be \'L\', \'M\' or \'R\''
+        raise ValueError('L_R must be \'L\', \'M\' or \'R\'')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 
 def program_If_Counter(Id,row,G_L_E,counter0,counter1):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if G_L_E == 'G':
@@ -913,13 +914,13 @@ def program_If_Counter(Id,row,G_L_E,counter0,counter1):
     elif G_L_E == 'E':
         Data = [35,2,18,96,row,68,counter0,counter1]
     else:
-        raise ValueError,'L_R must be \'L\', \'M\' or \'R\''
+        raise ValueError('L_R must be \'L\', \'M\' or \'R\'')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 
 def program_If_Random_Mc_Step(Id,row,index):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,52,index,0]
@@ -927,8 +928,28 @@ def program_If_Random_Mc_Step(Id,row,index):
         Msg.data[ind] = Data[ind]
     return Msg
 
+def program_init_Random_Mc_index(Id,row):
+    
+    Msg = CANMsg()
+    Msg.id = Id +1536
+    Msg.len = 8
+    Data = [35,2,18,96,row,54,0,0]
+    for ind in range(8):
+        Msg.data[ind] = Data[ind]
+    return Msg
+
+def program_is_Random_Mc_index(Id,row,index):
+    
+    Msg = CANMsg()
+    Msg.id = Id +1536
+    Msg.len = 8
+    Data = [35,2,18,96,row,55,index,0]
+    for ind in range(8):
+        Msg.data[ind] = Data[ind]
+    return Msg
+
 def program_Dummy_Test(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,82,0,0]
@@ -939,7 +960,7 @@ def program_Dummy_Test(Id,row):
 def read_Size_Log_and_Prog(Id, source_address=None, MODE=0):
     if MODE:
         return read_Size_Log_and_Prog_Xbee(Id, source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [64,2,18,37,0,0,0,0]
@@ -949,7 +970,7 @@ def read_Size_Log_and_Prog(Id, source_address=None, MODE=0):
 def read_External_EEPROM(Id,Index,source_address=None, MODE=0):
     if MODE:
         return read_External_EEPROM_Xbee(Id, Index, source_address)
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [64,2,18,4,0,0,Index%(16**2),Index//(16**2)]
@@ -958,7 +979,7 @@ def read_External_EEPROM(Id,Index,source_address=None, MODE=0):
     return Msg
 
 def log_ITI_end_Msg(Id, row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,43,0,0]
@@ -967,7 +988,7 @@ def log_ITI_end_Msg(Id, row):
     return Msg
 
 def program_Noise_On(Id, row, left, center, right):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if left:
@@ -977,13 +998,23 @@ def program_Noise_On(Id, row, left, center, right):
     elif right:
         Data = [35,2,18,96,row,20,0,0]
     else:
-        raise ValueError,'At least one side must be indicated'
+        raise ValueError('At least one side must be indicated')
+    for ind in range(8):
+        Msg.data[ind] = Data[ind]
+    return Msg
+
+def program_action(Id,row,mark):
+    
+    Msg = CANMsg()
+    Msg.id = Id +1536
+    Msg.len = 8
+    Data = [35,2,18,96,row,79,mark,0]
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 
 def program_Noise_Off(Id, row, left, center, right):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if left:
@@ -993,13 +1024,13 @@ def program_Noise_Off(Id, row, left, center, right):
     elif right:
         Data = [35,2,18,96,row,21,0,0]
     else:
-        raise ValueError,'At least one side must be indicated'
+        raise ValueError('At least one side must be indicated')
     for ind in range(8):
         Msg.data[ind] = Data[ind]
     return Msg
 
 def program_If_TimoutReached(Id,row):
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     Data = [35,2,18,96,row,69,0,0]
@@ -1016,16 +1047,16 @@ def program_TTL(Id,row,pin,duration):
             - duration : range (10,250), step di 10, durata in ms del segnale 
                         alto a 5V
     """
-    Msg = pycanusb.CANMsg()
+    Msg = CANMsg()
     Msg.id = Id +1536
     Msg.len = 8
     if pin < 1 or pin >= 15:
-        raise ValueError, 'Pin must be an INT between 1 and 15'
-    print 'duration',duration 
+        raise ValueError('Pin must be an INT between 1 and 15')
+    print('duration',duration) 
     if duration < 1 or duration > 250:
-        raise ValueError, 'Duration must be in the range of [1,250]'
+        raise ValueError('Duration must be in the range of [1,250]')
     elif duration != 1 and duration % 10 != 0:
-        raise ValueError, 'Duration must be a multiple of 10'
+        raise ValueError('Duration must be a multiple of 10')
     Data = [35,2,18,96,row,83,pin,duration]
     for ind in range(8):
         Msg.data[ind] = Data[ind]
@@ -1140,7 +1171,7 @@ def set_Trial_Timeout_ms_Xbee(Id, ms, source_address=None):
     
 def set_Probability_Array_Xbee(Id,probArray, source_address=None):
     if len(probArray)>20:
-        raise ValueError,'You can choose at max 20 different probability'
+        raise ValueError('You can choose at max 20 different probability')
     MsgList = []
     arrayInd = 0
     try:
@@ -1459,7 +1490,7 @@ def parsing_XBee_log(message,pc_id='0001'):
 #            print 'ANSWER'
             is_answ = True
         else:
-            print 'QUESTION'
+            print('QUESTION')
             is_answ = False
 #        print 'PARSING PAYLOAD',PAYLOAD
         Id = int(PAYLOAD[4:8], 16)
@@ -1531,7 +1562,7 @@ def parsing_XBee_log(message,pc_id='0001'):
                 return 'Info', Id, 'Request get trial number'
         elif PAYLOAD[8:10] == '12':
             if is_answ:
-                print 'trial time payload',PAYLOAD
+                print('trial time payload',PAYLOAD)
                 return 'Info', Id, 'Trial time %d'%int(PAYLOAD[12:20], 16)
             else:
                 return 'Info', Id, 'Request get real Time'
@@ -1594,7 +1625,7 @@ def stringFromMsg(msg):
         Retrurns a string with the message content. To be used in warning message
         in server_wifi_and_can_ask_status.py
     """
-    if type(msg) is pycanusb.CANMsg:
+    if type(msg) is CANMsg:
         string = 'Id: %d\n'%msg.id + msg.dataAsHexStr()
     elif type(msg) is bytearray:
         msg = XbeeMsg_from_Bytearray(msg)

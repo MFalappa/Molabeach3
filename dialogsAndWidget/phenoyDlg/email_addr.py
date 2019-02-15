@@ -45,23 +45,31 @@ class email_addr_add(QDialog,ui_email_addr.Ui_Form):
         self.spinBox.setRange(1,999)
         self.spinBox.setValue(587)
         self.lineEdit_2.setEchoMode(QLineEdit.Password)
+        
+        self.pushButton_email.clicked.connect(self.on_pushButton_email_clicked)
+        self.pushButtonOk.clicked.connect(self.accept)
    
     @pyqtSlot("QString")
     def on_lineEdit_textEdited(self):
         self.checkfields()
+        
     @pyqtSlot("QString")
     def on_lineEdit_2_textEdited(self):
         self.checkfields()
+        
     @pyqtSlot("QString")
     def on_lineEdit_3_textEdited(self):
         self.checkfields()
+        
     @pyqtSlot("QString")
     def on_lineEdit_4_textEdited(self):
         self.checkfields()
+        
     @pyqtSlot("QString")
     def on_pushButtonOk_clicked(self):
         self.accept()
-    @pyqtSlot("QString")
+        
+  
     def on_pushButton_email_clicked(self):
         try:
             smtpObj = SMTP(host=self.lineEdit_3.text(),port=self.spinBox.value())   
@@ -89,6 +97,8 @@ This is a test e-mail message."""%(self.lineEdit.text(),self.lineEdit_4.text())
                 smtpObj.close()
             except:
                 pass
+    
+    @pyqtSlot("QString")
     def checkfields(self):
         account = self.lineEdit.text()
         email_flag = validate_email(account)
@@ -104,6 +114,8 @@ This is a test e-mail message."""%(self.lineEdit.text(),self.lineEdit_4.text())
         else:
             self.pushButtonOk.setEnabled(False)
             self.pushButton_email.setEnabled(False)
+    
+   
     def accept(self):
         self.pdict = {'email': self.lineEdit.text(),
                       'password': pbkdf2_sha256.encrypt(self.lineEdit_2.text(),
@@ -114,9 +126,10 @@ This is a test e-mail message."""%(self.lineEdit.text(),self.lineEdit_4.text())
                       'receivers': [self.lineEdit.text()]}
         QDialog.accept(self)
     
-    @pyqtSlot("QString")
+    
     def on_pushButton_clicked(self):
         self.reject()
+        
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)

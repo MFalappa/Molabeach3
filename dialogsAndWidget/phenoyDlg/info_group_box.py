@@ -76,10 +76,11 @@ class info_group_box(QWidget):
         l2.addWidget(labelv1)
         self.labelStatus = QLabel('Pause') 
         l2.addWidget(self.labelStatus)
+        self.bacterylevel_label = QLabel('') 
+        l2.addWidget(self.bacterylevel_label)
         self.labelDir = QLabel('') 
         l2.addWidget(self.labelDir)
-        self.bacterylevel = QLabel('') 
-        l2.addWidget(self.bacterylevel)
+
         
         l3 = QVBoxLayout()
         l4 = QVBoxLayout()
