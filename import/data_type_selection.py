@@ -14,9 +14,9 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import QDialog
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from ui_data_type_selection import Ui_Dialog
 import numpy as np
 import sys,os
@@ -42,8 +42,8 @@ class layout_container(QObject):
 #        if row >= self.rownum:
 #            raise ValueError, 'h must be < %d, the number of hlayouts'%self.rownum
         if col > 3:
-            raise ValueError, 'col must be between 1 and 3'
-        if not self.vlayout_dict.has_key(row):
+            raise ValueError('col must be between 1 and 3')
+        if row not in self.vlayout_dict:
             self.vlayout_dict[row] = {}
             self.widget_dict[row] = {}
         self.vlayout_dict[row][col] = QVBoxLayout()
@@ -78,7 +78,7 @@ class layout_container(QObject):
         
     def removeHLayout(self,row):
         list_item = []
-        for col in np.sort(self.vlayout_dict[row].keys()):
+        for col in np.sort(list(self.vlayout_dict[row].keys())):
             list_item += self.removeVLayout(row,col)
         self.vlayout_dict.pop(row)
         self.hlayout_dict.pop(row)
@@ -98,11 +98,11 @@ class layout_container(QObject):
     
     def get_dict_type(self):
         dict_res = {}
-        for row in self.widget_dict.keys():
-            for col in self.widget_dict[row].keys():
+        for row in list(self.widget_dict.keys()):
+            for col in list(self.widget_dict[row].keys()):
                 key = self.widget_dict[row][col][0].text()
                 dict_res[key] = []
-                for itemNum in xrange(self.widget_dict[row][col][1].count()):
+                for itemNum in range(self.widget_dict[row][col][1].count()):
                     item = self.widget_dict[row][col][1].item(itemNum)
                     dict_res[key] += [item.text()]
         return dict_res
@@ -110,17 +110,17 @@ class layout_container(QObject):
     
     def __repr__(self):
         string =  'WIDGET DICT\n'
-        for i in self.widget_dict.keys():
+        for i in list(self.widget_dict.keys()):
             string += '\t%d:\n'%i
-            for j in self.widget_dict[i].keys():
+            for j in list(self.widget_dict[i].keys()):
                 string += '\t\t%d: '%j+'widgets' + '\n'
         string += 'vlayout DICT\n'
-        for i in self.vlayout_dict.keys():
+        for i in list(self.vlayout_dict.keys()):
             string +=  '\t%d:\n'%i
-            for j in self.vlayout_dict[i].keys():
+            for j in list(self.vlayout_dict[i].keys()):
                 string += '\t\t%d: '%j+ 'vlaout' + '\n'
         string += 'hlayout DICT\n'
-        for i in self.hlayout_dict.keys():
+        for i in list(self.hlayout_dict.keys()):
             string += '\t%d:'%i + '%s'%self.hlayout_dict[i]+'\n'
         return string
             
@@ -169,7 +169,7 @@ class data_type_selection(QDialog, Ui_Dialog):
         tot_vals = self.spinBox_typeNum.value()
         num_rows = int(np.ceil(tot_vals / 3.))
         grnum = 0
-        for row in xrange(num_rows):
+        for row in range(num_rows):
             self.layout_container.addHLayout(row)
             for col in range(3*row, min(tot_vals,3*(row+1))):
                 col = col - 3 * row
@@ -178,20 +178,20 @@ class data_type_selection(QDialog, Ui_Dialog):
             self.scrollLayout.addRow(self.layout_container.hlayout_dict[row])
 
     def spinBoxChanged(self,value):
-        print 'Changed Value', value
+        print('Changed Value', value)
         max_num = 3 * self.layout_container.getLastRow() + self.layout_container.getLastElement()[1] +1
-        print max_num
+        print(max_num)
         if value < max_num:
-            self.removeLastLists(range(value, max_num))
+            self.removeLastLists(list(range(value, max_num)))
         elif value > max_num:
-            self.addLists(range(max_num,value))
+            self.addLists(list(range(max_num,value)))
     
     def addLists(self, labels):
         rows = np.array(labels) // 3
         cols = np.array(labels) % 3
         max_row, last_col = self.layout_container.getLastElement()
         grnum = 3 * max_row + last_col + 1
-        for k in xrange(cols.shape[0]):
+        for k in range(cols.shape[0]):
             if cols[k] == 0:
                 self.layout_container.addHLayout(rows[k])
                 self.scrollLayout.addRow(self.layout_container.hlayout_dict[rows[k]])
@@ -203,9 +203,9 @@ class data_type_selection(QDialog, Ui_Dialog):
         self.accept()
         
     def checkOk(self):
-        print 'checking'
+        print('checking')
         dict_res = self.layout_container.get_dict_type()
-        for key in dict_res.keys():
+        for key in list(dict_res.keys()):
             if not dict_res[key]:
                 self.pushButtonContinue.setEnabled(False)
                 return

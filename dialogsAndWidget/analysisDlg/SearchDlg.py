@@ -15,8 +15,8 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 import re
-from PyQt5.QtWidgets import (QDialog)
-from PyQt5.QtCore import pyqtSignal, pyqtSlot
+from PyQt5.QtWidgets import (QDialog,QApplication)
+from PyQt5.QtCore import pyqtSignal, pyqtSlot,Qt
 from PyQt5.QtGui import *
 import ui_searchDlg
 
@@ -52,7 +52,9 @@ class SearchDlg(QDialog,ui_searchDlg.Ui_SearchDlg):
                     if not datatype in temp_data_list and datatype in self.type_available:
                         temp_data_list += [datatype]
         self.comboBox_types.addItems(temp_data_list)
-        self.connect(self.analysisList,SIGNAL('currentRowChanged (int)'),self.updateUi)
+        
+        self.analysisList.currentRowChanged[int].connect(self.updateUi)
+#        self.connect(self.analysisList,SIGNAL('currentRowChanged (int)'),self.updateUi)
         
         
     def updateUi(self):
@@ -116,7 +118,7 @@ class SearchDlg(QDialog,ui_searchDlg.Ui_SearchDlg):
                     self.analysisList.addItem(anName)
         
     
-#    @pyqtSignal("")
+    @pyqtSlot()
     def on_searchPushButton_clicked(self):
         item_list = []
         for ind in range(self.analysisList.count()):

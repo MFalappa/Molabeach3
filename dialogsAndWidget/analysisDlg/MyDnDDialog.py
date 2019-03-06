@@ -14,19 +14,18 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-#import os
-#import sys
-#from PyQt4.QtCore import (QByteArray, QDataStream, QIODevice, QMimeData,
-#        QPoint, Qt)
-#from PyQt4.QtGui import (QApplication, QDialog, QDrag, 
-#        QGridLayout, QIcon, QListWidget,QListWidgetItem)
-#
+
 import sys
 import os
-from PyQt4.QtCore import (QByteArray, QDataStream, QIODevice, QMimeData,
-        QPoint, Qt,SIGNAL)
-from PyQt4.QtGui import ( QCursor,QDrag, QIcon, QListWidget,QListWidgetItem,QDialog,QApplication,QGridLayout,QAbstractItemView)
+from PyQt5.QtCore import (QByteArray, QDataStream, QIODevice, QMimeData,
+        QPoint, pyqtSignal)
 
+
+from PyQt5.QtWidgets import (QAbstractItemView, QGridLayout,QDialog,
+                             QApplication,QListWidgetItem,QListWidget)
+
+from PyQt5.QtGui import (QCursor,QDrag, QIcon)
+from PyQt5.QtCore import Qt
 
 
 class MyDnDListWidget(QListWidget):
@@ -61,7 +60,7 @@ class MyDnDListWidget(QListWidget):
             data = event.mimeData().data("application/x-icon-and-text")
             stream = QDataStream(data, QIODevice.ReadOnly)
             num_drag = stream.readInt()
-            for k in xrange(num_drag):
+            for k in range(num_drag):
                 text = stream.readQString()
                 icon = QIcon()
                 stream >> icon
@@ -72,7 +71,7 @@ class MyDnDListWidget(QListWidget):
                     event.setDropAction(Qt.CopyAction)
                     #self.takeItem(self.row(items[0]))
                     event.ignore()
-                    print 'Ignora'
+                    print('Ignora')
                 else:
                     qpoint = self.mapFromGlobal(QCursor.pos())
                     itemIndex = self.indexAt(qpoint)
@@ -85,7 +84,7 @@ class MyDnDListWidget(QListWidget):
 #                    self.addItem(item) 
                     event.setDropAction(Qt.MoveAction)
                     event.accept()
-                    self.emit(SIGNAL('dropped()'))
+#                    self.emit(pyqtSignal('dropped()'))
                 
         else:
             event.ignore()
@@ -135,10 +134,10 @@ class MyDnDListWidget(QListWidget):
         pixmap = icon.pixmap(24, 24)
         drag.setHotSpot(QPoint(12, 12))
         drag.setPixmap(pixmap)
-        if drag.start(Qt.MoveAction) == Qt.MoveAction:
+        if drag.exec_(Qt.MoveAction) == Qt.MoveAction:
             for item in list_items:
                 self.takeItem(self.row(item))
-            self.emit(SIGNAL('dragged()'))
+#            self.emit(pyqtSignal('dragged()'))
             
 class Form(QDialog):
 
@@ -147,6 +146,7 @@ class Form(QDialog):
 
         dndListWidget = MyDnDListWidget()
         path = os.path.dirname(__file__)
+#        path = '/Users/Matte/Python_script/Phenopy3/'
         i=0
         for image in sorted(os.listdir(os.path.join(path, "images"))):
             if image.endswith(".png") or image.endswith(".ico"):

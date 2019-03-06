@@ -15,17 +15,18 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 import matplotlib.pyplot as plt
-import matplotlib.colors
 from matplotlib import colors
 import numpy as np
 import string
 import scipy.stats as sts
-from Analyzing_GUI import *
-from Modify_Dataset_GUI import *
+import bisect
+from copy import copy
+from Analyzing_GUI import Normalize_Action_x_Interval_GUI
+from Modify_Dataset_GUI import TimeUnit_to_Hours_GUI
 
 def plotLDARes_Dict(X_norm_d, y_d, lda_res_d, gauss_light_d, gauss_dark_d,line_light_d,line_dark_d, Index_for_color_d, Struct_mat_d, v_ort_d ,hl, hd,title_d,xlabel,ylabel):
     figDict = {}
-    for name in  X_norm_d.keys():
+    for name in  list(X_norm_d.keys()):
         X_norm = X_norm_d[name]
         y = y_d[name]
         lda_res = lda_res_d[name]
@@ -98,7 +99,7 @@ def Print_Actogram_GUI(Action_x_Interval,N_Day,interval,returnFig = False, *othe
     
     """
     
-    print 'retfig',returnFig
+    print('retfig',returnFig)
     if len(other)==0:
         period=24
         string='All'
@@ -117,17 +118,17 @@ def Print_Actogram_GUI(Action_x_Interval,N_Day,interval,returnFig = False, *othe
             string=other[0]
             period=other[1]
     elif len(other)>2:
-        print 'Warning! Too many input argumet...'
+        print('Warning! Too many input argumet...')
         return()
     
     if 3600%interval!=0:
         print('Warning! The interval you choose is not a fraction of an hour')
         return()
-    if kwargs.has_key('Start_Hour'):
+    if 'Start_Hour' in kwargs:
         Start_Hour=int(kwargs['Start_Hour'])
     else:
         Start_Hour=0
-    if kwargs.has_key('Norm'):
+    if 'Norm' in kwargs:
         Norm=kwargs['Norm']
     else:
         Norm = False
@@ -179,7 +180,7 @@ def Print_Actogram_GUI(Action_x_Interval,N_Day,interval,returnFig = False, *othe
     Bottom_y=Bottom_y[::-1]
     x_axis=x_axis*interval/3600
     FIG = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-    if kwargs.has_key('title'):
+    if 'title' in kwargs:
         plt.title(kwargs['title'])
     Actogram = plt.bar(x_axis,y_axis,bottom=Bottom_y,align='center',width=interval/3600.0,color='b',lw=0.)
      
@@ -202,12 +203,12 @@ def Print_Actogram_GUI(Action_x_Interval,N_Day,interval,returnFig = False, *othe
    
     plt.xlabel('Time(hours)')
     plt.ylabel('Days')
-    if kwargs.has_key('Title'):
+    if 'Title' in kwargs:
         title=kwargs['Title']
     else:
         title='Actogram'
     plt.title(title)
-    if kwargs.has_key('Suptitle'):
+    if 'Suptitle' in kwargs:
         plt.suptitle(kwargs['Suptitle'],fontsize='large')
     
     plt.ylim(1,ymax)
@@ -324,25 +325,25 @@ def LD_ErrorBar_plt_GUI(AllMeans,AllStdErrors,Label,Title=None,Ylim=None,
     plt.hold(1)
     if AllStdErrors==None:
         if color:
-            p1,=plt.plot(range(len(Label)),AllMeans,'%s'%color)
+            p1,=plt.plot(list(range(len(Label))),AllMeans,'%s'%color)
         else:
-            p1,=plt.plot(range(len(Label)),AllMeans)
+            p1,=plt.plot(list(range(len(Label))),AllMeans)
     else:
         if color and ecolor:
-            p1=plt.errorbar(range(len(Label)),AllMeans,yerr=AllStdErrors,elinewidth=2,color=color,ecolor=ecolor)    
+            p1=plt.errorbar(list(range(len(Label))),AllMeans,yerr=AllStdErrors,elinewidth=2,color=color,ecolor=ecolor)    
         elif color:
-            p1=plt.errorbar(range(len(Label)),AllMeans,yerr=AllStdErrors,elinewidth=2,color=color)
+            p1=plt.errorbar(list(range(len(Label))),AllMeans,yerr=AllStdErrors,elinewidth=2,color=color)
         elif ecolor:
-            p1=plt.errorbar(range(len(Label)),AllMeans,yerr=AllStdErrors,elinewidth=2,ecolor=ecolor)
+            p1=plt.errorbar(list(range(len(Label))),AllMeans,yerr=AllStdErrors,elinewidth=2,ecolor=ecolor)
         else:
-            p1=plt.errorbar(range(len(Label)),AllMeans,yerr=AllStdErrors,elinewidth=2)
+            p1=plt.errorbar(list(range(len(Label))),AllMeans,yerr=AllStdErrors,elinewidth=2)
     if Ylim is None:
         plt.ylim(0,1)
     else:
         plt.ylim(Ylim)
     plt.ylabel('Mean')
     if Ticks:
-        plt.xticks(range(len(Label)),Label,rotation=rotation)
+        plt.xticks(list(range(len(Label))),Label,rotation=rotation)
     else:
         ticks,labels=plt.xticks()
         
@@ -389,7 +390,7 @@ def F_Error_Rate_plt_GUI(Correct_Rate):
     Output:             -Error Rate bar graph.
                         
     """      
-    xaxis=range(24)
+    xaxis=list(range(24))
     yaxis=1-Correct_Rate
     Mean=sum(yaxis)/24
     x=[-0.50,23.5]
@@ -399,7 +400,7 @@ def F_Error_Rate_plt_GUI(Correct_Rate):
     plt.plot(x,y,'--r')
     plt.bar(xaxis,yaxis,align='center')
     plt.xlabel('Hour')
-    plt.legend([u'Mean'])
+    plt.legend(['Mean'])
     plt.title('All Trials Error Rate' )
         
     plt.xticks(np.arange(0,24,1),np.arange(0,24,1))
@@ -409,7 +410,7 @@ def F_Error_Rate_plt_GUI(Correct_Rate):
 
 def F_Error_Rate_New_plt_GUI(Correct_Rate,Ticks,color='b',meanColor='r',LenDark=12,
                              alpha=0.3,Title=None,correctRate=True):
-    xaxis=range(len(Correct_Rate))
+    xaxis=list(range(len(Correct_Rate)))
     if correctRate:
         yaxis=1-Correct_Rate
     else:
@@ -426,7 +427,7 @@ def F_Error_Rate_New_plt_GUI(Correct_Rate,Ticks,color='b',meanColor='r',LenDark=
     plt.plot(x,y,'--%s'%meanColor)
     plt.plot(xaxis,yaxis,'-o%s'%color)
     plt.xlabel('Time')
-    plt.legend([u'Mean'])
+    plt.legend(['Mean'])
     if not Title:
         plt.title('All Trials Error Rate' )
     else:
@@ -434,7 +435,7 @@ def F_Error_Rate_New_plt_GUI(Correct_Rate,Ticks,color='b',meanColor='r',LenDark=
     if len(Correct_Rate)>=10:
         xTicks = np.array(np.floor(np.arange(0,len(Correct_Rate),len(Correct_Rate)//10)),dtype=int  )
     else:
-        xTicks = range(len(Ticks))
+        xTicks = list(range(len(Ticks)))
     plt.xticks(xTicks,Ticks[xTicks])
     plt.axis([-0.5,len(Correct_Rate)-0.5,0,1])
     plt.grid()
@@ -446,7 +447,7 @@ def F_Error_Rate_New_plt_GUI(Correct_Rate,Ticks,color='b',meanColor='r',LenDark=
 def F_Error_Bar_New_plt_GUI(yaxis,yerr,Ticks,color='b',meanColor='r',LenDark=12,
                              alpha=0.3,Title=None,yLabel=None,yLim=None):
     
-    xaxis=range(len(yaxis))
+    xaxis=list(range(len(yaxis)))
  
     xEndDark=LenDark-0.5
     xStartDark=-0.5
@@ -460,7 +461,7 @@ def F_Error_Bar_New_plt_GUI(yaxis,yerr,Ticks,color='b',meanColor='r',LenDark=12,
     plt.plot(x,y,'--%s'%meanColor)
     plt.errorbar(xaxis,yaxis,yerr=yerr)
     plt.xlabel('Time')
-    plt.legend([u'Mean'])
+    plt.legend(['Mean'])
     if not Title:
         plt.title('All Trials Error Rate' )
     else:
@@ -468,7 +469,7 @@ def F_Error_Bar_New_plt_GUI(yaxis,yerr,Ticks,color='b',meanColor='r',LenDark=12,
     if len(yaxis)>=10:
         xTicks = np.array(np.floor(np.arange(0,len(yaxis),len(yaxis)//10)),dtype=int  )
     else:
-        xTicks = range(len(Ticks))
+        xTicks = list(range(len(Ticks)))
     plt.xticks(xTicks,Ticks[xTicks])
     if not yLim:
         plt.xlim(-0.5,len(yaxis)-0.5)
@@ -560,7 +561,7 @@ def F_Raster_Plt_GUI(Raster,strn,scale,*other):
                                 
     Output:                     -Raster plot graph
     """
-    print( 'len other: ', len(other))
+    print(( 'len other: ', len(other)))
     if len(other) == 3:
         RR = [Raster, other[0]]
         strings = [strn, other[1]]
@@ -569,7 +570,7 @@ def F_Raster_Plt_GUI(Raster,strn,scale,*other):
         plt.hold(1)
         XMIN,XMAX,YMIN,YMAX = np.inf, 0, np.inf, 0
         for k in [0, 1]:
-            print('k:',k)
+            print(('k:',k))
             Raster = RR[k]
             strn = strings[k]
             scale = scales[k]
@@ -672,8 +673,8 @@ def Gr_BoxPlot_LD_GUI(Means,Hour_Light,Hour_Dark,Group_Name):
     
     n_row=len(Group_Name)/2+len(Group_Name)%2
     
-    Ymin=np.min(Means.values())*0.95
-    Ymax=np.max(Means.values())*1.05
+    Ymin=np.min(list(Means.values()))*0.95
+    Ymax=np.max(list(Means.values()))*1.05
     figDict = {}
     i=0
     if len(Group_Name)!=1:
@@ -689,7 +690,7 @@ def Gr_BoxPlot_LD_GUI(Means,Hour_Light,Hour_Dark,Group_Name):
             
     else:
         figDict[i] = plt.figure()
-        print 'GR boxplot', Means[Group_Name[0]]
+        print('GR boxplot', Means[Group_Name[0]])
         plt.boxplot([Means[Group_Name[0]][Hour_Dark], Means[Group_Name[0]][Hour_Light]])
         ticks,tmp=plt.xticks()
         plt.xticks(ticks,['Dark','Light'])
@@ -742,7 +743,7 @@ def Plt_RawPowerDensity_GUI(Freq, y_axis_list, color_list = ['r'],
     """
     fig = plt.figure(figsize=(4.5*3.13,3.5*3.13))
     plt.hold(1)        
-    for k in xrange(len(y_axis_list)):
+    for k in range(len(y_axis_list)):
         plt.plot(Freq, y_axis_list[k], color = color_list[k],
                  linewidth = linewidth, label = legend_list[k])
     plt.title(title, fontsize = title_size)
@@ -762,14 +763,14 @@ def Plt_RawPowerDensity_Loop_GUI(Freq,Power_Wake,Power_Rem,Power_NRem,IndexGroup
                              legend_size = 15):
     figDict = {}
     maxList = []
-    for group in IndexGroup.keys():
-        for subject in IndexGroup[group].keys():
+    for group in list(IndexGroup.keys()):
+        for subject in list(IndexGroup[group].keys()):
             row = IndexGroup[group][subject]
             maxList += [np.max([np.max(Power_Wake[row]),np.max(Power_Rem[row]),
                                 np.max(Power_NRem[row])])]
     ylim = (0,np.max(maxList)*1.05)
-    for group in IndexGroup.keys():
-        for subject in IndexGroup[group].keys():
+    for group in list(IndexGroup.keys()):
+        for subject in list(IndexGroup[group].keys()):
             noext = subject.split('.')[0]
             title = 'Power Density\n%s (%s)'%(noext,group)
             row = IndexGroup[group][subject]
@@ -794,11 +795,11 @@ def Plt_MedianPowerDensity_GUI(Freq, PowerW_matrix, PowerR_matrix,
                                legend_size = 15,title_size=15,
                                MeanOrMedian = 'Mean'):
     fig = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-    nrow = len(IndexArray_dict.keys())
+    nrow = len(list(IndexArray_dict.keys()))
     ind = 1
     plt.hold(1)
     MAX_list = []
-    for key in IndexArray_dict.keys():
+    for key in list(IndexArray_dict.keys()):
         Index   = IndexArray_dict[key]
         if MeanOrMedian == 'Median':
             PowerW  = np.nanmedian(PowerW_matrix[Index],axis=0)
@@ -814,7 +815,7 @@ def Plt_MedianPowerDensity_GUI(Freq, PowerW_matrix, PowerR_matrix,
     ylim = (0,1.05*np.max(MAX_list))
     genotype_mean = {}
     gen_yer = {}
-    for key in IndexArray_dict.keys():
+    for key in list(IndexArray_dict.keys()):
         plt.subplot(nrow,1,ind)
         Index   = IndexArray_dict[key]
         if MeanOrMedian == 'Median':
@@ -870,13 +871,13 @@ def Plt_MedianPowerDensity_GUI(Freq, PowerW_matrix, PowerR_matrix,
     list_title = ['Power Wake','Power REM','Power NREM']
     tuple_fig = ()
     color_list = ['k', 'r', 'b','g','y',(125./255,)*3,'m','c']
-    for k in xrange(3):
+    for k in range(3):
         tuple_fig += (plt.figure(figsize=(5.5*3.13,3.5*3.13)),)
         legend_list = []
         legend_lab = []
         plt.title(list_title[k],fontsize=20)
         i = 0
-        for key in IndexArray_dict.keys():
+        for key in list(IndexArray_dict.keys()):
             if type(gen_yer[key]) is dict:
                 legend_list += [plt.errorbar(Freq, genotype_mean[key][k],yerr=np.vstack([gen_yer[key]['low'][k,:], gen_yer[key]['high'][k,:]]),color=color_list[i%len(color_list)])]
             else:
@@ -900,7 +901,7 @@ def CDF_average_plot_GUI(Cdf,EmCdf,Group_Name,Mouse_Grouped,t0=3,t1=6):
     i=1
 
     plt.hold(1)
-    print '\n\n%s\n=========\n\n'%Group_Name,Row_Num
+    print('\n\n%s\n=========\n\n'%Group_Name,Row_Num)
 
     for group in Group_Name:
         mn = np.zeros((Mouse_Grouped[group].__len__()),dtype = float)*np.nan
@@ -946,7 +947,7 @@ def CDF_Gr_Plot_GUI(Cdf,EmCdf,Group_Name,Mouse_Grouped,t0=3,t1=6):
     i=1
     fig=plt.figure('CDF')
     plt.hold(1)
-    print '\n\n%s\n=========\n\n'%Group_Name,Row_Num
+    print('\n\n%s\n=========\n\n'%Group_Name,Row_Num)
     if Num_Group == 1:
         col = 1
     else:
@@ -975,16 +976,16 @@ def Plt_ErrorBar_Gr_DeltaReb(Mean, SEM, TimeLim, Colors = None,
                              titlesize = 20, labelsize = 15):
     fig = plt.figure()
     plt.hold(1)
-    for key in Mean.keys():
+    for key in list(Mean.keys()):
         if not key in GroupLabel:
-            raise ValueError, 'GroupLabel must be a list containing keys of\
-                                Mean dicitonary'
+            raise ValueError('GroupLabel must be a list containing keys of\
+                                Mean dicitonary')
     ind = 0
     for key in GroupLabel:
         Sec_0 = TimeLim[0].second + TimeLim[0].minute * 60\
                 + TimeLim[0].hour * 3600
         TimeBinVect = (np.arange(len(Mean[key]))*TimeBin_Sec) + Sec_0
-        print(type(Colors))
+        print((type(Colors)))
         if Colors is None:
             plt.errorbar(TimeBinVect , Mean[key], yerr = SEM[key],
                          elinewidth = elinewidth, linewidth = linewidth, 
@@ -1078,8 +1079,8 @@ def plot_LDA_Group_GUI(lda_dict, X_dict, y_dict, y_pred_dict,color_dict,
     if newfig:
         fig = plt.figure(figsize=(4.*3.13,3*3.13))
     plt.hold(1)
-    for key in lda_dict.keys():
-        lda = lda_dict[key]
+    for key in list(lda_dict.keys()):
+#        lda = lda_dict[key]
         X = X_dict[key]
         y = y_dict[key]
         y_pred = y_pred_dict[key]
@@ -1094,7 +1095,7 @@ def plot_LDA_Group_GUI(lda_dict, X_dict, y_dict, y_pred_dict,color_dict,
     
     
         # class 0: dots
-        print color_dict 
+#        print(color_dict) 
         plt.plot(X0_tp[:, 0], X0_tp[:, 1], linestyle=' ',
                  marker='o', markeredgecolor=color_dict[key],markeredgewidth=2,
                  markerfacecolor=markerface[0],
@@ -1114,7 +1115,7 @@ def plot_LDA_Group_GUI(lda_dict, X_dict, y_dict, y_pred_dict,color_dict,
                  markerfacecolor=markerface[1],
                  markersize=markersize)
         # class 0 and 1 : areas
-        nx, ny = 200, 100
+#        nx, ny = 200, 100
         x_min, x_max = plt.xlim()
         y_min, y_max = plt.ylim()
         
@@ -1155,7 +1156,7 @@ def plot_Standard_Input_Error_Bar_GUI(stdGroupMatrix, Dark_length,
                                   linewidth = 1.5, elinewidth = 2,
                                   tick_every = 4, alpha = 0.4):
     if 3600 % TimeInterval != 0  and TimeInterval % 3600 != 0:
-        raise ValueError, 'TimeInterval must divide or be a multiple of 3600!'
+        raise ValueError('TimeInterval must divide or be a multiple of 3600!')
     Num_Hour_Dark  = int(np.ceil(Dark_length * (3600.0 / TimeInterval)))
     GroupList = np.unique(stdGroupMatrix['Group'])
     if not hold_on:
@@ -1172,7 +1173,7 @@ def plot_Standard_Input_Error_Bar_GUI(stdGroupMatrix, Dark_length,
             [np.where(stdGroupMatrix['Group']==group)[0]]
         if (not hold_on):
             fig[group] = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-        x_axis = range(len(y_axis))
+        x_axis = list(range(len(y_axis)))
         plt.errorbar(x_axis, y_axis, yerr= y_err,
                      linewidth = linewidth, elinewidth = elinewidth,
                      label = group)
@@ -1202,7 +1203,7 @@ def plot_Standard_Input_Error_Rate_GUI(stdGroupMatrix, Dark_length,
                                   linewidth = 1.5, elinewidth = 2,
                                   tick_every = 4, alpha = 0.4):
     if 3600 % TimeInterval != 0  and TimeInterval % 3600 != 0:
-        raise ValueError, 'TimeInterval must divide or be a multiple of 3600!'
+        raise ValueError('TimeInterval must divide or be a multiple of 3600!')
     Num_Hour_Dark  = int(np.ceil(Dark_length * (3600.0 / TimeInterval)))
     GroupList = np.unique(stdGroupMatrix['Group'])
     if not hold_on:
@@ -1220,7 +1221,7 @@ def plot_Standard_Input_Error_Rate_GUI(stdGroupMatrix, Dark_length,
             [np.where(stdGroupMatrix['Group']==group)[0]]
         if (not hold_on):
             fig[group] = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-        x_axis = range(len(y_axis))
+        x_axis = list(range(len(y_axis)))
         p=plt.errorbar(x_axis, y_axis, yerr= y_err,
                      linewidth = linewidth, elinewidth = elinewidth,
                      label = group)
@@ -1251,7 +1252,7 @@ def plot_Standard_Input_Error_Rate_GUI(stdGroupMatrix, Dark_length,
     for phase in ['Light','Dark']:
         plt.subplot(1,2,ind + 1)
         plt.title(phase,fontsize='large')
-        x_axis = range(len(GroupList))
+        x_axis = list(range(len(GroupList)))
         y_axis = []
         y_err = []
         for group in GroupList:
@@ -1360,8 +1361,8 @@ def plt_Best_Period(Period_Array, Best_Fit_Param, subject=''):
     try:
         tickList.remove('24')
         xticks.remove(24.)
-    except ValueError, inst:
-        print inst.message
+    except ValueError as inst:
+        print(inst.message)
         
     plt.xticks(xticks,tickList,fontsize='large')
     plt.yticks(fontsize='large')
@@ -1408,7 +1409,7 @@ def std_Bar_Plot_GUI(std_Matrix_input, title, title_size=20, linewidth=1,
         grIndex = np.where(std_Matrix['Group'] == group)[0]
         Mean += [np.nanmean(std_Matrix[varName][grIndex])]
         SEM += [np.nanstd(std_Matrix[varName][grIndex])/np.sqrt(len(grIndex))]
-    x_axis = range(len(Mean))
+    x_axis = list(range(len(Mean)))
     fig = plt.figure(figsize=(4.5*3.13,3.5*3.13))
     plt.hold(1)
     colorList = ('b', 'g', 'c', 'y', 'm', 'k',(1,69/255.,0/255.),'r')
@@ -1472,7 +1473,7 @@ def F_ExpGain_Plt_GUI(ExpLog, MaxRowl, Mean_minmax=(1, 9),
     ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%.2f'))
     plt.title('Expected Gain', fontsize='large')
     img = plt.imshow(Norm_ExpLog, cmap = plt.cm.Greys_r)
-    plt.plot(MaxRowl, range(Mesh), color = 'r')
+    plt.plot(MaxRowl, list(range(Mesh)), color = 'r')
     plt.gca().invert_yaxis()
     if color_bar:
         plt.colorbar(img)
@@ -1602,16 +1603,16 @@ def plot_Rsquared_Grid_GUI(regressionModels, title='Predictor comparison',
                     Heat map for R-squared of best fit
     """
 #    print title, x_label,y_label,label_size
-    observationList = regressionModels.keys()
+    observationList = list(regressionModels.keys())
     if reorderObs != None:
         observationList = np.array(observationList)[reorderObs]
     else:
         observationList.sort()
-    genotypeList = regressionModels[observationList[0]].keys()
-    predictorCircadian = regressionModels[observationList[0]]\
-        [genotypeList[0]].keys()[0]
-    predictorSleepList = regressionModels[observationList[0]]\
-        [genotypeList[0]][predictorCircadian].keys()
+    genotypeList = list(regressionModels[observationList[0]].keys())
+    predictorCircadian = list(regressionModels[observationList[0]]\
+        [genotypeList[0]].keys())[0]
+    predictorSleepList = list(regressionModels[observationList[0]]\
+        [genotypeList[0]][predictorCircadian].keys())
     if reorderPred != None:
         predictorSleepList = np.array(predictorSleepList)[reorderPred][::-1]
     else:
@@ -1661,9 +1662,9 @@ def plot_Rsquared_Grid_GUI(regressionModels, title='Predictor comparison',
         plt.title(title + '\nGenotype: %s'%genotype, fontsize=title_size)
         plt.ylabel(y_label, fontsize=label_size)
         plt.xlabel(x_label, fontsize=label_size)
-        pos = plt.xticks()[0]
-        posy = plt.yticks()[0][1]
-        print plt.yticks()[0]
+#        posx = plt.xticks()[0]
+#        posy = plt.yticks()[0][1]
+#        print(plt.yticks()[0])
         posy_all = 0.5 + np.arange(0,len(ytickList))
         plt.xticks(np.arange(len(xtickList))+0.5, xtickList, fontsize='x-small',
                    rotation=rotation)
@@ -1676,14 +1677,14 @@ def plot_Rsquared_Grid_GUI(regressionModels, title='Predictor comparison',
 
 def plot_R_Squared_vs_Lag_GUI(lagVect, R_squared):
     fig = {}
-    for obs in lagVect.keys():
-        gen = lagVect[obs].keys()[0]
-        for predictor in lagVect[obs][gen].keys():
+    for obs in list(lagVect.keys()):
+        gen = list(lagVect[obs].keys())[0]
+        for predictor in list(lagVect[obs][gen].keys()):
             obsLabel = obs.split('.')[0]
             predLabel = predictor.split('.')[0]
             fig['Lag_%s_%s'%(obsLabel,predLabel)] =\
                 plt.figure(figsize=(6.5*3.13,3.5*3.13))
-            for genotype in lagVect[obs].keys():
+            for genotype in list(lagVect[obs].keys()):
                 plt.plot(lagVect[obs][genotype][predictor],
                          R_squared[obs][genotype][predictor], label=genotype,
                          linewidth=1.5)

@@ -10,19 +10,23 @@
 # the GNU General Public License for more details.
 
 
+# modified by Matteo in 2019 to adapt to python3
 
-import os
+
+
+
 import sys
-from PyQt5.QtCore import (Qt, pyqtSignal,QPluginLoader)
+from PyQt5.QtCore import (QPluginLoader, pyqtSlot)
 from PyQt5.QtWidgets import (QApplication, QDialog, QVBoxLayout, QHBoxLayout,
-                         QListWidget, QListWidgetItem, QSplitter, QTableWidget
-                         ,QLabel, QLineEdit, QGridLayout, QDialogButtonBox,
-                         QComboBox)
+                         QLabel, QLineEdit,QListWidgetItem, QGridLayout, 
+                         QDialogButtonBox,QComboBox)
 
 from PyQt5.QtGui import QIcon,QFont
 from copy import copy
+
 from MyDnDDialog import MyDnDListWidget
-QPlugin = QPluginLoader("qico4.dll")
+
+QPlugin = QPluginLoader("qico5.dll")
 class CreateGroupsDlg(QDialog):
 # rimuovere anDict, e' obsoleto
     def __init__(self, GroupNumber=2, DataList=[],DataContainer=None,
@@ -73,9 +77,10 @@ class CreateGroupsDlg(QDialog):
             grid.addWidget(self.groupListWidget[i],row+1,column,1,1)
             grid.addWidget(self.lineEditWidget[i],row,column,1,1)
             if not groupName:
-                self.connect(self.lineEditWidget[i],
-                             SIGNAL('editingFinished()'),
-                             lambda number = i : self.updateEdit(number))
+                self.lineEditWidget[i].editingFinished.connect(lambda number = i : self.updateEdit(number))
+#                self.connect(self.lineEditWidget[i],
+#                             SIGNAL('editingFinished()'),
+#                             lambda number = i : self.updateEdit(number))
         self.filterComboBox=QComboBox()
         self.filterComboBox.addItems(TypeList)
         comboLabel=QLabel()
@@ -90,17 +95,29 @@ class CreateGroupsDlg(QDialog):
         VLayout.addLayout(HLayout)
         VLayout.addWidget(self.ButtonBox)
         self.setLayout(VLayout)
-        self.connect(self.ButtonBox,SIGNAL('rejected()'),self,SLOT('reject()'))
-        self.connect(self.ButtonBox,SIGNAL('accepted()'),self,SLOT('accept()'))
-        self.connect(self.filterComboBox,SIGNAL('currentIndexChanged(int)'),
-                         self.refreshDataList)
+        
+        self.ButtonBox.accepted.connect(pyqtSlot())
+        self.ButtonBox.rejected.connect(pyqtSlot())
+#        self.connect(self.ButtonBox,SIGNAL('rejected()'),self,SLOT('reject()'))
+#        self.connect(self.ButtonBox,SIGNAL('accepted()'),self,SLOT('accept()'))
+        
+        
+        self.filterComboBox.currentIndexChanged[int].connect(self.refreshDataList)
+#        self.connect(self.filterComboBox,SIGNAL('currentIndexChanged(int)'),
+#                         self.refreshDataList)
+        
         self.filterComboBox.setCurrentIndex(0)
         self.refreshDataList()
-        self.connect(self.dataListWidget,SIGNAL('dropped()'),lambda Key=None:self.enableOk(Key))
-        self.connect(self.dataListWidget,SIGNAL('dragged()'),self.startDrag)
+        
+        self.dataListWidget.dropEvent(lambda Key=None:self.enableOk(Key))
+        self.dataListWidget.startDrag(self.startDrag)
+#        self.connect(self.dataListWidget,SIGNAL('dropped()'),lambda Key=None:self.enableOk(Key))
+#        self.connect(self.dataListWidget,SIGNAL('dragged()'),self.startDrag)
         for key in list(self.groupListWidget.keys()):
-            self.connect(self.groupListWidget[key],SIGNAL('dropped()'), lambda Key=key:self.refreshAllData(Key))
-            self.connect(self.groupListWidget[key],SIGNAL('dragged()'),lambda Key=key:self.enableOk(Key))    
+            self.groupListWidget[key].dropEvent(lambda Key=key:self.refreshAllData(Key))
+            self.groupListWidget[key].startDrag(lambda Key=key:self.enableOk(Key))
+#            self.connect(self.groupListWidget[key],SIGNAL('dropped()'), lambda Key=key:self.refreshAllData(Key))
+#            self.connect(self.groupListWidget[key],SIGNAL('dragged()'),lambda Key=key:self.enableOk(Key))    
         self.setWindowTitle("Select Groups")
         
         

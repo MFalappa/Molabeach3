@@ -58,7 +58,7 @@ def return_input_count(path):
         else:
             continue
         if input_name not in list_std_input:
-            raise NameError, 'Input must be choosen between (%s)'%(', '.join(list_std_input))
+            raise NameError('Input must be choosen between (%s)'%(', '.join(list_std_input)))
         else:
             dict_input[input_name] += 1
     fh.close()
@@ -159,7 +159,7 @@ def check_analysis_function(path):
                 key1 = key1.rstrip('\'').lstrip('\'')
                 key1 = key1.rstrip('\"').lstrip('\"')
                 if ']=' in  no_space_after:
-                    if key1 in num_DataDict_key_def.keys():
+                    if key1 in list(num_DataDict_key_def.keys()):
                         return False, 'Error in line %d. Multiple definition of DataDict[%s]'%(i,key1)
                     else:
                         num_DataDict_key_def[key1] = 0
@@ -201,7 +201,7 @@ def check_analysis_function(path):
                 key1 = key1.lstrip('\'')
                 key1 = key1.lstrip('\"')
                 key1 = key1.rstrip('\'')
-                if not key1 in dict_inputs.keys():
+                if not key1 in list(dict_inputs.keys()):
                     dict_inputs[key1] = []
                     num_dictPlot_key_def[key1] = 0
                 if len(no_space_after.split(']')) is 3:
@@ -211,7 +211,7 @@ def check_analysis_function(path):
                     key2 = key2.rstrip('\"')
                     key2 = key2.lstrip('\'')
                     key2 = key2.lstrip('\"')
-                    if not key2 in dict_inputs.keys():
+                    if not key2 in list(dict_inputs.keys()):
                         dict_inputs[key1] += [key2]
                         
                 elif no_space_after.count('[') is 1 and '={}' in no_space_after:
@@ -274,7 +274,7 @@ def check_analysis_function(path):
         return False, 'Missing dictPlot definition'
     if num_info_def is 0:
         return False, 'Missing info definition'
-    for key in dict_inputs.keys():
+    for key in list(dict_inputs.keys()):
         if len(dict_inputs[key]) is 0:
             return False, 'dictPlot must be a dicitonary that contains other non empty dictionaries'
     for key in  key_info:
@@ -330,8 +330,8 @@ def check_plot_function(path,dict_inputs):
             key1 = key1.rstrip('\"')
             key1 = key1.lstrip('\'')
             key1 = key1.lstrip('\"')
-            if not key1  in dict_inputs.keys():
-                print( 'Allowed keys:', dict_inputs.keys())
+            if not key1  in list(dict_inputs.keys()):
+                print(( 'Allowed keys:', list(dict_inputs.keys())))
                 return False,'Error in line %d. %s is not one of the keys of myInput detected from the analysis function'%(i,key1)
             key2 = after_str.split(']')[2].split('[')[1]
             key2 = key2.lstrip(' ')
@@ -388,13 +388,14 @@ def check_plot_function(path,dict_inputs):
     
     return True, 'Plotting function checked, ok.'
 if __name__ == '__main__':
-    path = 'C:\Users\TucciLab\Documents\Software_Develompment\Phenopy\New_Analysis_Gui\Program upload\\TEST_tmp.py'
+#    add path of the folder where the program to be uplead is
+    path = '/Users/Matte/Python_script/Phenopy3/future/test_ipload.py'
     res = check_analysis_function(path)
     inp = return_input_count(path)
 #    print res
-    print inp
-    pathplt = 'C:\Users\TucciLab\Documents\Software_Develompment\Phenopy\New_Analysis_Gui\Program upload\\TEST_plt.py'
+    print(inp)
+    pathplt = '/Users/Matte/Python_script/Phenopy3/future/test_plot.py'
     if res[0]:
         res2=check_plot_function(pathplt,res[2])
-        print res2
+        print(res2)
     

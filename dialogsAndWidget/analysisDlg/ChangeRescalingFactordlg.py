@@ -15,8 +15,8 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 from PyQt5.QtWidgets import (QApplication, QDialog)
-from PyQt5.QtCore import (pyqtSignal,QPluginLoader)
-from PyQt5.QtGui import *
+from PyQt5.QtCore import (pyqtSlot,QPluginLoader,Qt)
+
 import ui_Change_Rascale_Factor
 MAC = 'qt_mac_set_native_menubar' in dir()
 QPlugin = QPluginLoader("qico5.dll")
@@ -30,14 +30,14 @@ class ChangeRescalingFactordlg(QDialog,ui_Change_Rascale_Factor.Ui_TimeScaledlg)
         if not MAC:
             self.pushButtonCancel.setFocusPolicy(Qt.NoFocus)
         
-#    @pyqtSignal("")
+    @pyqtSlot()
     def on_pushButtonCancel_clicked(self):
         self.close()
-#    @pyqtSignal("")
+    @pyqtSlot()
     def on_pushButtonApply_clicked(self):
         self.accept()
         
-#    @pyqtSignal("const QString&")
+    @pyqtSlot(str)
     def on_lineEdit_textEdited(self):
         try:
             float(str(self.lineEdit.text()))
@@ -52,6 +52,7 @@ if __name__== '__main__':
     import sys
     app = QApplication(sys.argv)
     form = ChangeRescalingFactordlg(1000)
-    form.exec_()#.show()
+    form.exec_()
+#    form.show()
     
     

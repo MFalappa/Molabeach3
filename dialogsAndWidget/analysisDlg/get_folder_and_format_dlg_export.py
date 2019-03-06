@@ -15,9 +15,7 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 from ui_get_folder_and_format_dlg_export import Ui_Dialog_export
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QDialog,QFileDialog,QApplication
 import os
 
 class get_export_info_dlg(QDialog,Ui_Dialog_export):
@@ -28,14 +26,21 @@ class get_export_info_dlg(QDialog,Ui_Dialog_export):
         self.path_folder = os.path.dirname(__file__)
         self.ext = self.comboBox.currentText()
         self.delim = self.comboBox_2.currentText()
-        self.connect(self.pushButton_browse,SIGNAL('clicked()'),self.browse)
-        self.connect(self.pushButton_ok,SIGNAL('clicked()'), self.ok_click)
-        self.connect(self.pushButton_Cancel,SIGNAL('clicked()'),self.reject)
-        self.connect(self.lineEdit,SIGNAL('textChanged (const QString&)'),self.check_folder)
-        self.connect(self.comboBox,SIGNAL('currentIndexChanged (const QString&)'),self.change_ext)
+        
+        self.pushButton_browse.clicked.connect(self.browse)
+        self.pushButton_ok.clicked.connect(self.ok_click)
+        self.pushButton_Cancel.clicked.connect(self.reject)
+        self.lineEdit.textChanged[str].connect(self.check_folder)
+        self.comboBox.currentIndexChanged[str].connect(self.change_ext)
+        
+#        self.connect(self.pushButton_browse,SIGNAL('clicked()'),self.browse)
+#        self.connect(self.pushButton_ok,SIGNAL('clicked()'), self.ok_click)
+#        self.connect(self.pushButton_Cancel,SIGNAL('clicked()'),self.reject)
+#        self.connect(self.lineEdit,SIGNAL('textChanged (const QString&)'),self.check_folder)
+#        self.connect(self.comboBox,SIGNAL('currentIndexChanged (const QString&)'),self.change_ext)
         
     def browse(self):
-        folder = QFileDialog. getSaveFileName(self,'Select a file name...', self.path_folder,filter="Export (*%s)"%self.comboBox.currentText())
+        folder,_ = QFileDialog. getSaveFileName(self,'Select a file name...', self.path_folder,filter="Export (*%s)"%self.comboBox.currentText())
         if not folder.endswith(self.comboBox.currentText()):
             folder += self.comboBox.currentText()
         self.path_folder = folder

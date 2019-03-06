@@ -14,17 +14,26 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-from Plotting_GUI import *
+from Plotting_GUI import (Plt_RawPowerDensity_Loop_GUI,Plt_MedianPowerDensity_GUI,
+                          plot_Standard_Input_Error_Rate_GUI,std_ErrorBar_Plt_TimeCourse_GUI,
+                          plot_Rsquared_Grid_GUI,plot_R_Squared_vs_Lag_GUI,plotLDARes_Dict,
+                          Gr_BoxPlot_LD_GUI,CDF_Gr_Plot_GUI,CDF_average_plot_GUI,
+                          F_ExpGain_Plt_GUI,std_Bar_Plot_GUI)
+
+import matplotlib.pylab as plt
+import numpy as np
+
+
 def plotPowerDensity(*myinputs):
-    print 'myinput',myinputs[0].keys(),myinputs[0]['Fig:Power Density'].keys()
+    print('myinput',list(myinputs[0].keys()),list(myinputs[0]['Fig:Power Density'].keys()))
     figs  = Plt_RawPowerDensity_Loop_GUI(\
-        *myinputs[0][myinputs[0].keys()[0]]['Single Subject'])
+        *myinputs[0][list(myinputs[0].keys())[0]]['Single Subject'])
     figsall = Plt_MedianPowerDensity_GUI(\
-        *myinputs[0][myinputs[0].keys()[0]]['Group'])
+        *myinputs[0][list(myinputs[0].keys())[0]]['Group'])
     fig1 = figsall[0]
     figDict = {'Fig Power Density':{}}
     figDict['Fig Power Density']['Grouped'] = fig1
-    for key in figs.keys():
+    for key in list(figs.keys()):
         figDict['Fig Power Density']['%s'%key] = figs[key]
         figs[key].show()
     figDict['Fig Power Density']['Wake x Group'] = figsall[1]
@@ -33,9 +42,9 @@ def plotPowerDensity(*myinputs):
     fig1.show()
     return figDict
 def plt_Error_Rate_Gr(*myinputs):
-    print myinputs[0].keys()
+    print(list(myinputs[0].keys()))
     fig,fig1  = plot_Standard_Input_Error_Rate_GUI(\
-        *myinputs[0][myinputs[0].keys()[0]]['Error Rate'])
+        *myinputs[0][list(myinputs[0].keys())[0]]['Error Rate'])
     figDict = {'Fig Group Error Rate':{}}
     figDict['Fig Group Error Rate']['Group Error Rate'] = fig
     figDict['Fig Group Error Rate']['Group Error Rate Bar'] = fig1
@@ -43,32 +52,32 @@ def plt_Error_Rate_Gr(*myinputs):
     fig1.show()
     return figDict
 def plotSleepTimeCourse(*myinputs):
-    KeyVect = myinputs[0][myinputs[0].keys()[0]]
+    KeyVect = myinputs[0][list(myinputs[0].keys())[0]]
     for key in KeyVect:
         if 'Num' in key:
             Key1 = key
         else:
             Key2 = key
-    print KeyVect
+    print(KeyVect)
     fig  = std_ErrorBar_Plt_TimeCourse_GUI(\
-        *myinputs[0][myinputs[0].keys()[0]][Key1])
+        *myinputs[0][list(myinputs[0].keys())[0]][Key1])
     fig1 = std_ErrorBar_Plt_TimeCourse_GUI(\
-        *myinputs[0][myinputs[0].keys()[0]][Key2])
+        *myinputs[0][list(myinputs[0].keys())[0]][Key2])
     figDict = {'Fig Sleep Time Course':{}}
     figDict['Fig Sleep Time Course']['Num Episodes'] = fig
     figDict['Fig Sleep Time Course']['Episode Duration'] = fig1
     fig.show()
     fig1.show()
-    return figDict
+    return figDict 
 def plotMRA(*myinputs):
-    print 'Entered plotMRA'
-    print myinputs[0][myinputs[0].keys()[0]]
-    fig = plot_Rsquared_Grid_GUI(*myinputs[0][myinputs[0].keys()[0]]['MRA'])[0]
-    fig2 = plot_R_Squared_vs_Lag_GUI(*myinputs[0][myinputs[0].keys()[0]]\
+    print('Entered plotMRA')
+    print(myinputs[0][list(myinputs[0].keys())[0]])
+    fig = plot_Rsquared_Grid_GUI(*myinputs[0][list(myinputs[0].keys())[0]]['MRA'])[0]
+    fig2 = plot_R_Squared_vs_Lag_GUI(*myinputs[0][list(myinputs[0].keys())[0]]\
         ['R_squared_vs_lag_sleep'])
-    for key in fig.keys():
+    for key in list(fig.keys()):
         fig[key].show()
-    for key in fig2.keys():
+    for key in list(fig2.keys()):
         fig2[key].show()
     figDict = {'Fig MRA':fig}
     figDict['Fig MRA'].update(fig2)
@@ -77,9 +86,9 @@ def plotLDA(*myInput):
     figs  = plotLDARes_Dict(*myInput[0]['Fig:LDA Results']['Scatter'])
     figs2 = plotLDARes_Dict(*myInput[0]['Fig:Group LDA Results']['Scatter'])
     figDict = {'Fig LDA':{}}
-    for key in figs.keys():
+    for key in list(figs.keys()):
         figDict['Fig LDA'][key] = figs[key]
-    for key in figs2.keys():
+    for key in list(figs2.keys()):
         figDict['Fig LDA'][key] = figs2[key]
     return figDict
 def plotSwitchLatency(*myInput):
@@ -90,7 +99,7 @@ def plotSwitchLatency(*myInput):
     figDict['Fig Switch Latency']['Gaussian Fit'] = fig1
     fig2 = F_ExpGain_Plt_GUI(*myInput[0]['Fig:Group Switch Latency']['Optimal Surface'])
     fig3 = std_Bar_Plot_GUI(*myInput[0]['Fig:Group Switch Latency']['Expected Gain'])
-    for key in figs.keys():
+    for key in list(figs.keys()):
         figDict['Fig Switch Latency']['Record switch time_%s'%key] = figs[key]
         figs[key].show()
     fig1.show()
@@ -102,7 +111,7 @@ def plotSwitchLatency(*myInput):
     figDict['Fig Switch Latency']['Gaussian Fit avg'] = fig4
     return figDict
 def delta_reb_plt(*myInput):
-    key = myInput[0]['Fig:Rebound'].keys()[0]
+    key = list(myInput[0]['Fig:Rebound'].keys())[0]
     band = key.split(' ')[0]
     norm_rebound = myInput[0]['Fig:Rebound']['%s Time Course'%band]
     v_tot_sec = np.vectorize(lambda t:t.total_seconds())

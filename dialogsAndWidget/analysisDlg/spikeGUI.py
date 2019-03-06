@@ -14,9 +14,9 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from ui_spike_gui import Ui_MainWindow
 import os, sys
 

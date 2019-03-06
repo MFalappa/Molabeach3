@@ -19,8 +19,8 @@ from Plotting_GUI import *
 def plotActogram(*myInput):
     figDict = {'Fig Actogram':{},'Fig SinFit':{}}
     data_dict = myInput[0]
-    print 'plotActo inputs',myInput[0].keys()
-    for dataName in data_dict.keys():
+    print('plotActo inputs',list(myInput[0].keys()))
+    for dataName in list(data_dict.keys()):
         Actogram = data_dict[dataName]['Fig_Actogram'][0]
         N_Day = data_dict[dataName]['Fig_Actogram'][1] 
         interval = data_dict[dataName]['Fig_Actogram'][2]
@@ -43,7 +43,7 @@ def plotActogram(*myInput):
 def plotErrorRate(*myInput):
     figDict = {'Fig Error Rate':{}}
     data_dict = myInput[0]
-    for dataName in data_dict.keys():
+    for dataName in list(data_dict.keys()):
         cr = data_dict[dataName]['Fig_Error_Rate_Daily_Average'][0]
         HLabel = data_dict[dataName]['Fig_Error_Rate_Daily_Average'][1]
         c1 = data_dict[dataName]['Fig_Error_Rate_Daily_Average'][2]
@@ -60,7 +60,7 @@ def plotErrorRate(*myInput):
 def plotAIT(*myInput):
     figDict = {'Fig AIT':{}}
     data_dict = myInput[0]
-    for dataName in data_dict.keys():
+    for dataName in list(data_dict.keys()):
         OrdMean = data_dict[dataName]['Fig_AIT'][0]
         OrdStd = data_dict[dataName]['Fig_AIT'][1]
         Hlabel = data_dict[dataName]['Fig_AIT'][2]
@@ -85,25 +85,25 @@ def plotAIT(*myInput):
 def plotRasterPlot(*myInput):
     figDict = {'Fig Raster Plot':{}}
     data_dict = myInput[0]
-    for dataName in data_dict.keys():
-        fig = F_Raster_Plt_GUI(*data_dict[dataName][data_dict[dataName].keys()[0]])
-        figName = data_dict[dataName].keys()[0] + '_' + dataName.split('.')[0]
+    for dataName in list(data_dict.keys()):
+        fig = F_Raster_Plt_GUI(*data_dict[dataName][list(data_dict[dataName].keys())[0]])
+        figName = list(data_dict[dataName].keys())[0] + '_' + dataName.split('.')[0]
         figDict['Fig Raster Plot'][figName] = fig
     return figDict
     
 def plotPeakProcedure(*myInput):
     figDict = {'Fig Peak Procedure':{}}
     data_dict = myInput[0]
-    for dataName in data_dict.keys():
-        fig = F_PeakProbes_plt_GUI(*data_dict[dataName][data_dict[dataName].keys()[0]])
-        figName = data_dict[dataName].keys()[0] + '_' + dataName.split('.')[0]
+    for dataName in list(data_dict.keys()):
+        fig = F_PeakProbes_plt_GUI(*data_dict[dataName][list(data_dict[dataName].keys())[0]])
+        figName = list(data_dict[dataName].keys())[0] + '_' + dataName.split('.')[0]
         figDict['Fig Peak Procedure'][figName] = fig
     return figDict
 def plotSpikeStatistics(*myInput):
     figDict = {'Firing Rate':{},'log2(ISI)':{}}
     dictFR = myInput[0]['Fig:Spike Statistics']['Firing Rate']
     dictIsi = myInput[0]['Fig:Spike Statistics']['ISI']
-    for name in dictFR.keys():
+    for name in list(dictFR.keys()):
         for k in range(len(dictFR[name]['nameFR'])):
             fig = plt.figure()
             firingRate = dictFR[name]['firingRate'][k,:]

@@ -1,5 +1,5 @@
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui,QtWidgets
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -8,54 +8,54 @@ except AttributeError:
         return s
 
 try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
+    _encoding = QtWidgets.QApplication.UnicodeUTF8
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+        return QtWidgets.QApplication.translate(context, text, disambig)
 
 class Ui_NewImageDlg(object):
     def setupUi(self, NewImageDlg):
         NewImageDlg.setObjectName(_fromUtf8("NewImageDlg"))
         NewImageDlg.resize(287, 214)
-        self.gridlayout = QtGui.QGridLayout(NewImageDlg)
+        self.gridlayout = QtWidgets.QGridLayout(NewImageDlg)
         self.gridlayout.setMargin(9)
         self.gridlayout.setSpacing(6)
         self.gridlayout.setObjectName(_fromUtf8("gridlayout"))
-        self.buttonBox = QtGui.QDialogButtonBox(NewImageDlg)
+        self.buttonBox = QtWidgets.QDialogButtonBox(NewImageDlg)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.NoButton|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.NoButton|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
         self.gridlayout.addWidget(self.buttonBox, 5, 1, 1, 2)
-        spacerItem = QtGui.QSpacerItem(269, 16, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        spacerItem = QtWidgets.QSpacerItem(269, 16, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.gridlayout.addItem(spacerItem, 4, 0, 1, 3)
-        self.colorLabel = QtGui.QLabel(NewImageDlg)
-        self.colorLabel.setFrameShape(QtGui.QFrame.StyledPanel)
-        self.colorLabel.setFrameShadow(QtGui.QFrame.Raised)
+        self.colorLabel = QtWidgets.QLabel(NewImageDlg)
+        self.colorLabel.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.colorLabel.setFrameShadow(QtWidgets.QFrame.Raised)
         self.colorLabel.setText(_fromUtf8(""))
         self.colorLabel.setScaledContents(True)
         self.colorLabel.setObjectName(_fromUtf8("colorLabel"))
         self.gridlayout.addWidget(self.colorLabel, 3, 1, 1, 1)
-        self.label_3 = QtGui.QLabel(NewImageDlg)
+        self.label_3 = QtWidgets.QLabel(NewImageDlg)
         self.label_3.setObjectName(_fromUtf8("label_3"))
         self.gridlayout.addWidget(self.label_3, 3, 0, 1, 1)
-        self.colorButton = QtGui.QPushButton(NewImageDlg)
+        self.colorButton = QtWidgets.QPushButton(NewImageDlg)
         self.colorButton.setObjectName(_fromUtf8("colorButton"))
         self.gridlayout.addWidget(self.colorButton, 3, 2, 1, 1)
-        self.brushComboBox = QtGui.QComboBox(NewImageDlg)
+        self.brushComboBox = QtWidgets.QComboBox(NewImageDlg)
         self.brushComboBox.setObjectName(_fromUtf8("brushComboBox"))
         self.gridlayout.addWidget(self.brushComboBox, 2, 1, 1, 2)
-        self.label_4 = QtGui.QLabel(NewImageDlg)
+        self.label_4 = QtWidgets.QLabel(NewImageDlg)
         self.label_4.setObjectName(_fromUtf8("label_4"))
         self.gridlayout.addWidget(self.label_4, 2, 0, 1, 1)
-        self.label = QtGui.QLabel(NewImageDlg)
+        self.label = QtWidgets.QLabel(NewImageDlg)
         self.label.setObjectName(_fromUtf8("label"))
         self.gridlayout.addWidget(self.label, 0, 0, 1, 1)
-        self.label_2 = QtGui.QLabel(NewImageDlg)
+        self.label_2 = QtWidgets.QLabel(NewImageDlg)
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.gridlayout.addWidget(self.label_2, 1, 0, 1, 1)
-        self.heightSpinBox = QtGui.QSpinBox(NewImageDlg)
+        self.heightSpinBox = QtWidgets.QSpinBox(NewImageDlg)
         self.heightSpinBox.setAlignment(QtCore.Qt.AlignRight)
         self.heightSpinBox.setMaximum(512)
         self.heightSpinBox.setMinimum(8)
@@ -63,7 +63,7 @@ class Ui_NewImageDlg(object):
         self.heightSpinBox.setProperty("value", 64)
         self.heightSpinBox.setObjectName(_fromUtf8("heightSpinBox"))
         self.gridlayout.addWidget(self.heightSpinBox, 1, 1, 1, 1)
-        self.widthSpinBox = QtGui.QSpinBox(NewImageDlg)
+        self.widthSpinBox = QtWidgets.QSpinBox(NewImageDlg)
         self.widthSpinBox.setAlignment(QtCore.Qt.AlignRight)
         self.widthSpinBox.setMaximum(512)
         self.widthSpinBox.setMinimum(8)

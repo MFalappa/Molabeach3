@@ -14,7 +14,7 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-import _winreg as winreg
+import winreg as winreg
 import itertools
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
@@ -65,15 +65,15 @@ class recievingXBeeThread(QThread):
         
     def connectXBee(self):
         self._xBee = XBee(self.serialPort, callback = self.emitSignal)
-        print 'Connected'
+        print('Connected')
     def terminate(self):
         if self.isRunning() == True:
             self._xBee.halt()
             self.exit()
             self.wait() 
-            print 'all disconnected'
+            print('all disconnected')
         super(recievingXBeeThread,self).terminate()
-        print 'thread reciever terminated '
+        print('thread reciever terminated ')
 
 class ZigBee_thread(QThread):
     addNewDevice = pyqtSignal(dict, name='newDeviceFound')
@@ -102,7 +102,7 @@ class ZigBee_thread(QThread):
         try:
             PAYLOAD = binascii.hexlify(msg['rf_data'])
             ID = int(PAYLOAD[4:8], 16)
-            if not ID in self.address_dict.keys():
+            if not ID in list(self.address_dict.keys()):
                 self.address_dict[ID] = msg['source_addr']
                 thisdict = {ID: msg['source_addr']}
                 self.addNewDevice.emit(thisdict)
@@ -111,7 +111,7 @@ class ZigBee_thread(QThread):
 
 def parsing_can_log(message):
 #    print 'Parsing data 0:', message.data[0]
-    print message.data[0], message.data[1]
+    print(message.data[0], message.data[1])
     if message.data[0] is 76 and message.data[1] is 1:
         #print 'Log Msg id: ',message.id
         Id = message.id - 640
@@ -139,7 +139,7 @@ def parsing_can_log(message):
         return 'Timer',Id, '%d\t38\n'%time
     
     elif message.data[0] is 67 and message.data[1] is 2:
-        print 'Entered in time settings',message.data[3]
+        print('Entered in time settings',message.data[3])
         Id = message.id - 1408
         if message.data[3] == 5:
             return 'Date',Id,'%d-%d-%d'%(message.data[4],message.data[5],
@@ -156,7 +156,7 @@ def parsing_can_log(message):
 def parsing_XBee_log(message):
     try:
         PAYLOAD = binascii.hexlify(message['rf_data'])
-        print 'PAYLOAD', PAYLOAD
+        print('PAYLOAD', PAYLOAD)
         Id = int(PAYLOAD[4:8], 16)
 #        print 'Id', Id
 #        print PAYLOAD[8:10],PAYLOAD[8:10] == '06'

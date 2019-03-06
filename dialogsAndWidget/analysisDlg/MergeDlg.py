@@ -17,10 +17,9 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import sys,os
 lib_dir = os.path.join(os.path.abspath(os.path.join(os.path.realpath(__file__),'../../..')),'libraries')
 sys.path.append(lib_dir)
-import re
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QDialog,QListWidgetItem,QAbstractItemView,QApplication
+from PyQt5.QtCore import Qt,pyqtSlot
+from PyQt5.QtGui import QIcon
 import ui_mergedlg
 from Modify_Dataset_GUI import DatasetContainer_GUI
 
@@ -53,10 +52,14 @@ class MergeDlg(QDialog,ui_mergedlg.Ui_SelectDataset):
             self.pushButtonOk.setFocusPolicy(Qt.NoFocus)
             self.pushButtonNext.setFocusPolicy(Qt.NoFocus)
         
-        self.connect(self.listWidgetAllDataset,SIGNAL('currentRowChanged (int)'),self.updateUi)
-        self.connect(self.listWidgetSelected,SIGNAL('currentRowChanged (int)'),self.updateUi)
-        self.connect(self.lineEditMergedName,SIGNAL('textEdited (const QString&)'),self.updateUi)
-        self.connect(self.pushButtonOk,SIGNAL('clicked()'),self.createMergeDictionary)
+        self.listWidgetAllDataset.currentRowChanged[int].connect(self.updateUi)
+        self.listWidgetSelected.currentRowChanged[int].connect(self.updateUi)
+        self.lineEditMergedName.textEdited[str].connect(self.updateUi)
+        self.pushButtonOk.clicked.connect(self.createMergeDictionary)
+#        self.connect(self.listWidgetAllDataset,SIGNAL('currentRowChanged (int)'),self.updateUi)
+#        self.connect(self.listWidgetSelected,SIGNAL('currentRowChanged (int)'),self.updateUi)
+#        self.connect(self.lineEditMergedName,SIGNAL('textEdited (const QString&)'),self.updateUi)
+#        self.connect(self.pushButtonOk,SIGNAL('clicked()'),self.createMergeDictionary)
         self.updateUi()
         
     def updateUi(self):
@@ -90,7 +93,7 @@ class MergeDlg(QDialog,ui_mergedlg.Ui_SelectDataset):
             self.pushButtonOk.setEnabled(False)
         
     
-#    @pyqtSignature("")
+    @pyqtSlot()
     def on_pushButtonAdd_clicked(self):
         Items = self.listWidgetAllDataset.selectedItems()
         last = self.listWidgetSelected.count()
@@ -108,7 +111,7 @@ class MergeDlg(QDialog,ui_mergedlg.Ui_SelectDataset):
         
             
     
-#    @pyqtSignature("")
+    @pyqtSlot()
     def on_pushButtonRemove_clicked(self):
         Items = self.listWidgetSelected.selectedItems()
         for i in Items:
@@ -119,21 +122,21 @@ class MergeDlg(QDialog,ui_mergedlg.Ui_SelectDataset):
             self.listWidgetAllDataset.setCurrentItem(Item)
             self.listWidgetAllDataset.sortItems()
     
-#    @pyqtSignature("")
+    @pyqtSlot()
     def on_pushButtonUp_clicked(self):
         Row= self.listWidgetSelected.currentRow()
         Item = self.listWidgetSelected.takeItem(Row)
         self.listWidgetSelected.insertItem(Row-1,Item)
         self.listWidgetSelected.setCurrentRow(self.listWidgetSelected.row(Item))
     
-#    @pyqtSignature("")
+    @pyqtSlot()
     def on_pushButtonDown_clicked(self):
         Row= self.listWidgetSelected.currentRow()
         Item = self.listWidgetSelected.takeItem(Row)
         self.listWidgetSelected.insertItem(Row+1,Item)
         self.listWidgetSelected.setCurrentRow(self.listWidgetSelected.row(Item))
     
-#    @pyqtSignature("")
+    @pyqtSlot()
     def on_pushButtonNext_clicked(self):
         BreakItems = self.listWidgetSelected.findItems(self.NextString,
                                                        Qt.MatchExactly)
@@ -168,7 +171,7 @@ def main():
     text=['Ciao Come va','ciao come va','analizzo','canalizzo','analizzom'
         ,'diario','polli','aviario','----------','Ciccio']
     dc = DatasetContainer_GUI()
-    tmp = np.load('C:\\Users\ebalzani\Desktop\\workspace_2017-4-21T10_56.phz')
+    tmp = np.load('/Users/Matte/Desktop/Paper marta/data/Sleep phz/baseline/PWS_22.phz')
     for key in list(tmp.keys()):
         dc.add(tmp[key].all())
     app = QApplication(sys.argv)

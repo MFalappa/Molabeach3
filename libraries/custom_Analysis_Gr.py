@@ -22,7 +22,7 @@ from Plotting_GUI import *
 from Modify_Dataset_GUI import *
 from copy import copy,deepcopy
 import sys
-from PyQt4.QtGui import QApplication
+from PyQt5.QtWidgets import QApplication
 import pandas as pd
 ## TODO: creare dizionario timestamps[dataname] per tipo di dato e cambiare le funzioni
 ## che richiamano timestamps in analyzing_gui
@@ -31,15 +31,15 @@ def Power_Density(*myInput):
     Input      = myInput[1]
     DataGroup  = myInput[2]
     lock       = myInput[4]
-    print 'Input ok'
+    print('Input ok')
     DataDict, dictPlot, info = {},{},{}
     lenName = 0
     lenGroupName = 0
-    for key in DataGroup.keys():
+    for key in list(DataGroup.keys()):
         lenGroupName = max(lenGroupName,len(key))
         for name in DataGroup[key]:
             lenName = max(lenName,len(name))
-    print 'lenNames ok'
+    print('lenNames ok')
     freqLim_Hz = Input[0]['DoubleSpinBox'][0]
     MeanOrMedian = Input[0]['Combo'][0]
     color_list = [Input[0]['Combo'][1],
@@ -51,27 +51,27 @@ def Power_Density(*myInput):
     legend_size = Input[0]['SpinBox'][2]
     axis_label_size = Input[0]['SpinBox'][3]
     suptitle_size = Input[0]['SpinBox'][4]
-    print 'set input ol'
+    print('set input ol')
     DataDict = {}
     AllData  = {}
-    for key in Datas.keys():
+    for key in list(Datas.keys()):
         try:
             lock.lockForRead()
             AllData[key] = copy(Datas.takeDataset(key))
         finally:
             lock.unlock()
-    print 'Data copied'
+    print('Data copied')
     (Power_Wake, Power_Rem, Power_NRem, Fr,
         IndexArray_dict,IndexGroup)= F_PowerDensity_GUI(AllData,
                        DataGroup, freqLim_Hz)
-    print 'PD analysis done'
+    print('PD analysis done')
     NRow = np.prod(Power_Wake.shape)
     DataDict['Power Density Wake'] = np.zeros(NRow, dtype = {
         'names':('Group','Subject','Frequency (Hz)','Value'),
         'formats':('|S%d'%lenGroupName,'|S%d'%lenName,float,float)})
     index = 0
     shape = Power_Wake.shape[1]
-    for key in DataGroup.keys():
+    for key in list(DataGroup.keys()):
         for name in DataGroup[key]: 
             DataDict['Power Density Wake']['Group'][index:index + shape] =\
                 key
@@ -82,14 +82,14 @@ def Power_Density(*myInput):
             DataDict['Power Density Wake']['Value'][index:index + shape] =\
                 Power_Wake[IndexGroup[key][name],:]
             index += shape
-    print 'PD data Wake extracted'
+    print('PD data Wake extracted')
     index = 0      
 #    DataDict['Power Density Rem'] = DataDict['Power Density Wake']
     DataDict['Power Density Rem'] = np.zeros(NRow, dtype = {
         'names':('Group','Subject','Frequency (Hz)','Value'),
         'formats':('|S%d'%lenGroupName,'|S%d'%lenName,float,float)})
     shape = Power_Rem.shape[1]
-    for key in DataGroup.keys():
+    for key in list(DataGroup.keys()):
         for name in DataGroup[key]:
             DataDict['Power Density Rem']['Value'][index:index + shape] =\
                 Power_Rem[IndexGroup[key][name],:]
@@ -101,13 +101,13 @@ def Power_Density(*myInput):
                 [index:index + shape] = Fr
             index += shape
     index=0
-    print 'PD data Rem extracted'
+    print('PD data Rem extracted')
 #    DataDict['Power Density NRem'] = DataDict['Power Density Wake']
     DataDict['Power Density NRem'] = np.zeros(NRow, dtype = {
         'names':('Group','Subject','Frequency (Hz)','Value'),
         'formats':('|S%d'%lenGroupName,'|S%d'%lenName,float,float)})
     shape = Power_NRem.shape[1]
-    for key in DataGroup.keys():
+    for key in list(DataGroup.keys()):
         for name in DataGroup[key]:
             DataDict['Power Density NRem']['Value'][index:index + shape] =\
                 Power_NRem[IndexGroup[key][name],:]
@@ -118,7 +118,7 @@ def Power_Density(*myInput):
             DataDict['Power Density NRem']['Frequency (Hz)']\
                 [index:index + shape] = Fr
             index += shape
-    print 'PD data Nrem extracted'
+    print('PD data Nrem extracted')
     dictPlot['Fig:Power Density'] = {}
     dictPlot['Fig:Power Density']['Single Subject'] = (Fr,Power_Wake,\
                                                        Power_Rem,Power_NRem,\
@@ -136,7 +136,7 @@ def Power_Density(*myInput):
                                               suptitle_size, axis_label_size,
                                               legend_size, title_size,
                                               MeanOrMedian)
-    print 'dictPlot build'
+    print('dictPlot build')
     info['Types']  = ['Group EEG','Power Density']
     info['Factor'] = [0,1,2]
     datainfo = {'Power Density Wake': info,'Power Density Rem': info,
@@ -146,7 +146,7 @@ def Power_Density(*myInput):
     DD['Power Density']['Power Density Wake'] = DataDict['Power Density Wake']
     DD['Power Density']['Power Density Rem'] = DataDict['Power Density Rem']
     DD['Power Density']['Power Density NRem'] = DataDict['Power Density NRem']
-    print 'Completed analysis'
+    print('Completed analysis')
 #    raw_input('press any key')
     return DD, dictPlot, datainfo
 def Group_Error_Rate(*myInput):
@@ -162,8 +162,8 @@ def Group_Error_Rate(*myInput):
     TimeInterval = Input[0]['Combo'][3]
     Dataset_Dict = {}
     TimeStamps_Dict = {}
-    print DataGroup
-    for group in DataGroup.keys():
+    print(DataGroup)
+    for group in list(DataGroup.keys()):
         for dataName in DataGroup[group]:
             try:
                 lock.lockForRead()
@@ -222,7 +222,7 @@ def Sleep_Time_Course(*myInput):
     total_or_mean = Input[0]['Combo'][2]
     
     AllData  = {}
-    for group in DataGroup.keys():
+    for group in list(DataGroup.keys()):
         for key in DataGroup[group]:
             try:
                 lock.lockForRead()
@@ -232,7 +232,7 @@ def Sleep_Time_Course(*myInput):
     secTimeDiff = []
     tinit = []
     ind = False
-    for name in AllData.keys():
+    for name in list(AllData.keys()):
         timeDiff = AllData[name].Timestamp[-1] - AllData[name].Timestamp[0]
         secTimeDiff += [timeDiff]
         if ind:
@@ -250,9 +250,9 @@ def Sleep_Time_Course(*myInput):
     TimeDict = {}
     Time_MyDict = {}
     Epi_Dur = {}
-    print 'Start/End time'
-    print startT, finalT
-    for name in AllData.keys():
+    print('Start/End time')
+    print(startT, finalT)
+    for name in list(AllData.keys()):
         Time = AllData[name].Timestamp
         Epoch = F_Epoch(AllData[name].Stage)
 #==============================================================================
@@ -263,13 +263,13 @@ def Sleep_Time_Course(*myInput):
         NAN_IND_PSP = np.where(np.isnan(AllData[name].PowerSp[:,0]))[0]
         Epoch = np.array(Epochs[0],dtype=float)
         Epoch[non_nan_ind][NAN_IND_PSP] = np.nan
-        print('LEN Epoch nans',len(NAN_IND_PSP))
+        print(('LEN Epoch nans',len(NAN_IND_PSP)))
         # End new code
         NEP,TT1 = EpocheTot_xTimebin_GUI(Epoch, Time, Bin, startT, finalT,
                                          Type=Type)
         NEP_Dict[name] = NEP
         TimeDict[name] = TT1
-        print name,' ',TT1[0],' ',TT1[-1]
+        print(name,' ',TT1[0],' ',TT1[-1])
         Mean,Dur,TT = EpisodsDurationXhour_GUI(Epoch,Time,Bin,startT,finalT,
                                                EpochDur=EpochDur,Type=Type,
                                                total_or_mean=total_or_mean)
@@ -412,20 +412,20 @@ def Linear_Discriminant_Analysis(*myinput):
         finally:
             lock.unlock()
     funcVect = np.vectorize(TimeBin_From_TimeString)
-    print('string: ', AllData_Sleep[key]['Time'][1])
+    print(('string: ', AllData_Sleep[key]['Time'][1]))
     TimeBin = Time_To_Seconds(AllData_Sleep[key]['Time'][1]) -\
         Time_To_Seconds(AllData_Sleep[key]['Time'][0])
     TimeBin_be = Time_To_Seconds(AllData_Behaviour[key1]['Time'][1]) -\
         Time_To_Seconds(AllData_Behaviour[key1]['Time'][0])    
-    print ('TimeBin: ', TimeBin)
+    print(('TimeBin: ', TimeBin))
     if TimeBin != TimeBin_be:
         raise ValueError('Different time binning between sleep and behavioural data')
     lenGr = 0
-    for key in Behaviour_GroupDict.keys():
+    for key in list(Behaviour_GroupDict.keys()):
         lenGr = max(lenGr, len(key))
     info['Linear Discriminant Analysis'] = {}
-    size = len(Behaviour_GroupDict.keys()) * len(AllData_Behaviour.keys()) *\
-        len(AllData_Sleep.keys())
+    size = len(list(Behaviour_GroupDict.keys())) * len(list(AllData_Behaviour.keys())) *\
+        len(list(AllData_Sleep.keys()))
     fit_Matrix = np.zeros(size, dtype=\
         {'names':('Sleep Data', 'Behaviour Data', 'Group',
                   'Weighted Error', 'Slope', 'Intercept'),
@@ -435,8 +435,8 @@ def Linear_Discriminant_Analysis(*myinput):
     DataDict['Linear Discriminant Analysis'] = {}
     dictPlot['Linear Discriminant Analysis'] = {}
     indSub = 0
-    for keySl in AllData_Sleep.keys():
-        for keyBe in AllData_Behaviour.keys():
+    for keySl in list(AllData_Sleep.keys()):
+        for keyBe in list(AllData_Behaviour.keys()):
             Sleep_Matrix = AllData_Sleep[keySl]
             Behaviour_Matrix = AllData_Behaviour[keyBe]
             Group_Mean_Sleep,Group_Mean_Error,ldaFit,ldaScore,weights,\
@@ -470,7 +470,7 @@ def Linear_Discriminant_Analysis(*myinput):
             info['LDA_%s_vs_%s'%(keyBe,keySl)]['Types'] = ['LDA Data',
                  'Single Subject']
             info['LDA_%s_vs_%s'%(keyBe,keySl)]['Factor'] = [0,1,2,3,4]
-            for group in Group_Mean_Sleep.keys():
+            for group in list(Group_Mean_Sleep.keys()):
                 X = np.zeros((len(Group_Mean_Sleep[group]),2))
                 X[:,0] = Group_Mean_Sleep[group]
                 X[:,1] = Group_Mean_Error[group]
@@ -504,7 +504,7 @@ def Multiple_Regression_Analysis(*myinput):
     DataGroup  = myinput[2]
     lock       = myinput[4]
     
-    print 'ok datas'
+    print('ok datas')
 #    print Datas, Input, DataGroup,lock
     p_entrance = Input[0]['DoubleSpinBox'][0]
     p_exit = Input[0]['DoubleSpinBox'][1]
@@ -517,7 +517,7 @@ def Multiple_Regression_Analysis(*myinput):
     AllData_Behaviour, AllData_Sleep, AllData_Obs  = {}, {}, {}
     AllGroup = {}
     lenBe, lenSl = 0,0
-    print 'ok initializing'
+    print('ok initializing')
     for key in DataGroup['Predictor Behavior']['Data Name']:
         try:
             lock.lockForRead()
@@ -526,7 +526,7 @@ def Multiple_Regression_Analysis(*myinput):
             lenBe = max(lenBe,len(key))
         finally:
             lock.unlock()
-    print 'ok AllData_BEhaviour'
+    print('ok AllData_BEhaviour')
     for key in DataGroup['Predictors Sleep']['Data Name']:
         try:
             lock.lockForRead()
@@ -535,7 +535,7 @@ def Multiple_Regression_Analysis(*myinput):
             lenSl = max(lenSl,len(key))
         finally:
             lock.unlock()
-    print 'ok AllData_Sleep'
+    print('ok AllData_Sleep')
     for key in DataGroup['Observation']['Data Name']:
         try:
             lock.lockForRead()
@@ -544,9 +544,9 @@ def Multiple_Regression_Analysis(*myinput):
             lenSl = max(lenSl,len(key))
         finally:
             lock.unlock()
-    print 'ok AllData_Obs'
+    print('ok AllData_Obs')
     lenGr = 0
-    for key in Behaviour_GroupDict.keys():
+    for key in list(Behaviour_GroupDict.keys()):
         lenGr = max(lenGr, len(key))
 #==============================================================================
 #   Ho salvato tutti i dizionari con i nomi dei dataset come chiavi e i 
@@ -555,10 +555,10 @@ def Multiple_Regression_Analysis(*myinput):
     bestLagSleep, R_squared_Sleep, lagVect_sleep = find_BestLag(AllGroup,
                                                                 AllData_Sleep,
                                                                 AllData_Obs)
-    print 'ok bestLag sleep',bestLagSleep
+    print('ok bestLag sleep',bestLagSleep)
     bestLagCircadian, R_squared_Circadian, lagVect_circa =\
         find_BestLag(AllGroup,  AllData_Behaviour, AllData_Obs)
-    print 'ok bestLag circadian',bestLagCircadian
+    print('ok bestLag circadian',bestLagCircadian)
 #==============================================================================
 #   Perform a step wise multiple regression
 #==============================================================================
@@ -570,7 +570,7 @@ def Multiple_Regression_Analysis(*myinput):
                                                    bestLagSleep,
                                                    p_entrance=p_entrance,
                                                    p_exit=p_exit)
-    print 'ok regression model'
+    print('ok regression model')
 #    print regressionModels
     dictPlot = {'Fig MRA':{}}
     dictPlot['Fig MRA']['MRA'] = (regressionModels, 'Predictor comparison',
@@ -601,7 +601,7 @@ def LDA(*myInput):
     sleep_par   = Input[0]['Combo'][3]
     hd,hl=Hour_Light_and_Dark_GUI(dark_start,dark_len,TimeInterval=3600)
     num_col = 0
-    for group in pairedGroups.keys():
+    for group in list(pairedGroups.keys()):
         num_col += len(pairedGroups[group]['Behavior'])
     dtype = {'names':('Group','Subject',beh_par,sleep_par),
              'formats':('S50','S100',float,float)}
@@ -629,14 +629,14 @@ def LDA(*myInput):
     title_gr_d = {} 
     ind_row = 0
     score_per_group = {}
-    for group in pairedGroups.keys():
+    for group in list(pairedGroups.keys()):
         score_per_group[group] = np.zeros((24,2))
         beh_tmp = np.zeros((24,len(pairedGroups[group]['Sleep'])))
         sleep_tmp = np.zeros((24,len(pairedGroups[group]['Sleep'])))
         i_sub = 0
         for sub_beh  in pairedGroups[group]['Behavior']:
             sub_sleep = pairedGroups[group]['Sleep'][i_sub]
-            print sub_beh,sub_sleep
+            print(sub_beh,sub_sleep)
             try:
                 lock.lockForRead()
                 data_beh = deepcopy(Datas.takeDataset(sub_beh))
@@ -736,17 +736,17 @@ def Switch_Latency(*myInput):
     Dark_length   = Input[0]['Combo'][1]
     type_tr   = Input[0]['Combo'][2]
     Long_Side = Input[0]['Combo'][3]
-    group_list = DataGroup.keys()
+    group_list = list(DataGroup.keys())
     group_list.sort()
     long_side_dict = {}
     k = 0
     for gr in group_list:
         long_side_dict[gr] = Long_Side
         k += 1
-    Mouse_Name = np.hstack(DataGroup.values())
+    Mouse_Name = np.hstack(list(DataGroup.values()))
     lenName = 0
     lenGroupName = 0
-    for key in DataGroup.keys():
+    for key in list(DataGroup.keys()):
         lenGroupName = max(lenGroupName,len(key))
         for name in DataGroup[key]:
             lenName = max(lenName,len(name))
@@ -758,7 +758,7 @@ def Switch_Latency(*myInput):
     long_side_sub = {}
     isMEDDict = {}
     print('CREATING TIMESTAMPS DICT')
-    for gr in Mouse_Grouped.keys():
+    for gr in list(Mouse_Grouped.keys()):
         for dataName in Mouse_Grouped[gr]:
             try:
                 lock.lockForRead()
@@ -770,12 +770,12 @@ def Switch_Latency(*myInput):
                     TimeStamps_Dict[dataName] = TimeStamps
             finally:
                 lock.unlock()
-    for gr in Mouse_Grouped.keys():
+    for gr in list(Mouse_Grouped.keys()):
         for dataName in Mouse_Grouped[gr]:
             long_side_sub[dataName] = long_side_dict[gr]
     print('\n\nGR SWITCH LAT\n\n')          
     table,left,right,Record_Switch,HSSwitch = F_New_Gr_Switch_Latency_GUI(AllData,TimeStamps_Dict,Mouse_Name,ts=ts,tl=tl,scale=1,Tend=Tend,Long_Side=long_side_sub,type_tr=type_tr,isMEDDict=isMEDDict)
-    for name in Record_Switch.keys():
+    for name in list(Record_Switch.keys()):
         if Record_Switch[name].shape[0] < 10:
             Record_Switch.pop(name)
             HSSwitch.pop(name)
@@ -783,7 +783,7 @@ def Switch_Latency(*myInput):
             left.pop(name)
             table.pop(name)
             AllData.pop(name)
-            for gr in Mouse_Grouped.keys():
+            for gr in list(Mouse_Grouped.keys()):
                 if name in Mouse_Grouped[gr]:
                     Mouse_Grouped[gr].remove(name)
 #    prev_groups = Mouse_Grouped.keys()
@@ -793,14 +793,14 @@ def Switch_Latency(*myInput):
     func = lambda h : h.hour
     v_func = np.vectorize(func)
     tmp = {}
-    for name in Record_Switch.keys():
+    for name in list(Record_Switch.keys()):
         tmp[name] = v_func(HSSwitch[name])
     HSSwitch = tmp
     Hour_Dark,Hour_Light=Hour_Light_and_Dark_GUI(Dark_start,Dark_length)
     Best_Model,Pdf,Cdf,EmCdf=F_Gr_Fit_GMM_GUI(Record_Switch,Mouse_Grouped,n_gauss=1)
     Median,Mean,Std=Subj_Median_Mean_Std_GUI(Record_Switch,HSSwitch)
     Hour_label = TimeUnit_to_Hours_GUI(np.hstack((Hour_Dark,Hour_Light)),3600)
-    DataLen    = len(Hour_label) * len(Record_Switch.keys())
+    DataLen    = len(Hour_label) * len(list(Record_Switch.keys()))
     print('\n\nGMM FIT\n\n')  
     std_Switch, GMM_Fit = std_Switch_Latency_GUI(Record_Switch, HSSwitch,
                                                  Mouse_Grouped, Dark_start=Dark_start, 
@@ -819,10 +819,10 @@ def Switch_Latency(*myInput):
     tmp_msgr = Cdf.__len__()
     DataDict['Group Switch Latency']['CDF'] = np.zeros(tmp_msgr*(10**4), dtype = {'names':('Group','Subject','X','Y'),'formats':('|S%d'%lenGroupName,'|S%d'%lenName,float,float)})
                    
-    DataDict['Group Switch Latency']['Group Switch Latency']['Time'] = list(Hour_label) * len(Record_Switch.keys())
+    DataDict['Group Switch Latency']['Group Switch Latency']['Time'] = list(Hour_label) * len(list(Record_Switch.keys()))
     ind = 0
     idx_cdf = 0
-    for key in Mouse_Grouped.keys():
+    for key in list(Mouse_Grouped.keys()):
         for name in Mouse_Grouped[key]:
             DataDict['Group Switch Latency']['Group Switch Latency']['Group'][ind:len(Hour_label)+ind]\
                 = [key] * len(Hour_label)
@@ -846,7 +846,7 @@ def Switch_Latency(*myInput):
     DataDict['Group Switch Latency']['Expected Gain'] = std_Exp_Gain
         
     Gr_Mean,Gr_Std=Gr_Mean_Std_GUI(Median,Mouse_Grouped)
-    Group_Name = Mouse_Grouped.keys()
+    Group_Name = list(Mouse_Grouped.keys())
     dictPlot = {}
     dictPlot['Fig:Group Switch Latency'] = {}
     dictPlot['Fig:Group Switch Latency']['Record switch time'] = Gr_Mean,Hour_Light,Hour_Dark,\
@@ -882,7 +882,7 @@ def delta_rebound(*myInput):
     stage = Input[0]['Combo'][2]
     
     phase_dict = Input[0]['PhaseSel'][0] # dict containing matrix for phase sel
-    subjects = phase_dict.keys()
+    subjects = list(phase_dict.keys())
     duration_sec = np.zeros(len(subjects))
     idx = 0
     for name in subjects:
@@ -899,7 +899,7 @@ def delta_rebound(*myInput):
     delta_to_Sec = lambda t : t.total_seconds()
     vec_delta_to_sec = np.vectorize(delta_to_Sec)
     k_sub = 0
-    for gen in DataGroup.keys():
+    for gen in list(DataGroup.keys()):
         for name in DataGroup[gen]: 
             try:
                 lock.lockForRead()

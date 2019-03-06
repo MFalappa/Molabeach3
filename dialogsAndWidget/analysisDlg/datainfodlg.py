@@ -20,15 +20,19 @@ classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'
 sys.path.append(classes_dir)
 sys.path.append(lib_dir)
 
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-import ui_datainfodlg
+from PyQt5.QtWidgets import (QDialog,QHBoxLayout,QLabel,QPushButton,QVBoxLayout,
+                             QTextBrowser,QTextEdit,QListWidget,QSpacerItem,QSizePolicy,
+                             QApplication)
+from PyQt5.QtCore import Qt,QReadWriteLock
+from PyQt5.QtGui import QFont
+
 from MyDnDDialog import MyDnDListWidget
 from copy import copy
-from abstractmodel_for_table_repr import *
+from abstractmodel_for_table_repr import table_view_setter
 from Modify_Dataset_GUI import *
 from Analyzing_GUI import *
+import ui_datainfodlg
+
 MAC = 'qt_mac_set_native_menubar' in dir()
 
 
@@ -75,8 +79,9 @@ class EditTypesDlg(QDialog):
         self.listDataType.addItems(Dataset.Types)
         self.listRestOfTypes.addItems(AllTypes)
         self.setLayout(layout)
-        self.connect(closeButton,SIGNAL('clicked()'),self.close)
-        self.connect(self.applyButton,SIGNAL('clicked()'),self.Apply)
+        closeButton.clicked.connect(self.close)
+        self.applyButton.clicked.connect(self.Apply)
+
         self.connect(self.listRestOfTypes,SIGNAL('dropped()'),lambda TorF=False: self.enableApply(TorF))
         self.connect(self.listDataType,SIGNAL('dropped()'),lambda TorF=True: self.enableApply(TorF))
        
@@ -199,10 +204,11 @@ class datainfodlg(QDialog):
         
         self.setLayout(vlayout)
         
-        self.connect(self.dialog,SIGNAL('updateTypes()'),self.updateTypes)
-        self.connect(pushButtonEdit,SIGNAL('clicked()'),self.pushButtonEdit_clicked)
-        self.connect(pushButtonRestore,SIGNAL('clicked()'),self.pushButtonRestore_clicked)
-        self.connect(pushButtonClose,SIGNAL('clicked()'),self.close)
+        self.dialog.updateTypes.connect(self.updateTypes)
+        pushButtonEdit.clicked.connect(self.pushButtonEdit_clicked)
+        pushButtonRestore.clicked.connect(self.pushButtonRestore_clicked)
+        pushButtonClose.clicked.connect(self.close)
+     
         
     
     
@@ -229,10 +235,11 @@ class datainfodlg(QDialog):
         
 def main():
     import sys
+    import numpy as np
     app = QApplication(sys.argv)
     lock = QReadWriteLock()
-    datas = np.load('C:\\Users\ebalzani\IIT\Dottorato\Marta_Pace\Pitolisant\\binned_2017-2-21T15_28.phz')
-    data_1 = datas['PW_00621_baseline_cFFT.txt'].all()
+    datas = np.load('/Users/Matte/Scuola/Dottorato/Projects/Pace/pitolisant/prova_binned.phz')
+    data_1 = datas['WT_5075_BL_cFFT.txt'].all()
     
 #    data_1.Dataset = ['ciaspole']
     dlg = datainfodlg(data_1,TimeStamps=None,TypeList=['Ciao','Cacao'],lock=lock)

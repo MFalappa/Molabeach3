@@ -14,31 +14,27 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-#from __future__ import division
-#from __future__ import print_function
-#from __future__ import unicode_literals
-#from future_builtins import *
-import sys,sip,os
+
+import sys,os
 lib_dir = os.path.join(os.path.abspath(os.path.join(os.path.realpath(__file__),'../../..')),'libraries')
 sys.path.append(lib_dir)
 from Modify_Dataset_GUI import OrderedDict
-import urllib.request, urllib.error, urllib.parse
-from PyQt5.QtCore import (Qt, pyqtSignal,QTime)
+
+from PyQt5.QtCore import ( pyqtSignal,QTime)
 from PyQt5.QtGui import QFont
 
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
         QSpinBox, QLabel, QHBoxLayout,QGridLayout, QDialogButtonBox,
-        QVBoxLayout, QSpacerItem, QSizePolicy,QListWidget, QRadioButton,
+        QVBoxLayout, QSpacerItem, QSizePolicy, QRadioButton,
         QCheckBox, QDoubleSpinBox,QLineEdit,QPushButton,QFileDialog,QTimeEdit)
 
 
-from Modify_Dataset_GUI import OrderedDict,DatasetContainer_GUI
+from Modify_Dataset_GUI import DatasetContainer_GUI
 from MyDnDDialog import MyDnDListWidget
 import numpy as np
 from widgetSleepRecordingPhase import widgetSleepRecordingPhase
-#sip.setapi('QString', 2)
-#sip.setapi('QStringList', 2)
-#sip.setapi('QVariant', 2)
+
+
 
 class comboBoxAutonomice(object):
     def __init__(self, comboBox, valueList):
@@ -581,7 +577,7 @@ def main():
 #     Phase Selection
 #==============================================================================
     dc = DatasetContainer_GUI()
-    dd = np.load('C:\\Users\ebalzani\Desktop\Data\Sleep\\workspace_2017-5-15T14_16.phz')
+    dd = np.load('/Users/Matte/Desktop/Paper marta/data/Sleep phz/baseline/PWS_22.phz')
     kl = []
     for key in list(dd.keys())[:3]:
         dc.add(dd[key].all())
