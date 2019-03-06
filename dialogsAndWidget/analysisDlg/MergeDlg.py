@@ -18,8 +18,9 @@ import sys,os
 lib_dir = os.path.join(os.path.abspath(os.path.join(os.path.realpath(__file__),'../../..')),'libraries')
 sys.path.append(lib_dir)
 import re
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtWidgets import QDialog
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import ui_mergedlg
 from Modify_Dataset_GUI import DatasetContainer_GUI
 
@@ -74,7 +75,7 @@ class MergeDlg(QDialog,ui_mergedlg.Ui_SelectDataset):
         except IndexError:
             NumDatasetToMerge = 1
         
-        DataNames=unicode(self.lineEditMergedName.text()).split(';')
+        DataNames=str(self.lineEditMergedName.text()).split(';')
         
         try:
             while True:
@@ -89,16 +90,16 @@ class MergeDlg(QDialog,ui_mergedlg.Ui_SelectDataset):
             self.pushButtonOk.setEnabled(False)
         
     
-    @pyqtSignature("")
+#    @pyqtSignature("")
     def on_pushButtonAdd_clicked(self):
         Items = self.listWidgetAllDataset.selectedItems()
         last = self.listWidgetSelected.count()
         if last != 0:
             lastItem = self.listWidgetSelected.item(last-1)
-            print unicode(lastItem.text())
-            if unicode(lastItem.text()) != self.NextString:
-                if self.DataTypeDict[unicode(lastItem.text())] !=\
-                    self.DataTypeDict[unicode(Items[0].text())]:
+            print(str(lastItem.text()))
+            if str(lastItem.text()) != self.NextString:
+                if self.DataTypeDict[str(lastItem.text())] !=\
+                    self.DataTypeDict[str(Items[0].text())]:
                     return
         for i in range(len(Items)):
             Item = self.listWidgetAllDataset.takeItem(self.listWidgetAllDataset.row(Items[i]))
@@ -107,7 +108,7 @@ class MergeDlg(QDialog,ui_mergedlg.Ui_SelectDataset):
         
             
     
-    @pyqtSignature("")
+#    @pyqtSignature("")
     def on_pushButtonRemove_clicked(self):
         Items = self.listWidgetSelected.selectedItems()
         for i in Items:
@@ -118,21 +119,21 @@ class MergeDlg(QDialog,ui_mergedlg.Ui_SelectDataset):
             self.listWidgetAllDataset.setCurrentItem(Item)
             self.listWidgetAllDataset.sortItems()
     
-    @pyqtSignature("")
+#    @pyqtSignature("")
     def on_pushButtonUp_clicked(self):
         Row= self.listWidgetSelected.currentRow()
         Item = self.listWidgetSelected.takeItem(Row)
         self.listWidgetSelected.insertItem(Row-1,Item)
         self.listWidgetSelected.setCurrentRow(self.listWidgetSelected.row(Item))
     
-    @pyqtSignature("")
+#    @pyqtSignature("")
     def on_pushButtonDown_clicked(self):
         Row= self.listWidgetSelected.currentRow()
         Item = self.listWidgetSelected.takeItem(Row)
         self.listWidgetSelected.insertItem(Row+1,Item)
         self.listWidgetSelected.setCurrentRow(self.listWidgetSelected.row(Item))
     
-    @pyqtSignature("")
+#    @pyqtSignature("")
     def on_pushButtonNext_clicked(self):
         BreakItems = self.listWidgetSelected.findItems(self.NextString,
                                                        Qt.MatchExactly)
@@ -151,7 +152,7 @@ class MergeDlg(QDialog,ui_mergedlg.Ui_SelectDataset):
         self.mergeDict = {}
         for name in list_names:
             self.mergeDict[name] = []
-        for row in xrange(self.listWidgetSelected.count()):
+        for row in range(self.listWidgetSelected.count()):
             item_text = self.listWidgetSelected.item(row).text()
             if item_text == self.NextString:
                 ind_data += 1
@@ -164,11 +165,11 @@ def main():
 
     import sys
     import numpy as np
-    text=[u'Ciao Come va',u'ciao come va',u'analizzo',u'canalizzo',u'analizzom'
-        ,u'diario',u'polli',u'aviario','----------',u'Ciccio']
+    text=['Ciao Come va','ciao come va','analizzo','canalizzo','analizzom'
+        ,'diario','polli','aviario','----------','Ciccio']
     dc = DatasetContainer_GUI()
-    tmp = np.load('C:\Users\ebalzani\Desktop\\workspace_2017-4-21T10_56.phz')
-    for key in tmp.keys():
+    tmp = np.load('C:\\Users\ebalzani\Desktop\\workspace_2017-4-21T10_56.phz')
+    for key in list(tmp.keys()):
         dc.add(tmp[key].all())
     app = QApplication(sys.argv)
     form = MergeDlg(DataContainer=dc)

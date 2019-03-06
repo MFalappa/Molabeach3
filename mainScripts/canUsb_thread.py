@@ -141,6 +141,9 @@ class canUsb_thread(QThread):
         
     def run(self):
         self.canUsb = serial.Serial(self.serialPort, baudrate=500000,timeout=0)
+        self.canUsb.write(CLOSE)
+        self.canUsb.write(canbaud+CR)
+        self.canUsb.write(OPEN)
         self.timer = QTimer()
         self.timer.timeout.connect(self.add_new_address)
         self.timer.start(1)
@@ -155,12 +158,11 @@ class canUsb_thread(QThread):
         
     def add_new_address(self):
         self.timer.stop()
-        byte = self.canUsb.read() 
+        byte = self.canUsb.read()
+#        print(byte)
         if byte is not b'':
             if byte[0] == 116:
-                print('qui')
                 while byte[-1] != 13:
-                    print('qua')
                     byte += self.canUsb.read()
                 
                 msg = CANMsg()
@@ -214,9 +216,11 @@ def parsing_can_log(message):
             return 'Time',Id, '%d:%d:%d'%(message.data[7],message.data[6],
                                    message.data[5])
     else:
+        print('matto')
+        return 'Set Date',message.id-1408, None
 #        print('Not recognize data')
 #        print(message,'\n')
-        raise ValueError
+#        raise ValueError
   
 
     

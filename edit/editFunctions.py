@@ -22,14 +22,16 @@ phenopy_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../..")),'mai
 sys.path.append(lib_dir)
 sys.path.append(anDlg_dir)
 sys.path.append(phenopy_dir)
-from Modify_Dataset_GUI import *
+from copy import copy
+from Modify_Dataset_GUI import (Dataset_GUI,Merge_N_Dataset_GUI,vectAddDays,
+                                Time_Details_GUI,Cut_Dataset_GUI,Select_Interval_GUI)
 from MergeDlg import MergeDlg
-from mainAnalysis import *
-from PyQt4.QtGui import QApplication
+from PyQt5.QtWidgets import QApplication,QMainWindow
 from CreateGroupsDlg import CreateGroupsDlg
-from Input_Dlg_std import inputDialog
+from input_Dlg_std import inputDialog
 import datetime as DT
 import numpy as np
+
 
 def TSE__Merge_Dataset(phenopy, selType='TSE'): 
     """
@@ -40,7 +42,7 @@ def TSE__Merge_Dataset(phenopy, selType='TSE'):
     if not dialog.exec_():
         return
     mergeDict = dialog.mergeDict
-    for key in mergeDict.keys():
+    for key in list(mergeDict.keys()):
         datalist = mergeDict[key]
         data_dict = {}
         try:
@@ -58,7 +60,7 @@ def TSE__Merge_Dataset(phenopy, selType='TSE'):
             phenopy.Dataset.add(data)
             message = 'Merged data %s'%key
             phenopy.listWidgetRight.addItem(message)
-        except Exception, e:
+        except Exception as e:
             phenopy.listWidgetRight.addItem(e)
         finally:
             phenopy.lock.unlock()
@@ -75,7 +77,7 @@ def EEG_Binned_Frequencies__Merge_Dataset(phenopy, selType='EEG Binned Frequenci
     if not dialog.exec_():
         return
     mergeDict = dialog.mergeDict
-    for key in mergeDict.keys():
+    for key in list(mergeDict.keys()):
         datalist = mergeDict[key]
         try:
             phenopy.lock.lockForWrite()
@@ -115,31 +117,32 @@ def TSE_Cut_Dataset(phenopy, selType='TSE'):
         Cut dataset of TSE type keeping only a range of experimental days
     """
     dataContainer = phenopy.Dataset
-    Groupdialog = CreateGroupsDlg(1,dataContainer.keys(),DataContainer=dataContainer,
+    Groupdialog = CreateGroupsDlg(1,list(dataContainer.keys()),DataContainer=dataContainer,
                                   TypeList=[selType],parent=phenopy)
     if not Groupdialog.exec_():
         return
     datadict = Groupdialog.returnSelectedNames()
-    datalist = datadict[datadict.keys()[0]]
+    datalist = datadict[list(datadict.keys())[0]]
     IsFirst = True
     for dataName in datalist:
         Start_exp,Start_Time,End_Time = Time_Details_GUI(dataContainer.takeDataset(dataName),
                                                         dataContainer[dataName].TimeStamps)   
         N_Day=int(np.ceil((End_Time[0]-Start_exp[0])/(3600*24)))
-        Days=[ '%s'%d for d in xrange(1,N_Day+2) ]
-        DaysValue = range(1,N_Day+2)
+        Days=[ '%s'%d for d in range(1,N_Day+2) ]
+        DaysValue = list(range(1,N_Day+2))
         if IsFirst:
-            comboBox = [(u'Starting Day:',Days,DaysValue,0),
-                        (u'Ending Day:',Days, DaysValue, len(Days)-1)]
+            comboBox = [('Starting Day:',Days,DaysValue,0),
+                        ('Ending Day:',Days, DaysValue, len(Days)-1)]
             timeSpinBox = [None,('Starting Time:',0, 0),
                            ('Ending Time',23,59),None]
             IsFirst = False
         else:
-            comboBox = [(u'Starting Day:', Days,DaysValue, dialog.ComboBox[0].currentIndex()),
-                        (u'Ending Day:', Days, DaysValue, min(dialog.ComboBox[1].currentIndex(),len(Days)))]
+            comboBox = [('Starting Day:', Days,DaysValue, dialog.ComboBox[0].currentIndex()),
+                        ('Ending Day:', Days, DaysValue, min(dialog.ComboBox[1].currentIndex(),len(Days)))]
             timeSpinBox = [None,('Starting Time:',dialog.HourSpinBox[1].value(), dialog.MinuteSpinbox[1].value()),
                            ('Ending Time',dialog.HourSpinBox[2].value(),dialog.MinuteSpinbox[2].value()),None]
         lineEdit = ['Dataset name:']
+        
         dialog = inputDialog(dataName, comboBox, timeSpinBox, None, lineEdit, parent=phenopy)
         if not dialog.exec_():
             continue
@@ -152,7 +155,7 @@ def TSE_Cut_Dataset(phenopy, selType='TSE'):
             secStart = (dayStart - 1)*3600*24+hourStart
             secEnd = (dayEnd - 1)*3600*24+hourEnd
             phenopy.lock.lockForWrite()
-            print secStart,secEnd
+            print(secStart,secEnd)
             Dataset = Cut_Dataset_GUI(dataContainer.takeDataset(dataName),secStart,secEnd,
                                       dataContainer[dataName].TimeStamps, DayOrSec='Sec')
             
@@ -162,7 +165,7 @@ def TSE_Cut_Dataset(phenopy, selType='TSE'):
                 dataContainer.pop(newName)
             else:
                 newName = copy(dataName)
-            while newName in dataContainer.keys():
+            while newName in list(dataContainer.keys()):
                 newName = newName.split('.')[0] + '_Cut.csv'
                     
             data = Dataset_GUI(Dataset, newName,
@@ -171,7 +174,7 @@ def TSE_Cut_Dataset(phenopy, selType='TSE'):
                                TimeStamps=dataContainer[dataName].TimeStamps)
             dataContainer.add(data)
             phenopy.listWidgetRight.addItem(message)
-        except IndexError, e:
+        except IndexError as e:
             message = 'Failed to cut Dataset %s with exception'%(dataName,e.message)
             phenopy.listWidgetRight.addItem(message)
         finally:
@@ -188,14 +191,14 @@ def EEG_Binned_Frequencies__Cut_Dataset(phenopy,selType='EEG Binned Frequencies'
     """
         Cut sleepSign dataset of the form EEG Binned Frequencies
     """
-    print selType
+    print(selType)
     dataContainer = phenopy.Dataset
-    Groupdialog = CreateGroupsDlg(1,dataContainer.keys(),DataContainer=dataContainer,
+    Groupdialog = CreateGroupsDlg(1,list(dataContainer.keys()),DataContainer=dataContainer,
                                   TypeList=[selType],parent=phenopy)
     if not Groupdialog.exec_():
         return
     datadict = Groupdialog.returnSelectedNames()
-    datalist = datadict[datadict.keys()[0]]
+    datalist = datadict[list(datadict.keys())[0]]
     IsFirst = True
     for dataName in datalist:
         try:
@@ -206,16 +209,16 @@ def EEG_Binned_Frequencies__Cut_Dataset(phenopy,selType='EEG Binned Frequencies'
             d1 = DT.date(Dataset.Timestamp[-1].year, Dataset.Timestamp[-1].month,
                          Dataset.Timestamp[-1].day)
             N_Day = (d1 - d0).days + 1
-            Days=[u'%s'%d for d in xrange(1,N_Day+2)]
-            DaysValue = range(1,N_Day+2)
+            Days=['%s'%d for d in range(1,N_Day+2)]
+            DaysValue = list(range(1,N_Day+2))
             if IsFirst:
-                comboBox = [(u'Starting Day:', Days, DaysValue,0),
-                            (u'Ending Day:', Days, DaysValue, len(Days)-1)]
+                comboBox = [('Starting Day:', Days, DaysValue,0),
+                            ('Ending Day:', Days, DaysValue, len(Days)-1)]
                 timeSpinBox = [None,('Starting Time:',0,0),
                              ('Ending Time',23,59),None]
             else:
-                comboBox = [(u'Starting Day:', Days,DaysValue,dialog.ComboBox[0].currentIndex()),
-                            (u'Ending Day:', Days, DaysValue, min(dialog.ComboBox[1].currentIndex(),len(Days)-1))]
+                comboBox = [('Starting Day:', Days,DaysValue,dialog.ComboBox[0].currentIndex()),
+                            ('Ending Day:', Days, DaysValue, min(dialog.ComboBox[1].currentIndex(),len(Days)-1))]
                 timeSpinBox = [None,('Starting Time:',dialog.HourSpinBox[1].value(),dialog.MinuteSpinBox[1].value()),
                              ('Ending Time',dialog.HourSpinBox[2].value(),dialog.MinuteSpinBox[2].value()),None]
             lineEdit = ['Dataset name:']
@@ -257,7 +260,7 @@ def EEG_Binned_Frequencies__Cut_Dataset(phenopy,selType='EEG Binned Frequencies'
                 dataContainer.pop(newName)
             else:
                 newName = copy(dataName)
-            while newName in dataContainer.keys():
+            while newName in list(dataContainer.keys()):
                 newName = newName.split('.')[0] + '_Cut.csv'
                     
             data = Dataset_GUI(Dataset, newName,
@@ -266,7 +269,7 @@ def EEG_Binned_Frequencies__Cut_Dataset(phenopy,selType='EEG Binned Frequencies'
                                TimeStamps=dataContainer[dataName].TimeStamps)
             dataContainer.add(data)
             phenopy.listWidgetRight.addItem(message)
-        except Exception, e:
+        except Exception as e:
             message = 'Unable to cut dataset with the exception: %s'%e.message
             phenopy.listWidgetRight.addItem(message)
         finally:
@@ -283,17 +286,17 @@ def TSE__Select_Interval(phenopy, selType='TSE'):
         Select a subset of hours from TSE data across the whole experiment
     """
     dataContainer = phenopy.Dataset
-    Groupdialog = CreateGroupsDlg(1,dataContainer.keys(),DataContainer=dataContainer,
+    Groupdialog = CreateGroupsDlg(1,list(dataContainer.keys()),DataContainer=dataContainer,
                                   TypeList=[selType],parent=phenopy)
     if not Groupdialog.exec_():
         return
     datadict = Groupdialog.returnSelectedNames()
-    datalist = datadict[datadict.keys()[0]]
-    comboBox=[(u'Keep time interval:', ['Inside','Outside'],['Inside','Outside'], 0)]
+    datalist = datadict[list(datadict.keys())[0]]
+    comboBox=[('Keep time interval:', ['Inside','Outside'],['Inside','Outside'], 0)]
     timeSpinBox = [('Day Time 0:', 0, 0),('Day Time 1:', 24, 0),None]
-    Datalist=u''
+    Datalist=''
     for dataName in datalist:
-        Datalist+=unicode(dataName)+u'<br>'
+        Datalist+=str(dataName)+'<br>'
     Datalist=Datalist[:-4]
     dialog = inputDialog(Datalist,comboBox,timeSpinBox,None,NewDataLineEdit=True,
                                  DatasetNum=Groupdialog.groupListWidget[0].count(),
@@ -308,7 +311,7 @@ def TSE__Select_Interval(phenopy, selType='TSE'):
     if len(dialog.NewDataLineEdit.text())>0:
         newName = dialog.NewDataLineEdit.text().split(';')
                                     
-    if InOrOut==u'Inside':
+    if InOrOut=='Inside':
         InOrOut = 'In'
     else:
         InOrOut = 'Out'
@@ -330,13 +333,13 @@ def TSE__Select_Interval(phenopy, selType='TSE'):
                 phenopy.Dataset.pop(newName)
             else:
                 newName = copy(DataLabel)
-            while newName in dataContainer.keys():
+            while newName in list(dataContainer.keys()):
                 newName = newName.split('.')[0] + '_SelectedInterval.csv' 
             data = Dataset_GUI(Dataset,newName,
                                Path=None,Types=Types, Scaled=Scaled)
             phenopy.Dataset.add(data)
             phenopy.listWidgetRight.addItem(message)
-        except IndexError, e:
+        except IndexError as e:
             message = 'Failed to select interval from data %s\nwith the exception %s'%(DataLabel,e.message)
             phenopy.listWidgetRight.addItem(message)
         finally:
@@ -348,7 +351,7 @@ def AM_Microsystems__Select_Interval(phenopy):
     TSE__Select_Interval(phenopy, selType='TSE')
         
 def create_laucher():
-    fh = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'editFunctions.py'),'U')
+    fh = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'editFunctions.py'))
     script = 'import numpy as np\nfrom editFunctions import *\n\ndef launchEditFun(phenopy,funName):\n'
     line = fh.readline()
     
@@ -372,7 +375,7 @@ create_laucher()
 
 def main():
     app=QApplication(sys.argv)
-    form = MainWindow()
+    form = QMainWindow()
     form.show()
     app.exec_()
 

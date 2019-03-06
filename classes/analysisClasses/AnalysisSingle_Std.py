@@ -14,18 +14,22 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
+import numpy as np
 import os,sys
 lib_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'libraries')
 sys.path.append(lib_dir)
-from PyQt4.QtCore import (SIGNAL, QThread)
-from Analyzing_GUI import *
-from Plotting_GUI import *
-from Modify_Dataset_GUI import OrderedDict
+from PyQt5.QtCore import (pyqtSignal, QThread)
+from Modify_Dataset_GUI import (OrderedDict,Time_Details_GUI,StartDate_GUI,EndDate_GUI,
+                                create_OutputData_GUI,TimeUnit_to_Hours_GUI,
+                                Hour_Light_and_Dark_GUI)
 from copy import copy
-import matplotlib
+
 from launcher import function_Launcher
-matplotlib.use('qt4agg')
+
+from Analyzing_GUI import (F_Actogram_GUI,Fit_Sin_BestPeriod,HourDark_And_Light_BinnedMean_GUI,
+                           AITComputation_GUI,F_Correct_Rate_New_GUI,F_OnSet_GUI,
+                           F_OffSet_GUI,F_PeakProbes_GUI ,F_Probes_x_TimeInterval_GUI)
+
 
 class analysisSingle_thread(QThread):
     def __init__(self, Datas, lock, parent = None):
@@ -37,33 +41,33 @@ class analysisSingle_thread(QThread):
         self.info = OrderedDict()
         
     def initialize(self, Input, analysisName, DataDict , TimeStamps, pairedGroups):
-        print 'start initialize'
+#        print('start initialize')
         self.Input = Input
         self.analysisName = analysisName
-        print 'DataDict',DataDict
-        self.DataList = DataDict.values()[0]
+#        print('DataDict',DataDict)
+        self.DataList = list(DataDict.values())[0]
         self.TimeStamps = copy(TimeStamps)
         self.pairedGroups = pairedGroups
         flag = True
-        for key in Input.keys():
-            if Input[key].has_key('SavingDetails'):
+        for key in list(Input.keys()):
+            if 'SavingDetails' in Input[key]:
                 self.savingDetails = Input[key]['SavingDetails']
                 flag = False
                 break
         if flag:
             self.savingDetails = False
-        print 'end initialize ',self.savingDetails
+#        print('end initialize ',self.savingDetails)
     def run(self):
         self.outputData, self.inputForPlots, self.info =\
             self.analyze(self.analysisName)
-        self.emit(SIGNAL('threadFinished()'))
+        self.emit(pyqtSignal('threadFinished()'))
         
     def setInput(self, Input, DataList):
         self.Input = Input
         self.DataList = DataList
     
     def analyze(self, analysisName):
-        print 'analyze called',':',analysisName
+#        print('analyze called',':',analysisName)
         try:
             if analysisName == 'Actogram':
                 return Actogram(self.Datas, self.Input, 
@@ -85,13 +89,13 @@ class analysisSingle_thread(QThread):
                                                self.Input,self.DataList,
                                                self.TimeStamps, self.lock,
                                                self.pairedGroups)
-        except Exception,e:# as inst:
+        except Exception as e:# as inst:
             #print(type(inst))    # the exception instance
             #print(inst.args)     # arguments stored in .args
             #print(inst)
             #x = inst.args     # unpack args
             #print('x =', x)
-            print e
+            print(e)
             outputData, inputForPlot, info = None, None, None
             
         return outputData, inputForPlot, info
@@ -101,16 +105,16 @@ def Actogram(Datas, Input, DataList, TimeStamps, lock):
         Actogram from std input dlg
     """
     interval = Input[0]['Combo'][0] * 60
-    print 'interval ',interval
+#    print('interval ',interval)
     step_num = Input[0]['SpinBox'][0]
     p_min = Input[0]['Range'][0][0]
     p_max = Input[0]['Range'][0][1]
     Light_start = Input[0]['Combo'][1]
-    print 'Input extracted'
+    print('Input extracted')
     inputForPlots, dataDict = OrderedDict(),OrderedDict()
-    outputData = OrderedDict()
+#    outputData = OrderedDict()
     lenName = 0
-    print 'DL',DataList
+    print('DL',DataList)
     for name in DataList:
         lenName = max(lenName, len(name))
     dtypeDict = {'names':('Subject', 'Period', 'Phase', 'Amplitude',
@@ -119,7 +123,7 @@ def Actogram(Datas, Input, DataList, TimeStamps, lock):
                             float)}
     std_SinFit = np.zeros(len(DataList), dtype=dtypeDict)
     ind = 0
-    print DataList
+    print(DataList)
     for dataName in DataList:
         try:
             lock.lockForRead()
@@ -130,15 +134,15 @@ def Actogram(Datas, Input, DataList, TimeStamps, lock):
             ##############################################
         finally:
             lock.unlock()
-        print 'data exported'
-        print TimeStamps
+        print('data exported')
+        print(TimeStamps)
         Start_exp, Start_Time, End_Time = Time_Details_GUI(data,TimeStamps)
         Start_H = (Start_exp)//3600
         Actogram, N_Day = F_Actogram_GUI(data, Start_exp, End_Time,\
                                              interval, TimeStamps, 24)
         Ms,Ds,Ys = StartDate_GUI(data, TimeStamps)
         Me,De,Ye = EndDate_GUI(data, TimeStamps)
-        title = u'Actogram %s\nFrom: %d/%d/%d\nTo: %d/%d/%d'\
+        title = 'Actogram %s\nFrom: %d/%d/%d\nTo: %d/%d/%d'\
                 %(dataName,Ms,Ds,Ys,Me,De,Ye)
         kwargs = {'Start_Hour': Start_H,'Title' : title}
         inputForPlots[dataName] = {}
@@ -202,7 +206,7 @@ def AIT(Datas, Input, DataList, TimeStamps, lock):
             ##############################################
         finally:
             lock.unlock()
-        print 'Dato estratto'
+        print('Dato estratto')
         OrdMedian,OrdMean,OrdStd,perc25,perc75,\
             Hour_Dark,Hour_Light,HourStart_AIT = AITComputation_GUI(
                 data, Dark_start,
@@ -220,16 +224,16 @@ def AIT(Datas, Input, DataList, TimeStamps, lock):
         AITVector['Perc 25']=perc25
         AITVector['Perc 75']=perc75
         AITVector['Time']=Hlabel
-        print 'AITVector created'
+        print('AITVector created')
         inputForPlots[dataName] = {}
         inputForPlots[dataName]['Fig_AIT'] = (OrdMean, OrdStd,
                                           Hlabel, 'b', 'r', LenDark, 0.3,
                                          'Actual Inter Trial\n%s'\
                                          %dataName, 
                                          'AIT Duration (min)',None,OrdMedian,perc25,perc75)
-        print 'inputForPlots created'
+        print('inputForPlots created')
         dataDict[dataName] = AITVector
-        print 'dataDict created'
+        print('dataDict created')
     
     DataDict = {}
     DataDict['Single Subject AIT'] = {}
@@ -278,7 +282,7 @@ def Error_Rate(Datas, Input, DataList, TimeStamps, lock):
                                     TimeStamps,Start_exp,24,tend=tend,
                                     TimeInterval=TimeInterval)
         except:
-            print 'unable to extract correct rate'
+            print('unable to extract correct rate')
             return
         ReorderIndex = np.hstack((Hour_Dark,Hour_Light))
         if HBin==1:
@@ -358,10 +362,10 @@ def Raster_Plot(Datas, Input, DataList, TimeStamps, lock):
             scale  = copy(Datas.scaled(dataName)[1])
         finally:
             lock.unlock()
-        print 'data copied'
+        print('data copied')
         Start_exp,Start_Time,End_Time = Time_Details_GUI(data,
                                                          TimeStamps)
-        print 'time details extracted'
+        print('time details extracted')
         if Input[0]['Combo'][0] == 'All':
             TrialOnset = np.where(data['Action']==TimeStamps['Center Light On'])[0]
             TrialOffset = np.where(data['Action']==TimeStamps['End Intertrial Interval'])[0]
@@ -389,7 +393,7 @@ def Raster_Plot(Datas, Input, DataList, TimeStamps, lock):
                 inputForPlots[dataName] = {}
                 inputForPlots[dataName]['Fig_Raster_%s'%LocName] =\
                         Pk[0], Location, scale
-                
+              
         else:
             Pks_0,Pks_1,indTrOn,trNum = F_Probes_x_TimeInterval_GUI(data, 
                                               TimeStamps, Start_exp,
@@ -401,7 +405,7 @@ def Raster_Plot(Datas, Input, DataList, TimeStamps, lock):
             Pk = F_PeakProbes_GUI(data, TimeStamps, Pks[0], Pks[1], tend,
                                   loc_for_Pk,trial_num=trNum,trial_ind=indTrOn)
             if printBoth:
-                print 'HS: ',HopperSide
+                print('HS: ',HopperSide)
                 Pk1 = F_PeakProbes_GUI(data, TimeStamps, Pks[0], Pks[1], tend,
                                        loc_for_Pk1,trial_num=trNum,
                                        trial_ind=indTrOn)
@@ -413,7 +417,7 @@ def Raster_Plot(Datas, Input, DataList, TimeStamps, lock):
                 inputForPlots[dataName] = {}
                 inputForPlots[dataName]['Fig_Raster_%s'%LocName] =\
                         Pk[0], Location, scale
-        print 'Raster Plot Extracted'
+        print('Raster Plot Extracted')
         
 
         
@@ -456,11 +460,11 @@ def Peak_Procedure(Datas, Input, DataList, TimeStamps, lock):
 #            scale  = copy(Datas.scaled(dataName)[1])
         finally:
             lock.unlock()
-        print 'data copied'
+        print('data copied')
         
         Start_exp,Start_Time,End_Time = Time_Details_GUI(data,
                                                          TimeStamps)
-        print 'time details extracted'
+        print('time details extracted')
         ## Probe trial on and off
         if Input[0]['Combo'][0] == 'All':
             TrialOnset = np.where(data['Action']==TimeStamps['Center Light On'])[0]
@@ -480,17 +484,17 @@ def Peak_Procedure(Datas, Input, DataList, TimeStamps, lock):
                                           End_Time, HopperSide, tend = tend,
                                           Floor=True,  t_first = t_first, 
                                           t_last = t_last)
-        print 'Pks computed'
-        print '\n\nLen pks: ',len(Pks[0])
-        print dataName
+        print('Pks computed')
+        print('\n\nLen pks: ',len(Pks[0]))
+        print(dataName)
         Pk = F_PeakProbes_GUI(data, TimeStamps, Pks[0], Pks[1], tend,
                               loc_for_Pk)
-        print 'Pk computed'
+        print('Pk computed')
         if Input[0]['Combo'][0] == 'All':
             title = 'All trials, %s'%LocName
         else:
             title = '%s trials, %s'%(Input[0]['Combo'][0],LocName)
-        print np.max(Pk[1])
+        print(np.max(Pk[1]))
         inputForPlots[dataName]['Fig_Peak_%s'%LocName] =\
                 Pk[1], tend, t, Location, 'Peak Procedure\n%s\n%s'%(dataName,
                 title),\

@@ -14,9 +14,9 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+
+
+
 from future_builtins import *
 
 
@@ -24,7 +24,7 @@ import sys,os
 lib_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libraries')
 sys.path.append(lib_dir)
 from Modify_Dataset_GUI import OrderedDict
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from PyQt4.QtCore import (Qt, SIGNAL, SLOT)
 from PyQt4.QtGui import (QApplication, QComboBox, QDialog,
         QSpinBox, QLabel, QHBoxLayout,QGridLayout, QFont, QDialogButtonBox,
@@ -67,8 +67,8 @@ class inputDialog(QDialog):
             font.setBold(True)
             font.setWeight(75)
         
-            DataLabel=QLabel(u'Selected Dataset: ')
-            Data_Name=QLabel(u'%s'%DataName)
+            DataLabel=QLabel('Selected Dataset: ')
+            Data_Name=QLabel('%s'%DataName)
             Data_Name.setFont(font)
         
                
@@ -87,7 +87,7 @@ class inputDialog(QDialog):
         if comboBox is not None:
             
             for indexCombo in range(len(comboBox)):
-                ComboLabel[indexCombo] = QLabel(unicode(comboBox[indexCombo][0]))
+                ComboLabel[indexCombo] = QLabel(str(comboBox[indexCombo][0]))
                 self.ComboBox[indexCombo] = QComboBox()
                 print(comboBox[indexCombo][1])
                 self.ComboBox[indexCombo].addItems(comboBox[indexCombo][1])
@@ -109,8 +109,8 @@ class inputDialog(QDialog):
                     self.MinuteSpinbox[indexSpin] = QSpinBox()
                     self.MinuteSpinbox[indexSpin].setRange(0,59)
                     self.MinuteSpinbox[indexSpin].setValue(TimeSpinBoxLabel[indexSpin][2])
-                    SpinLabel[indexSpin] = QLabel(unicode(TimeSpinBoxLabel[indexSpin][0]))
-                    SeparatorLabel[indexSpin]=QLabel(u':')
+                    SpinLabel[indexSpin] = QLabel(str(TimeSpinBoxLabel[indexSpin][0]))
+                    SeparatorLabel[indexSpin]=QLabel(':')
                     
                     HLayout2[indexSpin] = QHBoxLayout()
                     HLayout2[indexSpin].addWidget(SpinLabel[indexSpin])
@@ -155,7 +155,7 @@ class inputDialog(QDialog):
                                                         SpinBox[indexSpinBox][2][1])
                 self.SpinBox[indexSpinBox].setValue(SpinBox[indexSpinBox][1])
                 
-            IntSpinLabel[indexSpinBox] = QLabel(u'%s'%SpinBox[indexSpinBox][0])
+            IntSpinLabel[indexSpinBox] = QLabel('%s'%SpinBox[indexSpinBox][0])
             HLayout5[indexSpinBox] = QHBoxLayout()
             HLayout5[indexSpinBox].addWidget(IntSpinLabel[indexSpinBox])
             
@@ -165,7 +165,7 @@ class inputDialog(QDialog):
             
         for indexLineEdit in range(len(LineEdit)):
             self.LineEdit[indexLineEdit] = QLineEdit()
-            LineEditLabel[indexLineEdit] = QLabel(u'%s'%LineEdit[indexLineEdit])
+            LineEditLabel[indexLineEdit] = QLabel('%s'%LineEdit[indexLineEdit])
             HLayout4[indexLineEdit] = QHBoxLayout()
             HLayout4[indexLineEdit].addWidget(LineEditLabel[indexLineEdit])
             
@@ -233,7 +233,7 @@ class inputDialog(QDialog):
                 self.ButtonBox.button(self.ButtonBox.Ok).setEnabled(False)
             else:
                 try:
-                    DataNames=unicode(self.NewDataLineEdit.text()).split(';')
+                    DataNames=str(self.NewDataLineEdit.text()).split(';')
             
                     try:
                         while True:
@@ -246,7 +246,7 @@ class inputDialog(QDialog):
                     self.ButtonBox.button(self.ButtonBox.Ok).setEnabled(True)        
         else:
         
-            DataNames=unicode(self.NewDataLineEdit.text()).split(';')
+            DataNames=str(self.NewDataLineEdit.text()).split(';')
             
             try:
                 while True:
@@ -272,7 +272,7 @@ if __name__ == "__main__":
     Hours=[]
     for h in range(24):
         Hours+=['%d h'%h]
-    comboBox=[(u'Dark Phase Start:',Hours,20),(u'Dark Phase Duration:',Hours,12)]
+    comboBox=[('Dark Phase Start:',Hours,20),('Dark Phase Duration:',Hours,12)]
     
     timeSpinBox = [None,('Ora1:',0,0),('Ora 2:',24,0),None,('Ora 3:',1,0)]
     
@@ -287,10 +287,10 @@ if __name__ == "__main__":
     for h in range(24):
         Hours+=['%d:00'%h]
         Hours1+=['%d h'%h]
-    Label = [u'Short Signal:',u'Long Signal:',u'Trial Duration:']
+    Label = ['Short Signal:','Long Signal:','Trial Duration:']
     Range=[(0,20),(5,30),(15,10000)]
     doubleSpinBox = (Label,Range,(1,111,100))
-    comboBox=[(u'Hopper Side:',['Left','Right'],0)]
+    comboBox=[('Hopper Side:',['Left','Right'],0)]
     timeSpinBox=[None,('Starting Time:',0,0),('Ending Time',24,0),None]
     LineEdit=['Entrare il patronimico:']
     SpinBox=[('SpinnoBoxo',30,(-1,1000)),('We Guagliao',1),('Cose a caso',)]
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     app.exec_()
     
     String = form.ComboBox[0].itemText(form.ComboBox[0].currentIndex())
-    if String == u'Left':
+    if String == 'Left':
           S='l'
     else:
         S='r'

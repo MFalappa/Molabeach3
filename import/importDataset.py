@@ -18,17 +18,18 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import os,sys
 lib_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../..')),'libraries')
 dlgAn_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../..')),'dialogsAndWidget','analysisDlg')
+repo_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../..')),'actionDictionaries')
+
 sys.path.append(dlgAn_dir)
 sys.path.append(lib_dir)
-repo_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../..')),'actionDictionaries')
 import numpy as np
-from scipy.io import loadmat
 import h5py
-from Modify_Dataset_GUI import *
-import os
+from Modify_Dataset_GUI import (DetectDelimiter_GUI,Rescale_Time_GUI,Time_Details_GUI,
+                                Terminate_Dataset_GUI,Dataset_GUI,EEG_Data_Struct)
+
 import pandas as pd
 import nexfile
-from Input_Dlg_std import *
+from input_Dlg_std import *
 
 def loadTimeActionData_TSE(path):
     """
@@ -38,10 +39,7 @@ per sistema TSE
     """
     timestamps = np.load(os.path.join(repo_dir,'TSE.npy')).all()
     delimiter = DetectDelimiter_GUI(path)
-#    dlg = inputDialog(None, DoubleSpinBox = [('Select time scaling:', (0.01,10**4),1000)])
-#    if not dlg.exec_():
-#        return
-#    scale = dlg.DoubleSpinBox[0].value()
+
     scale = 1000
     Scaled = (True,scale)
     Types =['TSE']
@@ -74,10 +72,7 @@ In these file there is a footer (in the new version it has been deleted)
     """
     timestamps = np.load(os.path.join(repo_dir,'TSE.npy')).all()
     delimiter = DetectDelimiter_GUI(path)
-#    dlg = inputDialog(None, DoubleSpinBox = [('Select time scaling:', (0.01,10**4),1000)])
-#    if not dlg.exec_():
-#        return
-#    scale = dlg.DoubleSpinBox[0].value()
+
     scale = 1000
     Scaled = (True,scale)
     Types =['TSE']
@@ -111,12 +106,8 @@ and code per sistema am-microsystems
     """
     timestamps = np.load(os.path.join(repo_dir,'AM-Microsystems.npy')).all()
     delimiter = DetectDelimiter_GUI(path)
-#    dlg = inputDialog(None, DoubleSpinBox = [('Select time scaling:', (0.01,10**4),1000)])
-#    if not dlg.exec_():
-#        return
-#    scale = dlg.DoubleSpinBox[0].value()
+
     scale = 1000
-#    print('SCALE',scale)
     Scaled = (True,scale)
     Types = ['AM-Microsystems']
     fh = open(path,'U')
@@ -154,7 +145,7 @@ or the following: Epoch, Stage, Time, Delta + power from Theta, Gamma,...
     flagBreak = False
     line = fh.readline()
     while line:
-        print line
+        print(line)
         for head in ['EpochNo',	'Stage','Time',	'0.000000Hz']:
             if head in line:
                 flagBreak = True
@@ -215,9 +206,9 @@ Import NeuroNexus ".nex" files  using the "nexfile.py" script from http//neuroex
     return ds
 
 def create_laucher():
-    fh = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'importDataset.py'),'U')
+    fh = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'importDataset.py'))
     script = 'import numpy as np\nfrom importDataset import *\n\ndef launchLoadingFun(fhname,funName):\n'
-    script += '\tprint \'Importing function launchehd: \', funName\n'
+    script += '\tprint(\'Importing function launchehd: \', funName)\n'
     line = fh.readline()
     while line:
         if line.startswith(('def ','def\t')):

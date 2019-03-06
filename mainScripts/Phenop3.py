@@ -377,7 +377,7 @@ class Msg_Server(QMainWindow):
     
     def launch_online_analysis(self):
         if (not self.Phenopy3) or not (self.Phenopy3.poll() is None):
-            self.Phenopy3 = Popen([executable,os.path.join(file_dir,'mainAnalysis.py')])
+            self.Phenopy3 = Popen([executable,os.path.join(file_dir,'mainScripts/mainAnalysis.py')])
         
     def read_program(self):
         self.read_Program_ation.setEnabled(False)
@@ -611,9 +611,9 @@ class Msg_Server(QMainWindow):
             self.stack_list += [[msg, answ]]
         if not self.timer_stack.isActive():
             self.timer_stack.start(DT)
-#    
+    
     def write_if_stack(self):
-        print('aggiorna la dir')
+        print('fare qualcosa')
 
 #        MAXCOUNTER = 10
 #        DT = 1500
@@ -651,7 +651,7 @@ class Msg_Server(QMainWindow):
             self.stack_list.pop(0)
             self.stack_counter = 0
             self.write_if_stack()
-#    
+    
     def start_message_gui(self):
         print('lancio la gui')
         bl = self.get_not_recording_box()
@@ -671,17 +671,15 @@ class Msg_Server(QMainWindow):
         self.add_stack(msg_list)
         
     def closeEvent(self, event):
-#        if self.Phenopy3:
-#            self.Phenopy3.kill()
-#        settings = QSettings()
-#        settings.setValue("MainWindow/Geometry", 
-#                          self.saveGeometry())
-#        settings.setValue("MainWindow/State", 
-#                          self.saveState())
-#       
-#        settings.setValue('SaveDirectory',self.saveFolderPath)
-#        if len(list(self.pdict.keys())):
-#            np.save(os.path.join(os.curdir,'pdict.npy'),self.pdict)
+        if self.Phenopy3:
+            self.Phenopy3.kill()
+        settings = QSettings()
+        settings.setValue("MainWindow/Geometry",self.saveGeometry())
+        settings.setValue("MainWindow/State", self.saveState())
+       
+        settings.setValue('SaveDirectory',self.saveFolderPath)
+        if len(list(self.pdict.keys())):
+            np.save(os.path.join(os.curdir,'pdict.npy'),self.pdict)
 #        if self.MODE:
 #            self.Reader.terminate()
 #            if self.serialPort:

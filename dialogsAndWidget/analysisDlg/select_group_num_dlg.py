@@ -15,9 +15,10 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 
-from ui_select_group_num_dlg import *
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from ui_select_group_num_dlg import Ui_Dialog
+from PyQt5.QtWidgets import (QDialog,QApplication)
+from PyQt5.QtCore import pyqtSlot
+
 
 MAC = "qt_mac_set_native_menubar" in dir()
 class select_group_num(QDialog,Ui_Dialog):
@@ -28,11 +29,11 @@ class select_group_num(QDialog,Ui_Dialog):
         if not MAC:
             self.pushButton_ok.setFocus(True)
     
-    @pyqtSignature('void')
+    @pyqtSlot()
     def on_pushButton_ok_clicked(self):
         self.accept()
     
-    @pyqtSignature('void')
+    @pyqtSlot()
     def on_pushButton_cancel_clicked(self):
         self.reject()
 

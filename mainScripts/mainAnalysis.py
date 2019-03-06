@@ -50,9 +50,7 @@ from SearchDlg import SearchDlg
 from input_Dlg_std import inputDialog
 from CreateGroupsDlg import CreateGroupsDlg   
 from copy import copy
-from MergeDlg import MergeDlg
-from ChangeRescalingFactordlg import ChangeRescalingFactordlg
-from analysis_data_type_class import refreshTypeList, getTypes
+
 from plot_Launcher import select_Function_GUI
 from plot_Launcher_Gr import select_Function_GUI_Gr    
 
@@ -63,24 +61,24 @@ import scipy as sts
 import matplotlib.pylab as plt
 
 
+from importDatasetDlg import importDlg
 
-from select_group_num_dlg import *
-from export_files import *
-from Analyzing_GUI import *
+
+from select_group_num_dlg import select_group_num
+from export_files import select_export
+from editDatasetDlg import editDlg
+from Analyzing_GUI import Extracting_Data_GUI
+from Modify_Dataset_GUI import (OrderedDict,DatasetContainer_GUI,Dataset_GUI,
+                                TimeUnit_to_Hours_GUI)
+
+from AnalysisGroup_Std  import analysisGroup_thread
+
+
+from MergeDlg import MergeDlg
+from ChangeRescalingFactordlg import ChangeRescalingFactordlg
+from analysis_data_type_class import refreshTypeList, getTypes
 from Plotting_GUI import *
-from Modify_Dataset_GUI import OrderedDict
 from AnalysisSingle_Std import *
-from AnalysisGroup_Std  import *
-from editDatasetDlg import *
-
-#DatasetContainer_GUI
-#analysisGroup_thread
-#editDlg
-#select_export
-#importDlg
-#TimeUnit_to_Hours_GUI
-#Extracting_Data_GUI
-#Dataset_GUI
 from spikeGUI import *
 #from sleepGUI import *
 #from behaviourGUI import *
@@ -102,18 +100,32 @@ class MainWindow(QMainWindow):
 #       Recording Original TimeStamps:        
         self.TimeStamps={}
         self.TimeStampsKey=['Start Month','Start Day','Start Year','Start Hour',
-                            'Start Minute','Start Second','End Month','End Day',
-                            'End Year','House Light On','House Light Off',
-                            'Left Light On','Left Light Off','Center Light On',
-                            'Center Light Off','Right Light On','Right Light Off',
-                            'Left NP In','Left NP Out','Center NP In',
-                            'Center NP Out','Right NP In','Right NP Out',
-                            'Give Pellet Left','Give Pellet Right',
-                            'Start Intertrial Interval','End Intertrial Interval',
-                            'Probe Trial','Add Nose Poke Exceded','Add Nose Poke Not Reached']
+                            'Start Minute','Start Second','ACT_MILLI','End Month',
+                            'End Day','End Year','ACT_SUBJECT','ACT_EXPID','ACT_PHASE',
+                            'ACT_BOXID','ACT_TRIAL',
                             
-        TimeStampsCode = [1,2,3,4,5,6,8,9,10,15,16,17,18,19,20,21,22,23,24,25,
-                          26,27,28,29,30,36,33,35,37,38]
+                            'House Light On','House Light Off','Left Light On',
+                            'Left Light Off','Center Light On','Center Light Off',
+                            'Right Light On','Right Light Off','Left NP In','Left NP Out',
+                            'Center NP In','Center NP Out','Right NP In','Right NP Out',
+                            'Give Pellet Left','Give Pellet Right','ACT_TTL_HIGH',
+                            'ACT_TTL_LOW','Start Intertrial Interval','End Intertrial Interval',
+                            'ACT_TIMEOUT_REACHED','Probe Trial','ACT_LEFT_NOISE_ON',
+                            'ACT_LEFT_NOISE_OFF','ACT_MID_NOISE_ON','ACT_MID_NOISE_OFF',
+                            'ACT_RIGHT_NOISE_ON','ACT_RIGHT_NOISE_OFF','ACT_ABORT_ACTION',
+                            'ACT_END_GLOBAL_TRIAL','ACT_BATTERY_LOW','ACT_START_TEST',
+                            
+                            'ACT_MARK_1','ACT_MARK_2','ACT_MARK_3','ACT_MARK_4',
+                            'ACT_MARK_5','ACT_MARK_6','ACT_MARK_7','ACT_MARK_8',
+                            'ACT_MARK_9','ACT_MARK_10']
+        
+
+                            
+        TimeStampsCode = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
+                          20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,
+                          38,39,40,41,42,43,44,45,46,47,48,49,50,51,
+                          60,61,62,63,64,65,66,67,68,69]
+        
         refreshTypeList(import_dir)
 
         self.AnalysisAndLabels = np.load(os.path.join(os.path.dirname(__file__),'Analysis.npy')).all()
@@ -377,12 +389,21 @@ class MainWindow(QMainWindow):
         self.analysisGroupThread = analysisGroup_thread(self.Dataset,
                                                           self.lock)
 
-# questi segnali vanno sistemati
+        # questi segnali vanno sistemati
+        self.analysisSingleThread.finished.connect(lambda Type = 'Single': self.completedAnalysis(Type))
+        self.analysisGroupThread.finished.connect(lambda Type = 'Group': self.completedAnalysis(Type))
+        
+#       connecting Dockwidget items to some methods   
+        self.listWidgetLeft.itemClicked.connect(self.UpdateCurrentDataset)
+        self.listWidgetLeft.customContextMenuRequested.connect(self.on_context_menu)
+        self.listWidgetLeft.itemSelectionChanged.connect(self.enable_disable_actions)
+
+# vecchia modalità
+# vecchia modalità
 #        self.connect(self.analysisSingleThread,pyqtSignal('threadFinished()'),\
 #                     lambda Type = 'Single': self.completedAnalysis(Type))
 #        self.connect(self.analysisGroupThread,pyqtSignal('threadFinished()'),\
 #                     lambda Type = 'Group': self.completedAnalysis(Type))
-##       connecting Dockwidget items to some methods        
 #        self.connect(self.listWidgetLeft,pyqtSignal("itemClicked (QListWidgetItem *)"),self.UpdateCurrentDataset)
 #        self.connect(self.listWidgetLeft,pyqtSignal('customContextMenuRequested(const QPoint&)'),self.on_context_menu)
 #        self.connect(self.listWidgetLeft,pyqtSignal('itemSelectionChanged ()'),self.enable_disable_actions)
@@ -432,6 +453,7 @@ class MainWindow(QMainWindow):
             
         
     def importExternalData(self):
+        print('ci arrivo')
         dlg = importDlg(parent=self)
         dlg.errorImport.connect(self.listWidgetRight.addItem)
         dlg.show()
@@ -443,8 +465,7 @@ class MainWindow(QMainWindow):
         answ = QMessageBox.question(self,'Load last dataset?', 
                                     'Do you want to load last session dataset?',
                                     QMessageBox.No|QMessageBox.Yes)
-        print('==========')
-        print(answ)
+
         if answ != 16384:
             fname = []
         existingFile=[]
@@ -504,7 +525,7 @@ class MainWindow(QMainWindow):
             self.editSelectIntervalAction.setEnabled(False)
             self.spikeAction.setEnabled(True)
 
-# va sistemata quella connection con slot
+
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):
         action = QAction(text, self)
@@ -515,9 +536,8 @@ class MainWindow(QMainWindow):
         if tip is not None:
             action.setToolTip(tip)
             action.setStatusTip(tip)
-#        if slot is not None:
-#            action.pyqtSignal.connect(slot)
-#            self.connect(action, pyqtSignal(signal), slot)
+        if slot is not None:
+            action.triggered.connect(slot)
         if checkable:
             action.setCheckable(True)
         return action

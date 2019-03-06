@@ -23,7 +23,7 @@ phenopy_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(phenopy_dir,'libraries')))
 sys.path.append(phenopy_dir)
 
-from Modify_Dataset_GUI import *
+from Modify_Dataset_GUI import EEG_Data_Struct,Dataset_GUI
 
 def export_EEG_DataStruct(path,data_eeg,txt_delimiter=';'):
     data_eeg = data_eeg.reconstructDataMatrix()
@@ -49,7 +49,7 @@ def export_numpy_array(path, array, delimiter=';'):
             df.to_excel(writer,index=False)
             writer.save()
             return True, 'Data %s succesfully saved as excel file'%os.path.basename(path)
-        except Exception, e:
+        except Exception as e:
             return False,'Couldn\'t save to excel with the following exception \"%s\"'%e
     elif path.endswith(('csv','txt')):
         fmt = []
@@ -62,7 +62,7 @@ def export_numpy_array(path, array, delimiter=';'):
         for STR,TYPE in type_list:
             if np.dtype(TYPE) == float:
                 fmt += ['%f']
-            elif np.dtype(TYPE) == int or np.dtype(TYPE) == long:
+            elif np.dtype(TYPE) == int or np.dtype(TYPE) == int:
                 fmt += ['%d']
             elif np.dtype(TYPE) == complex:
                 fmt+= ['%s']
@@ -86,7 +86,7 @@ def save_a_Dataset_GUI(dataGUI, path_file):
     return True, 'Data %s succesfully saved'%(path_file.split('.')[0] + '.phz')
                         
 def select_export(data_exp, path, delimiter=';'):
-    print(type(data_exp))
+    print((type(data_exp)))
     if type(data_exp) == EEG_Data_Struct:
         return export_EEG_DataStruct(path,data_exp,txt_delimiter=delimiter)
     elif type(data_exp) == Dataset_GUI:
@@ -102,16 +102,16 @@ def select_export(data_exp, path, delimiter=';'):
 
 def main():
     test_data=np.random.uniform(size=(10,4))
-    path1 = 'C:\Users\ebalzani\Desktop\TMP\\test.xls'
-    path2 = 'C:\Users\ebalzani\Desktop\TMP\\test.csv'
-    print export_numpy_array(path1,test_data)
-    print export_numpy_array(path2,test_data)
+    path1 = '/Users/Matte/Desktop/test.xls'
+    path2 = '/Users/Matte/Desktop/test.csv'
+    print(export_numpy_array(path1,test_data))
+    print(export_numpy_array(path2,test_data))
     test_data=np.zeros(10,dtype={'names':('a','b','c','d','e'),
-                                 'formats':('S10','f8',long,int,complex)})
-    path1 = 'C:\Users\ebalzani\Desktop\TMP\\test1.xls'
-    path2 = 'C:\Users\ebalzani\Desktop\TMP\\test1.csv'
-    print export_numpy_array(path1,test_data)
-    print export_numpy_array(path2,test_data)
+                                 'formats':('S10','f8',int,int,complex)})
+    path1 = '/Users/Matte/Desktop/test1.xls'
+    path2 = '/Users/Matte/Desktop/test1.csv'
+    print(export_numpy_array(path1,test_data))
+    print(export_numpy_array(path2,test_data))
     
 if __name__ == '__main__':
     main()

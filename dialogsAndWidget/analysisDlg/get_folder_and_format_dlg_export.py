@@ -15,8 +15,9 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 from ui_get_folder_and_format_dlg_export import Ui_Dialog_export
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import QDialog
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 import os
 
 class get_export_info_dlg(QDialog,Ui_Dialog_export):
@@ -44,8 +45,8 @@ class get_export_info_dlg(QDialog,Ui_Dialog_export):
         ext = self.comboBox.currentText()
         file_name = self.lineEdit.text()
         delim_list = []
-        print ext,file_name
-        for row in xrange(self.comboBox.count()):
+        print(ext,file_name)
+        for row in range(self.comboBox.count()):
             delim_list += [self.comboBox.itemText(row)]
         if file_name and not file_name.endswith(ext):
             if file_name.split('.')[-1] in delim_list:
@@ -72,7 +73,7 @@ def main():
     import sys
     app = QApplication(sys.argv)
     form = get_export_info_dlg()
-    print form.exec_()
+    print(form.exec_())
 #    res = app.exec_()
 #    print res
 if __name__ == '__main__':

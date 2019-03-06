@@ -20,8 +20,9 @@ classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'
 sys.path.append(classes_dir)
 sys.path.append(lib_dir)
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtWidgets import QDialog
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import ui_datainfodlg
 from MyDnDDialog import MyDnDListWidget
 from copy import copy
@@ -40,14 +41,14 @@ class EditTypesDlg(QDialog):
         font = QFont()
         font.setBold(True)
         font.setWeight(75)
-        LabelDataType = QLabel(u'Dataset Type',parent=self)
+        LabelDataType = QLabel('Dataset Type',parent=self)
         LabelDataType.setFont(font)
-        LabelRestOfTypes = QLabel(u'Other Types',parent=self)
+        LabelRestOfTypes = QLabel('Other Types',parent=self)
         LabelRestOfTypes.setFont(font)
         self.listDataType = MyDnDListWidget(parent=self)
         self.listRestOfTypes = MyDnDListWidget(parent=self)
-        self.applyButton = QPushButton(u'Apply',parent=self)
-        closeButton = QPushButton(u'Close',parent=self)
+        self.applyButton = QPushButton('Apply',parent=self)
+        closeButton = QPushButton('Close',parent=self)
         Hlayout1 = QHBoxLayout()
         Vlayout1 = QVBoxLayout()
         Vlayout2 = QVBoxLayout()
@@ -86,12 +87,12 @@ class EditTypesDlg(QDialog):
         MaxInd=self.listDataType.count()
         for ind in range(MaxInd):
             Item = self.listDataType.item(ind)
-            ItemList+=[unicode(Item.text())]
+            ItemList+=[str(Item.text())]
         RestList=[]
         MaxInd=self.listRestOfTypes.count()
         for ind in range(MaxInd):
             Item = self.listRestOfTypes.item(ind)
-            RestList+=[unicode(Item.text())]
+            RestList+=[str(Item.text())]
         
         self.__RestOfType = RestList
         self.__TypeList = ItemList
@@ -159,8 +160,8 @@ class datainfodlg(QDialog):
         try:
             self.updateTypes()
             self.information(Path)
-        except Exception,e:
-            print('Unable to collect dataset info. %s'%e)
+        except Exception as e:
+            print(('Unable to collect dataset info. %s'%e))
             self.reject()
             
         vlayout = QVBoxLayout()
@@ -230,7 +231,7 @@ def main():
     import sys
     app = QApplication(sys.argv)
     lock = QReadWriteLock()
-    datas = np.load('C:\Users\ebalzani\IIT\Dottorato\Marta_Pace\Pitolisant\\binned_2017-2-21T15_28.phz')
+    datas = np.load('C:\\Users\ebalzani\IIT\Dottorato\Marta_Pace\Pitolisant\\binned_2017-2-21T15_28.phz')
     data_1 = datas['PW_00621_baseline_cFFT.txt'].all()
     
 #    data_1.Dataset = ['ciaspole']

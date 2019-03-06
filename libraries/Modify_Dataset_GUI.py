@@ -15,10 +15,6 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 
-from __future__ import division
-from __future__ import print_function
-#from __future__ import unicode_literals # confuses doctest
-from future_builtins import *
 import numpy as np
 import matplotlib.pyplot as plt
 import bisect
@@ -26,7 +22,7 @@ import os
 from copy import copy,deepcopy
 import datetime
 import scipy.stats as sts
-from PyQt4.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal
 import warnings
 def intConv(x):
     return int(x)
@@ -86,7 +82,7 @@ def Time_Details_GUI(Y,TimeStamps,*scale,**kwargs):
     else:
         scale=scale[0]
     
-    if  kwargs.has_key('Start_exp'):
+    if  'Start_exp' in kwargs:
         Start_exp=kwargs['Start_exp']
     else:
         Start_exp=F_Start_exp_GUI(Y,TimeStamps)
@@ -152,10 +148,8 @@ def Rescale_Time_GUI(Y,TimeStamps,scale=1000,header=12,footer=3):
     """
 #   Changing time unit from millisec to sec.
     if len(np.where(Y['Action']==TimeStamps['End Month'])[0])>0:
-        print('footer',type(scale), scale)
         Y['Time'][header:-footer]=Y['Time'][header:-footer]/scale
     else:
-        print(type(scale), scale)
         Y['Time'][header:]=Y['Time'][header:]/scale
     return(Y)
     
@@ -210,7 +204,6 @@ def F_Import_GUI(Mouse_Name,Exp_Name,Path_Exp,footerLen=4):
     Datas={}
     
     for i in np.arange(len(Mouse_Name)):
-        print(Exp_Name[i],Mouse_Name[i])
         This_Path=Path_Exp+Exp_Name[i]
         delim = DetectDelimiter_GUI(This_Path)
         try:
@@ -233,7 +226,6 @@ def F_Start_exp_GUI(Y,TimeStamps):
     """
 #   Here we save huor-min-sec of the beginning of our experiment
     
-    print('F_Start_exp_GUI',Y[:10],TimeStamps)
     second_start_exp = Y['Time'][np.where(Y['Action']==TimeStamps['Start Second'])[0]];
     minute_start_exp = Y['Time'][np.where(Y['Action']==TimeStamps['Start Minute'])[0]];
     hour_start_exp = Y['Time'][np.where(Y['Action']==TimeStamps['Start Hour'])[0]];
@@ -332,7 +324,6 @@ def Cut_Dataset_GUI(Data,Start,End,TimeStamps,scale=1,DayOrSec='Day',header=12,f
     New_Hour = (New_Start_exp//3600)%24
     New_Minute = (New_Start_exp//60)%60
     New_Second = (New_Start_exp)%60
-    #print(New_Hour,New_Minute,New_Second)
     
     Temp['Time']=Temp['Time']-Sec_start
     
@@ -367,7 +358,6 @@ def Select_Interval_GUI(Data,Start_second,End_second,TimeStamps,InOrOut='In',sca
     """
     Start_exp,Start_Time,End_Time=Time_Details_GUI(Data,TimeStamps)
     if Data['Action'][-footer]==TimeStamps['End Month']:
-#        print('\n\nCut Footer\n\n')
         Temp=np.array(Data[header:-footer]) 
     else:
         Temp=np.array(Data[header:]) 
@@ -392,10 +382,8 @@ def Select_Interval_GUI(Data,Start_second,End_second,TimeStamps,InOrOut='In',sca
                 if len(OnSet)==0 and len(OffSet)==0:
                     pass
                 elif len(OnSet)==0:
-                    print('no onset','\nlunghezza Offset:', len(OffSet))
                     TmpIndex=TmpIndex[OffSet[0]+1:]
                 elif len(OffSet)==0:
-                    print('no offset','\nlunghezza Onset:', len(OnSet))
                     TmpIndex=TmpIndex[:OnSet[0]]
                 print('Exception Raised (IndexError)')
                 pass
@@ -413,10 +401,8 @@ def Select_Interval_GUI(Data,Start_second,End_second,TimeStamps,InOrOut='In',sca
                 if len(OnSet)==0 and len(OffSet)==0:
                     pass
                 elif len(OnSet)==0:
-                    print('no onset','\nlunghezza Offset:', len(OffSet))
                     TmpIndex=TmpIndex[OffSet[0]+1:]
                 elif len(OffSet)==0:
-                    print('no offset','\nlunghezza Onset:', len(OnSet))
                     TmpIndex=TmpIndex[:OnSet[0]]
                 print('Exception Raised (IndexError)')
                 pass
@@ -448,10 +434,8 @@ def Select_Interval_GUI(Data,Start_second,End_second,TimeStamps,InOrOut='In',sca
                 if len(OnSet)==0 and len(OffSet)==0:
                     pass
                 elif len(OnSet)==0:
-                    print('no onset','\nlunghezza Offset:', len(OffSet))
                     TmpIndex0=TmpIndex0[OffSet[0]+1:]
                 elif len(OffSet)==0:
-                    print('no offset','\nlunghezza Onset:', len(OnSet))
                     TmpIndex0=TmpIndex0[:OnSet[0]]
                 print('Exception Raised (IndexError)')
                 pass
@@ -469,10 +453,8 @@ def Select_Interval_GUI(Data,Start_second,End_second,TimeStamps,InOrOut='In',sca
                 if len(OnSet)==0 and len(OffSet)==0:
                     pass
                 elif len(OnSet)==0:
-                    print('no onset','\nlunghezza Offset:', len(OffSet))
                     TmpIndex1=TmpIndex1[OffSet[0]+1:]
                 elif len(OffSet)==0:
-                    print('no offset','\nlunghezza Onset:', len(OnSet))
                     TmpIndex1=TmpIndex1[:OnSet[0]]
                 print('Exception Raised (IndexError)')
                 pass
@@ -491,10 +473,8 @@ def Select_Interval_GUI(Data,Start_second,End_second,TimeStamps,InOrOut='In',sca
                 if len(OnSet)==0 and len(OffSet)==0:
                     pass
                 elif len(OnSet)==0:
-                    print('no onset','\nlunghezza Offset:', len(OffSet))
                     TmpIndex1=TmpIndex1[OffSet[0]+1:]
                 elif len(OffSet)==0:
-                    print('no offset','\nlunghezza Onset:', len(OnSet))
                     TmpIndex1=TmpIndex1[:OnSet[0]]
                 print('Exception Raised (IndexError)')
                 pass
@@ -502,38 +482,14 @@ def Select_Interval_GUI(Data,Start_second,End_second,TimeStamps,InOrOut='In',sca
             TmpIndex = np.hstack((TmpIndex0,TmpIndex1))
             
         Index = np.hstack((Index,TmpIndex))
-    Index=np.array(Index,dtype=int)        
-#    Temp['Time']=(Temp['Time']+Start_exp)%(3600*24)
-#    Index=np.where(Data['Action']<=15)[0]    
-#    Temp['Time'][Index]=-1
-#    
-#    
-#    Index=np.where(Temp['Action']>=37)[0]
-#    Temp['Time'][Index]=-1
-    
-
-
-    
-    Ind_8_9_10=np.hstack((np.where(Data['Action']==TimeStamps['End Month'])[0],
-                         np.where(Data['Action']==TimeStamps['End Day'])[0],
-                         np.where(Data['Action']==TimeStamps['End Year'])[0]))
-                         
-    Ind_Fr_1_to_7_11_12_13_40_14=np.hstack((np.where(Data['Action']<=7)[0],
-                                            np.where(Data['Action']==11)[0],
-                                            np.where(Data['Action']==12)[0],
-                                            np.where(Data['Action']==13)[0],
-                                            np.where(Data['Action']==40)[0],
-                                            np.where(Data['Action']==14)[0]))
-                                            
+    Index=np.array(Index,dtype=int)                                                    
                  
     if Data['Action'][-footer]==6:
-        print('\n\nCIAO\n\n')
         Data=np.hstack((Data[:][:header],Data[header:-footer][Index],Data[:][-footer:]))
     else:
         
         Data=np.hstack((Data[:][:header],Data[header:][Index]))
         End_Time=Time_Details_GUI(Data,TimeStamps)[2]
-        print('\n\n%f\n\n'%End_Time)
         Data=Terminate_Dataset_GUI(Data,End_Time,TimeStamps)
     
     return(Data) 
@@ -541,13 +497,13 @@ def Select_Interval_GUI(Data,Start_second,End_second,TimeStamps,InOrOut='In',sca
 
     
 def Select_Interval_Gr_GUI(Datas,Start_second,End_second,TimeStamps,scale=1000):
-    for name in Datas.keys():
+    for name in list(Datas.keys()):
         Datas[name]=Select_Interval_GUI(Datas,Start_second,End_second,TimeStamps,scale=scale)
     return(Datas)
     
 def F_Gr_Rescale_Time_GUI(Datas,TimeStamps,scale):
     Y={}
-    for name in Datas.keys():
+    for name in list(Datas.keys()):
         Y[name]=Rescale_Time_GUI(Datas[name],TimeStamps,scale)
     return(Y)
     
@@ -649,7 +605,7 @@ def Hour_Light_and_Dark_GUI(Dark_start,Len_Dark,TimeInterval=3600):
                         Vector elements are hours 
     """
     if 3600.0%TimeInterval!=0:
-        raise ValueError,'TimeInterval must divide 3600'
+        raise ValueError('TimeInterval must divide 3600')
     NumInterval=(3600*24)//TimeInterval
     Len_Light_Interval=NumInterval-Len_Dark*(3600//TimeInterval)
     Len_Dark_Interval=Len_Dark*(3600//TimeInterval)
@@ -802,9 +758,8 @@ def Terminate_Dataset_GUI(Y,End_Time,TimeStamps,scaled=True):
                             second from midnight of first day of exp
     Output:             -Y=nx2 dataset merged with the last day of experiment 
     """
-    #print(np.where(Y['Action']==TimeStamps['End Month'])[0])
+
     if len(np.where(Y['Action']==TimeStamps['End Month'])[0])==0:  
-#        print('No end month timestamp')
         N_Day=End_Time//(3600*24)
         Start_month=Y['Time'][np.where(Y['Action']==TimeStamps['Start Month'])[0][0]]
         Start_Day=Y['Time'][np.where(Y['Action']==TimeStamps['Start Day'])[0][0]]
@@ -820,8 +775,7 @@ def Terminate_Dataset_GUI(Y,End_Time,TimeStamps,scaled=True):
         Start_Day=Y['Time'][np.where(Y['Action']==TimeStamps['Start Day'])[0][0]]
         Start_Year=Y['Time'][np.where(Y['Action']==TimeStamps['Start Year'])[0][0]]
         End_Month,End_Day,End_Year=summing_day_GUI(Start_month,Start_Day,Start_Year,N_Day)
-#        print('Found end month timestamp')
-#        print(End_Month,End_Day,End_Year)
+
         Y['Time'][np.where(Y['Action']==TimeStamps['End Month'])[0][0]] = End_Month
         Y['Time'][np.where(Y['Action']==TimeStamps['End Day'])[0][0]] = End_Day
         Y['Time'][np.where(Y['Action']==TimeStamps['End Year'])[0][0]] = End_Year
@@ -876,11 +830,10 @@ def Merge_2_Dataset_GUI(Y0,Y1,TimeStamps,scale=1,header=12,footer=3):
     Time_Difference=Start_exp_1-Last_Day_Time
     
     if Time_Delta<0:
-        print('More than one day of interruption!')
         Time_Difference=Time_Difference+3600*24
     Y=Y1[header:].copy()
     
-    #print( Time_Difference)
+
     h = ((Start_exp_1+Y['Time'][header:-footer]) // 60) % (24*60)
     if Y['Action'][-footer]==TimeStamps['End Month']:
         Y['Time'][:-footer]=Y['Time'][:-footer]+LastTimeStamp+Time_Difference
@@ -888,11 +841,10 @@ def Merge_2_Dataset_GUI(Y0,Y1,TimeStamps,scale=1,header=12,footer=3):
         Y['Time']=Y['Time']+LastTimeStamp+Time_Difference
     hh = ((Start_exp_0+Y['Time'][header:-footer]) // 60) % (24*60)
     if not np.prod(hh==h):
-        raise ValueError, 'Data Assigned To Different Daily time'
+        raise ValueError('Data Assigned To Different Daily time')
     if Y0['Action'][-footer]==TimeStamps['End Month']:
         New_Y=np.hstack((Y0[:-footer],Y))
     else:
-#        print('No end date found')
         New_Y=np.hstack((Y0,Y))
     return(New_Y)
     
@@ -908,10 +860,10 @@ def Merge_N_Dataset_GUI(Datas,Keys,TimeStamps,scale=1):
     Output:             -New_Datas=merged dataset
     """
     if len(Keys)==1:
-        return(Datas.values()[0])
+        return(list(Datas.values())[0])
     New_Datas=Merge_2_Dataset_GUI(Datas[Keys[0]],Datas[Keys[1]],TimeStamps,scale=scale)
     for key_num in range(2,len(Keys)):
-#        print( 'merging ',key_num, key_num-1)
+
         New_Datas=Merge_2_Dataset_GUI(New_Datas,Datas[Keys[key_num]],TimeStamps,scale=scale)
     return(New_Datas)
     
@@ -992,13 +944,11 @@ def CreateGroupMatrix_GUI(SubjectName,StatName_Vector,Values,Groups = None):
     Matrix = np.hstack((Groups,SubjectName,StatName_Vector,Values))
     dTypes='|S%d,|S%d,|S6,'%(lenGroupName,lenSubjectName)
     stringLabel = 'Group,Subject,Stat,'
-    print('\n\n\nYo: ',totTimePoint,'\n\n\n')
     for k in range((totTimePoint)):
         stringLabel+='Time_%d,'%k
         dTypes += 'float,'
     dTypes = str(dTypes[:-1])
     stringLabel=str(stringLabel[:-1])
-    print(stringLabel,dTypes)
     Matrix = np.core.records.fromarrays(list(Matrix.T),names=stringLabel,formats=dTypes)
     return Matrix
 
@@ -1022,7 +972,6 @@ def DetectDelimiter_GUI(csvFile,delimiters=[';','\t',',']):
     with open(csvFile, 'U') as myCsvfile:
         header=myCsvfile.readline()
         line1=myCsvfile.readline()
-#        print('find delimiter', header)
         while header:
             count = []
             for d in delimiters:
@@ -1030,8 +979,6 @@ def DetectDelimiter_GUI(csvFile,delimiters=[';','\t',',']):
             if max(count)>1:
                 return delimiters[np.argmax(count)]
             header = myCsvfile.readline()
-#        print(count)
-#        print(header)
         return None
 
 def create_OutputData_GUI(DataDict):
@@ -1046,7 +993,7 @@ def create_OutputData_GUI(DataDict):
     """
     lengths    = []
     maxNameLen = 0
-    Keys       = DataDict.keys()
+    Keys       = list(DataDict.keys())
     for key in Keys:
         lengths    += [len(DataDict[key])]
         maxNameLen = max(len(key), maxNameLen)
@@ -1086,7 +1033,7 @@ class DatasetContainer_GUI(QObject):
         self.updateSignal.emit()
         
     def __iter__(self):
-        for Label in self.keys():
+        for Label in list(self.keys()):
             yield self.__Datas[Label].Label,self.__Datas[Label].Dataset
     
     def getTimeStamps(self,label):
@@ -1106,11 +1053,11 @@ class DatasetContainer_GUI(QObject):
         
     def join(self,other):
 
-        for key in other.keys():
+        for key in list(other.keys()):
             # copy old keys
             old_key = copy(key)
             # create new key
-            while key in self.keys():
+            while key in list(self.keys()):
                 key += '_1'
             # cerate new data_GUI object with new key
             new_data = Dataset_GUI(other[old_key].Dataset,
@@ -1129,7 +1076,6 @@ class DatasetContainer_GUI(QObject):
         
     def pop(self,Label):
         Data = self.__Datas.pop(Label)
-        print(Data)
         if Data:
             return Data.Label,Data.Dataset
         self.updateSignal.emit()
@@ -1160,7 +1106,7 @@ class DatasetContainer_GUI(QObject):
         self.add(data)  
         
     def keys(self):
-        return self.__Datas.keys()
+        return list(self.__Datas.keys())
         
     def renameColumns(self,Label,columTuple):
         Data=self.takeDataset(Label)
@@ -1182,7 +1128,7 @@ class DatasetContainer_GUI(QObject):
         return self.__Datas[Label]
 
     def has_key(self,Label):
-        if Label in self.keys():
+        if Label in list(self.keys()):
             return True
         else:
             return False
@@ -1191,7 +1137,6 @@ class DatasetContainer_GUI(QObject):
         Dataset = copy(self.__Datas[Label].Dataset)
         Types = self.__Datas[Label].Types
         Scaled = self.__Datas[Label].Scaled
-        print(Types)
         boolType = 1
         for Type in Types:
             if 'EEG' in Type:
@@ -1199,7 +1144,7 @@ class DatasetContainer_GUI(QObject):
                 break
         if boolType:
             try:
-                if Dataset.dtype.names==(u'Time',u'Action'):
+                if Dataset.dtype.names==('Time','Action'):
                     if self.__Datas[Label].Scaled[0]:
                         Dataset=self.ReturnToOriginalScale(\
                             Label,self.__Datas[Label].Scaled[1])
@@ -1207,7 +1152,6 @@ class DatasetContainer_GUI(QObject):
                 return False
         if not save_A_Data_GUI(Dataset,Types,Scaled,
                     fname,self.factorCulumnIndexes(Label)):
-            print( 'Fail')
             return False
         
         data = Dataset_GUI(self.__Datas[Label].Dataset,os.path.basename(fname)
@@ -1224,9 +1168,6 @@ class DatasetContainer_GUI(QObject):
         #Dataset = Rescale_Time(Dataset,1.0/float(scale))
         return Dataset
         
-    def keys(self):
-        return self.__Datas.keys()
-        
     def takeDataset(self,Label):
         return self.__Datas[Label].Dataset
         
@@ -1240,17 +1181,15 @@ def save_A_Data_GUI(Dataset,Types,Scaled,
                     fname,FactorColumnInd=None):
     try:
         Data = Dataset.reconstructDataMatrix()
-        print( 'Data returned')
+       
         fmt = ['%i','%s','%s'] + ['%f']*Dataset.PowerSp.shape[1]
-        print( 'fmt created, data shape %s'%(Data.shape[0]))
-        print( 'fmt len %s'%len(fmt))
+       
         header = ''
         for i in range(len(Data.dtype.names))  :
             header = header + Data.dtype.names[i] + '\t'
         header = header[:-1]
         np.savetxt(fname, Data, header=header, comments='',
                    delimiter='\t', fmt=fmt)
-        print( 'EEG saving finished')
         return True
     except AttributeError:
         pass
@@ -1290,11 +1229,10 @@ def save_A_Data_GUI(Dataset,Types,Scaled,
             footer=footer[:-1]
         else:
             footer += '\nfactorColumns;'
-        print('footer',footer)
+       
         header=header[:-1]
         np.savetxt(fname,Dataset,header=header,footer=footer,comments='',
                    delimiter=';',fmt=fmt)
-        print( 'saving finished')
         return True
     except:
         return False
@@ -1329,11 +1267,9 @@ class EEG_Data_Struct(object):
         self.freqTuple = []
         if PathToFile:
             fh = open(PathToFile, 'U')
-#            print('header',header)
-            for tmp in xrange(header-1):
+            for tmp in range(header-1):
                 fh.readline()
             line = (fh.readline()[:-1]).split(delimiter)
-#            print('line', line)
             fh.close()
             
             removeCol = []
@@ -1363,7 +1299,6 @@ class EEG_Data_Struct(object):
                 if lastFreq:
                     FreqList += [lastFreq]
                 else:
-#                    print( FreqList)
                     lastFreq = 2 * FreqList[-1] - FreqList[-2]
                     FreqList += [lastFreq]
                 for k in range(len(FreqList)-1):
@@ -1388,29 +1323,22 @@ class EEG_Data_Struct(object):
                     numCol += 1
                     
             self.freqTuple = np.array(self.freqTuple)
-            useCol = range(firstPw, numCol)
-#            print( useCol, delimiter)
+            useCol = list(range(firstPw, numCol))
             self.PowerSp   = np.genfromtxt(PathToFile, skip_header = header,
                                            usecols = useCol, dtype = float,
                                            delimiter=delimiter)
-#            print('PS ok')                    
             self.Stage     = np.genfromtxt(PathToFile, skip_header = header,
                                            usecols = [StageCol], dtype = '|S3',
                                            delimiter=delimiter)
-#            print('Stage ok')
+
             self.Timestamp = np.genfromtxt(PathToFile, skip_header = header,
                                            usecols = [timeCol], dtype = '|S20',
                                            delimiter=delimiter)
-#            print('time ok')
-#            print( self.Timestamp[118814:118814+3])
-#            print(self.Timestamp[0])
+
             self.Timestamp = vectDateConvertion(self.Timestamp)
-#            print('date conv')
-            
-            
+
             self.Timestamp = addSecondToEEGTimeStamp(self.Timestamp)
-#            print( self.Timestamp[118814:118814+3])
-#            print('add conv')
+
         else:
             self.PowerSp      = PowerSp
             self.Stage        = Stage
@@ -1421,7 +1349,6 @@ class EEG_Data_Struct(object):
             self.freqTuple    = np.array(freqTuple)
             
         if self.PowerSp.shape[1] > self.freqTuple.shape[0]:
-#            print('Too many columns')
             self.PowerSp = self.PowerSp[:,:self.freqTuple.shape[0]]
         elif self.PowerSp.shape[1] < self.freqTuple.shape[0]:
             self.freqTuple = self.freqTuple[:self.PowerSp.shape[1],:]
@@ -1433,7 +1360,7 @@ class EEG_Data_Struct(object):
             if freqMin <= rangeFreq[0] and rangeFreq[0] <= freqMax:
                 useCol += [col]
             col += 1
-#        print( useCol)
+
         return self.PowerSp[:,useCol],self.freqTuple[useCol]
     
     def __getitem__(self,index):
@@ -1463,12 +1390,12 @@ class EEG_Data_Struct(object):
         names = ('EpochNo', 'Stage', 'Time')
         for tup in self.freqTuple:
             names += ('%.6fHz'%tup[0],)
-#        print( names, fmt)
+
         DM = np.zeros(shape[0], dtype={'names':names,
                       'formats':fmt})
         DM['Time'] = isovect(self.Timestamp)
         DM['Stage'] = self.Stage
-        DM['EpochNo'] = range(shape[0])
+        DM['EpochNo'] = list(range(shape[0]))
         ind = 0
         for row in self.PowerSp.T:
             DM[names[ind+3]] = row
@@ -1481,7 +1408,7 @@ def returnIsoFmt(dt):
 def addSecondToEEGTimeStamp(timeVect, epoch_dur=False):
     if timeVect[0].second !=0 or timeVect[1].second != 0 or\
         timeVect[2].second != 0:
-#        print('Seconds already formatted')
+
         return timeVect
     timeStamp = copy(timeVect)
     firstMinute = timeStamp[0].minute
@@ -1500,8 +1427,8 @@ def addSecondToEEGTimeStamp(timeVect, epoch_dur=False):
     EpochDur = 60 // countLen
     startEpoch = countLen - ind
     h = startEpoch
-#    print( ind,countLen)
-    print( h)
+
+
     for k in range(len(timeStamp)):
         timeStamp[k] = timeStamp[k].replace(second=0)
         timeStamp[k] = timeStamp[k] + datetime.timedelta(seconds=h*EpochDur)
@@ -1532,13 +1459,12 @@ def Parse_TimeVect(TimeVect):
 
 def Return_Hour_Minute(datetimeVect):
     timeVect = np.zeros(len(datetimeVect),dtype='S5')
-    for k in xrange(len(datetimeVect)):
+    for k in range(len(datetimeVect)):
         timeVect[k] = '%d:%d'%(datetimeVect[k].hour,datetimeVect[k].minute)
     return timeVect
 
 def TimeBin_From_TimeString(timeStr, Binning = 3600):
-#    if 3600.0%Binning!=0:
-#        raise ValueError,'Binning must divide 3600'
+
     try:
         Bin = (timeStr.hour * 3600 + timeStr.minute * 60) // Binning
     except AttributeError:
@@ -1620,7 +1546,7 @@ class OrderedDict(object):
               not hasattr(dictionary, "items")):
             self.__dict.update(dictionary)
         else:
-            for key, value in dictionary.items():
+            for key, value in list(dictionary.items()):
                 self.__dict[key] = value
         if kwargs:
             self.__dict.update(kwargs)
@@ -2026,18 +1952,17 @@ def add_NANs(time_vect, *epoch_vect_tuple):
 #       In case there is more then one day one day of difference 
         dt[ind] = dt[ind] % (3600 * 24)
         if dt[ind] == 0: # in case there's exactly one day of difference
-#            print 'add one day'
+
             dt[ind] = dt[ind] + 3600 * 24
         num_add_epochs = int(dt[ind] // epoch_dur[0])
         add_times = []
-#        print num_add_epochs,dt[ind]
         for k in range(1,num_add_epochs):
             add_times = np.hstack((add_times, time_vect[ind] +\
             datetime.timedelta(0, k * epoch_dur[0])))
-#        print time_vect[ind],add_times[:10]
-#        print add_times[-10:],time_vect[ind+1]
+
+
         new_time = np.hstack((new_time[:ind+1], add_times, new_time[ind+1:]))
-        for key in new_epoch.keys():
+        for key in list(new_epoch.keys()):
             new_epoch[key] = np.hstack((new_epoch[key][:ind+1], np.zeros(num_add_epochs) *
             np.nan, new_epoch[key][ind+1:]))
     return new_time, new_epoch#,add_times
@@ -2110,7 +2035,7 @@ class AnalysisList(list):
         elif label == 'integrative':
             self.__integrative_list.append(value)
         else:
-            raise ValueError,'Must choose label between \"sleep\", \"behavior\" and \"integrative\"'
+            raise ValueError('Must choose label between \"sleep\", \"behavior\" and \"integrative\"')
     def __repr__(self):
         
         string = 'Behavior list: ' + self.__behavior_list.__repr__()

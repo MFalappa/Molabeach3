@@ -22,12 +22,16 @@ import sys,sip,os
 lib_dir = os.path.join(os.path.abspath(os.path.join(os.path.realpath(__file__),'../../..')),'libraries')
 sys.path.append(lib_dir)
 from Modify_Dataset_GUI import OrderedDict
-import urllib2
-from PyQt4.QtCore import (Qt, SIGNAL, SLOT,QTime)
-from PyQt4.QtGui import (QApplication, QComboBox, QDialog,
-        QSpinBox, QLabel, QHBoxLayout,QGridLayout, QFont, QDialogButtonBox,
+import urllib.request, urllib.error, urllib.parse
+from PyQt5.QtCore import (Qt, pyqtSignal,QTime)
+from PyQt5.QtGui import QFont
+
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
+        QSpinBox, QLabel, QHBoxLayout,QGridLayout, QDialogButtonBox,
         QVBoxLayout, QSpacerItem, QSizePolicy,QListWidget, QRadioButton,
         QCheckBox, QDoubleSpinBox,QLineEdit,QPushButton,QFileDialog,QTimeEdit)
+
+
 from Modify_Dataset_GUI import OrderedDict,DatasetContainer_GUI
 from MyDnDDialog import MyDnDListWidget
 import numpy as np
@@ -39,8 +43,8 @@ from widgetSleepRecordingPhase import widgetSleepRecordingPhase
 class comboBoxAutonomice(object):
     def __init__(self, comboBox, valueList):
         if comboBox.count() != len(valueList):
-            raise ValueError,'comboBox and valueList must have same number of \
-                                items'
+            raise ValueError('comboBox and valueList must have same number of \
+                                items')
         self._comboBox = comboBox
         self._valueList = valueList
     def selectedValue(self):
@@ -70,7 +74,7 @@ class inputDialog(QDialog):
                  NewDataLineEdit=None,DatasetNum=1, ActivityList=None,
                  folderSave = False,RadioButton=None, Range=None,TimeRange=None, PhaseSel=None,parent=None):
         super(inputDialog,self).__init__(parent)
-        print 'init started'
+        print('init started')
         self.ComboBox=OrderedDict()
         self.HourSpinBox=OrderedDict()
         self.MinuteSpinbox=OrderedDict()
@@ -97,8 +101,8 @@ class inputDialog(QDialog):
             font = QFont()
             font.setBold(True)
             font.setWeight(75)
-            DataLabel=QLabel(u'Selected Dataset: ')
-            Data_Name=QLabel(u'%s'%DataName)
+            DataLabel=QLabel('Selected Dataset: ')
+            Data_Name=QLabel('%s'%DataName)
             Data_Name.setFont(font)
             HLayout = QHBoxLayout()
             HLayout.addWidget(DataLabel)
@@ -161,7 +165,7 @@ class inputDialog(QDialog):
                 HLayout.addWidget(Label)
                 HLayout.addWidget(RadioButtons)
                 RadioLayout.addLayout(HLayout)
-                self.connect(RadioButtons,SIGNAL('clicked()'),
+                self.connect(RadioButtons,pyqtSignal('clicked()'),
                              lambda x=indexRadio : self.setRadioChoice(x))
                 if indexRadio == 0:
                     RadioButtons.setChecked(True)
@@ -173,8 +177,8 @@ class inputDialog(QDialog):
         if comboBox is not None:
             
             for indexCombo in range(len(comboBox)):
-                ComboLabel = QLabel(unicode(comboBox[indexCombo][0]))
-                print indexCombo ,comboBox[indexCombo]
+                ComboLabel = QLabel(str(comboBox[indexCombo][0]))
+                print(indexCombo ,comboBox[indexCombo])
                 thisCombo = QComboBox()
                 thisCombo.addItems(comboBox[indexCombo][1])
                 thisCombo.setCurrentIndex(comboBox[indexCombo][3])
@@ -195,8 +199,8 @@ class inputDialog(QDialog):
                     self.MinuteSpinbox[indexSpin] = QSpinBox()
                     self.MinuteSpinbox[indexSpin].setRange(0,59)
                     self.MinuteSpinbox[indexSpin].setValue(TimeSpinBoxLabel[indexSpin][2])
-                    SpinLabel = QLabel(unicode(TimeSpinBoxLabel[indexSpin][0]))
-                    SeparatorLabel=QLabel(u':')
+                    SpinLabel = QLabel(str(TimeSpinBoxLabel[indexSpin][0]))
+                    SeparatorLabel=QLabel(':')
                     HLayout2 = QHBoxLayout()
                     HLayout2.addWidget(SpinLabel)
                     HLayout2.addWidget(self.HourSpinBox[indexSpin])
@@ -271,7 +275,7 @@ class inputDialog(QDialog):
                         self.SpinBox[indexSpinBox].setRange(SpinBox[indexSpinBox][1][0],
                                                             SpinBox[indexSpinBox][1][1])
                     self.SpinBox[indexSpinBox].setValue(SpinBox[indexSpinBox][2])
-                IntSpinLabel = QLabel(u'%s'%SpinBox[indexSpinBox][0])
+                IntSpinLabel = QLabel('%s'%SpinBox[indexSpinBox][0])
                 HLayout = QHBoxLayout()
                 HLayout.addWidget(IntSpinLabel)
                 HLayout.addWidget(self.SpinBox[indexSpinBox])
@@ -281,7 +285,7 @@ class inputDialog(QDialog):
         if not LineEdit is None:
             for indexLineEdit in range(len(LineEdit)):
                 self.LineEdit[indexLineEdit] = QLineEdit()
-                LineEditLabel = QLabel(u'%s'%LineEdit[indexLineEdit])
+                LineEditLabel = QLabel('%s'%LineEdit[indexLineEdit])
                 HLayout = QHBoxLayout()
                 HLayout.addWidget(LineEditLabel)
                 HLayout.addWidget(self.LineEdit[indexLineEdit])
@@ -331,7 +335,7 @@ class inputDialog(QDialog):
             spacerItem=QSpacerItem(40, 20, QSizePolicy.Expanding,\
                                     QSizePolicy.Minimum)
             VLayout.addSpacerItem(spacerItem)
-            self.connect(browseButton,SIGNAL('clicked()'),self.getDir)
+            self.connect(browseButton,pyqtSignal('clicked()'),self.getDir)
         
         if NewDataLineEdit:
             LabelNewData = QLabel('<b>Dataset Names</b> (spearated by ;):')
@@ -344,54 +348,54 @@ class inputDialog(QDialog):
             
            
         if folderSave and NewDataLineEdit:
-            self.connect(self.NewDataLineEdit,SIGNAL('textEdited (const QString&)'),
+            self.connect(self.NewDataLineEdit,pyqtSignal('textEdited (const QString&)'),
                          lambda par=None,ToF=False, ToF2 = True:\
                          self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
-            self.connect(self.LineEditFileSaveDir, SIGNAL('textChanged (const QString&)'),
+            self.connect(self.LineEditFileSaveDir, pyqtSignal('textChanged (const QString&)'),
                      lambda par=None,ToF=False, ToF2 = True:\
                      self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
-            self.connect(self.saveCheckBox,SIGNAL('stateChanged (int)'),
+            self.connect(self.saveCheckBox,pyqtSignal('stateChanged (int)'),
                          lambda ToF=False, ToF2 = True:\
                          self.enableOk(BoolData=ToF,BoolSave=ToF2))
             if self.ActivityListBool:
-                self.connect(self.activitySelectedWidget,SIGNAL('dropped()'),
+                self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
                              lambda ToF=True,ToF2 = True:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
-                self.connect(self.activitySelectedWidget,SIGNAL('dragged()'),
+                self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
                              lambda ToF=True,ToF2 = True:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
         elif folderSave:
-            print 'folderSave Connect'
-            self.connect(self.LineEditFileSaveDir, SIGNAL('textChanged (const QString&)'),
+            print('folderSave Connect')
+            self.connect(self.LineEditFileSaveDir, pyqtSignal('textChanged (const QString&)'),
                      lambda par=None,ToF=True, ToF2 = True:\
                      self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
-            self.connect(self.saveCheckBox,SIGNAL('stateChanged (int)'),
+            self.connect(self.saveCheckBox,pyqtSignal('stateChanged (int)'),
                          lambda par=None,ToF=True, ToF2 = True:\
                          self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
             if self.ActivityListBool:
-                self.connect(self.activitySelectedWidget,SIGNAL('dropped()'),
+                self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
                              lambda ToF=True,ToF2 = True:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
-                self.connect(self.activitySelectedWidget,SIGNAL('dragged()'),
+                self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
                              lambda ToF=True,ToF2 = True:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
                          
         elif NewDataLineEdit:
-            self.connect(self.NewDataLineEdit,SIGNAL('textEdited (const QString&)'),
+            self.connect(self.NewDataLineEdit,pyqtSignal('textEdited (const QString&)'),
                          lambda par=None,ToF=False, ToF2 = False:\
                          self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
             if self.ActivityListBool:
-                self.connect(self.activitySelectedWidget,SIGNAL('dropped()'),
+                self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
                              lambda ToF=True,ToF2 = False:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
-                self.connect(self.activitySelectedWidget,SIGNAL('dragged()'),
+                self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
                              lambda ToF=True,ToF2 = False:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
         elif self.ActivityListBool:
-            self.connect(self.activitySelectedWidget,SIGNAL('dropped()'),
+            self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
                          lambda ToF=True,ToF2 = False:\
                          self.enableOk(BoolData=ToF,BoolSave=ToF2))
-            self.connect(self.activitySelectedWidget,SIGNAL('dragged()'),
+            self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
                          lambda ToF=True,ToF2 = False:\
                          self.enableOk(BoolData=ToF,BoolSave=ToF2))
         
@@ -400,8 +404,10 @@ class inputDialog(QDialog):
         VLayout.addWidget(self.ButtonBox)      
         self.setLayout(VLayout)
         
-        self.connect(self.ButtonBox,SIGNAL('rejected()'),self,SLOT('reject()'))
-        self.connect(self.ButtonBox,SIGNAL('accepted()'),self,SLOT('accept()'))
+        self.connect(self.ButtonBox,pyqtSignal('rejected()'),self)
+        self.connect(self.ButtonBox,pyqtSignal('accepted()'),self)
+#        self.connect(self.ButtonBox,pyqtSignal('rejected()'),self,SLOT('reject()'))
+#        self.connect(self.ButtonBox,pyqtSignal('accepted()'),self,SLOT('accept()'))
         self.setWindowTitle('Input Dialog')
         
         
@@ -419,49 +425,49 @@ class inputDialog(QDialog):
     def createStdOutput(self):
        stdOutPut = OrderedDict()
        stdOutPut['Combo'] = []
-       for key in self.ComboBox.keys():
+       for key in list(self.ComboBox.keys()):
            stdOutPut['Combo'] += [self.ComboBox[key].selectedValue()]
        
        stdOutPut['DoubleSpinBox'] = []
-       for key in self.DoubleSpinBox.keys():
+       for key in list(self.DoubleSpinBox.keys()):
            stdOutPut['DoubleSpinBox'] += [self.DoubleSpinBox[key].value()]
        
        stdOutPut['TimeSpinBox'] = []
-       for key in self.HourSpinBox.keys():
+       for key in list(self.HourSpinBox.keys()):
            stdOutPut['TimeSpinBox'] += [(self.HourSpinBox[key].value(),\
                                 self.MinuteSpinbox[key].value())]
        stdOutPut['SpinBox'] = []
-       for key in self.SpinBox.keys():
+       for key in list(self.SpinBox.keys()):
            stdOutPut['SpinBox'] += [self.SpinBox[key].value()]
        
        stdOutPut['LineEdit'] = []
-       for key in self.LineEdit.keys():
-           stdOutPut['LineEdit'] += [unicode(self.LineEdit[key].text())]
+       for key in list(self.LineEdit.keys()):
+           stdOutPut['LineEdit'] += [str(self.LineEdit[key].text())]
            
        stdOutPut['RadioButton'] = []
        if self.RadioChoice:
            stdOutPut['RadioButton'] = [self.RadioChoice]
 
        stdOutPut['Range'] = []
-       for  key in self.Range_0.keys():
+       for  key in list(self.Range_0.keys()):
            stdOutPut['Range'] += [(self.Range_0[key].value(),
                                          self.Range_1[key].value())]
        stdOutPut['PhaseSel'] = []
-       for  key in self.PhaseSel.keys():
+       for  key in list(self.PhaseSel.keys()):
            stdOutPut['PhaseSel'] += [self.PhaseSel[key].phase_dict]
            
        stdOutPut['TimeRange'] = []
-       for  key in self.TimeRange_0.keys():
+       for  key in list(self.TimeRange_0.keys()):
            stdOutPut['TimeRange'] += [(self.TimeRange_0[key].time().toPyTime(),
                                        self.TimeRange_1[key].time().toPyTime())]
            
        if self.folderSave:
-           print 'Adding SavingDetails to stdOutput'
+           print('Adding SavingDetails to stdOutput')
            stdOutPut['SavingDetails'] = []
            if self.saveCheckBox.isChecked():
-               Dir = unicode(self.LineEditFileSaveDir.text())
+               Dir = str(self.LineEditFileSaveDir.text())
                row = self.extensionCombo.currentIndex()
-               ext = unicode(self.extensionCombo.itemText(row))
+               ext = str(self.extensionCombo.itemText(row))
                stdOutPut['SavingDetails'] += [Dir,ext]
                
        return stdOutPut
@@ -477,7 +483,7 @@ class inputDialog(QDialog):
                  BoolSave = False):
         OkToContinue = True
         if BoolSave:
-            dirString = unicode(self.LineEditFileSaveDir.text())
+            dirString = str(self.LineEditFileSaveDir.text())
             OkToContinue =  (os.path.exists(dirString) and\
                             os.path.isdir(dirString)) or\
                             (not self.saveCheckBox.isChecked())
@@ -490,7 +496,7 @@ class inputDialog(QDialog):
             
                 else:
                     try:
-                        DataNames=unicode(self.NewDataLineEdit.text()).split(';')
+                        DataNames=str(self.NewDataLineEdit.text()).split(';')
                         try:
                             while True:
                                 DataNames.remove('')
@@ -506,7 +512,7 @@ class inputDialog(QDialog):
                     self.ButtonBox.button(self.ButtonBox.Ok).setEnabled(True)
         else:
         
-            DataNames=unicode(self.NewDataLineEdit.text()).split(';')
+            DataNames=str(self.NewDataLineEdit.text()).split(';')
             
             try:
                 while True:
@@ -548,7 +554,7 @@ def main():
     for h in range(24):
         Hours+=['%d:00'%h]
         Hours1+=['%d h'%h]
-    doubleSpinBox=[(u'Short Signal:',(0,20),1),(u'Long Signal:',(5,30),11),(u'Trial Duration:',(15,10000),100)]
+    doubleSpinBox=[('Short Signal:',(0,20),1),('Long Signal:',(5,30),11),('Trial Duration:',(15,10000),100)]
     comboBox=[('Epoch type:', ['Sleep', 'Rem', 'NRem', 'Wake'], [[2, 3], [2], [3], [1]], 0), 
               ('Statistical index:', ['Mean', 'Median'], ['Mean', 'Median'], 0), 
               ('Dark phase start:', ["0", "1", "2", "3", "4", "5","6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23], 20)]
@@ -575,9 +581,9 @@ def main():
 #     Phase Selection
 #==============================================================================
     dc = DatasetContainer_GUI()
-    dd = np.load('C:\Users\ebalzani\Desktop\Data\Sleep\\workspace_2017-5-15T14_16.phz')
+    dd = np.load('C:\\Users\ebalzani\Desktop\Data\Sleep\\workspace_2017-5-15T14_16.phz')
     kl = []
-    for key in dd.keys()[:3]:
+    for key in list(dd.keys())[:3]:
         dc.add(dd[key].all())
         kl += [key]
     kl = np.sort(kl)
@@ -607,6 +613,6 @@ def main():
 #   
 #    print(form.ComboBox[0].selectedValue(),form.ComboBox[1].selectedValue())
     stdOutPut = form.createStdOutput()
-    print stdOutPut
+    print(stdOutPut)
 if __name__ == '__main__':
     main()

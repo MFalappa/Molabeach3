@@ -14,25 +14,27 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
+import datetime
+import warnings
 
 import numpy as np
 import scipy.stats as sts
-from Modify_Dataset_GUI import *
 import sklearn.mixture as mxt
-import sklearn.lda as lda
-from scipy.optimize import curve_fit
-import datetime
-from sklearn.utils import weight_vector
-from sklearn.decomposition import PCA, FastICA
-from sklearn.utils.sparsetools import _graph_validation,_graph_tools
-from sklearn.utils import lgamma,weight_vector
-from sklearn.neighbors import typedefs
-from statsmodels.api import add_constant, OLS
-from bisect import bisect_left
-from matplotlib.mlab import PCA as PCA_mpl
-from PyQt4 import QtGui
 
-import warnings
+
+from scipy.optimize import curve_fit
+from statsmodels.api import add_constant, OLS
+from bisect import bisect_left,insort_left
+from PyQt5 import QtGui
+
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as lda
+from matplotlib.mlab import PCA as PCA_mpl
+
+from Modify_Dataset_GUI import (Rescale_Time_GUI,MultipleHour_Light_and_Dark,
+                                Time_Details_GUI,F_Start_exp_GUI,OrderedDict,
+                                Hour_Light_and_Dark_GUI,TimeUnit_to_Hours_GUI,
+                                dateTimeArange,Parse_TimeVect,TimeBin_From_TimeString)
+
 
 def F_New_Gr_Switch_Latency_GUI(Datas, TimeStamps, Mouse_Name, H_By_H=False, ts=3,
                             tl=6, type_tr='Long', scale=1, Tend=15,
@@ -103,18 +105,12 @@ def compute_latency(table,left_in,left_out,right_in,right_out,start,stop,ts,tl,t
                 if len(oth_in[k][:,1])*len(np_in[k][:,1]) > 0:
                     left = np.concatenate((left,left_in[k][:,1]))
                     right = np.concatenate((right,right_in[k][:,1]))
-#                    idx = np.where(np_in[k][:,1] <= tl)[0]
-#                    if len(idx) > 0:
-#                        if oth_in[k][0,1] - np_out[k][idx[-1],1] < tl+ts:
-#                            switch = np.hstack((switch,np_out[k][idx[-1],1]))
-#                            hrs_switch = np.concatenate((hrs_switch, [table[k]['absTime']]))
-       
+
                 
                     idx = np.where( np_in[k][:,1] <= tl)[0]
                     if idx.shape[0] and np_out[k].shape[0] > idx[-1]:
-                        print k
-#                if len(tmp) > 0:
-#                    if oth_in[k][0,1] - tmp[-1] < tl+ts:
+                        print(k)
+
                 ## MODIFICA DA IN AD OUT
                 #switch = np.concatenate((switch,[left_in[k][idx[-1],1]]))
                         switch = np.concatenate((switch,[np_out[k][idx[-1],1]]))
@@ -123,7 +119,7 @@ def compute_latency(table,left_in,left_out,right_in,right_out,start,stop,ts,tl,t
 
 def getRewardTrialMED(Y,TimeStamps,start,stop):
     reward_start = []
-    for k in xrange(start.shape[0]):
+    for k in range(start.shape[0]):
         if TimeStamps['Give Pellet Center'] in Y['Action'][start[k]:stop[k]]:
             reward_start += [start[k]]
     return np.array(reward_start)
@@ -158,7 +154,7 @@ def createAbsoluteTime(Y,indexVect,Timestamps):
     
     secs = Y['Time'][indexVect]
     delta_sec = np.zeros(secs.shape[0],dtype=datetime.timedelta)
-    for k in xrange(secs.shape[0]):
+    for k in range(secs.shape[0]):
         delta_sec[k] = datetime.timedelta(0,secs[k])
     abstime = datetime.datetime(int(year),int(month),int(day),int(hour),int(minute),int(second))
     func = lambda dt : abstime + dt
@@ -390,7 +386,7 @@ def F_Actogram_GUI(Y,Start_Time,End_Time,interval,TimeStamps,*period,**kwargs):
     if 3600%interval!=0:
         #print('Warning! The interval you choose is not a fraction of an hour')
         return()
-    if kwargs.has_key('String'):
+    if 'String' in kwargs:
         String=kwargs['String']
     else:
         String='FullData'
@@ -513,7 +509,6 @@ def F_Correct_Rate_GUI(Y,Start_exp,period,TimeStamps,*tend):
     TrialOnSet=np.where(Y['Action']==TimeStamps['Center Light On'])[0]
     TrialOffSet=np.where(Y['Action']==TimeStamps['End Intertrial Interval'])[0]
     StartITI=np.where(Y['Action']==TimeStamps['Start Intertrial Interval'])[0]
-    ##print(len(TrialOnSet),len(StartITI),len(TrialOffSet))
     
 #    if len(TrialOnSet)>len(TrialOffSet):
 #        TrialOnSet=TrialOnSet[:-1]
@@ -529,8 +524,7 @@ def F_Correct_Rate_GUI(Y,Start_exp,period,TimeStamps,*tend):
         StartITI=StartITI[1:]
 #    if len(StartITI)>len(TrialOffSet):
 #        StartITI=StartITI[:-1]
-    ##print(StartITI[0],TrialOnSet[0],TrialOffSet[0],StartITI[-1],TrialOnSet[-1],TrialOffSet[-1])
-    ##print(len(TrialOnSet),len(StartITI),len(TrialOffSet))   
+  
 #    KeepIndex=np.where(Y['Time'][StartITI]-Y['Time'][TrialOnSet]<=tend)[0]
 #    TrialOnSet=TrialOnSet[KeepIndex]
 #    TrialOffSet=TrialOffSet[KeepIndex]
@@ -682,7 +676,6 @@ def F_Hour_Trial_GUI(Y,TimeStamps,Start_exp,TrialOnset,TrialOffset,l_r_p_a,tend,
     
     period=float(period)
 
-    ##print 'Attenzione, ho cambiato la variabile l_r_p_a\n prima indicavo short o long location ora indico right o left hopper'
     
     if l_r_p_a=='l':
         Off=TimeStamps['Give Pellet Left']
@@ -698,7 +691,6 @@ def F_Hour_Trial_GUI(Y,TimeStamps,Start_exp,TrialOnset,TrialOffset,l_r_p_a,tend,
         
         TrialOn=TrialOnset
     else:
-        ##print(l_r_p_a)
         TrialOff=np.where(Y['Action']==Off)[0]
         if len(TrialOff)!=0:
 
@@ -754,7 +746,6 @@ def F_TimeInterval_Trial_GUI(Y,TimeStamps,Start_exp,TimeInterval,TrialOnset,Tria
     
     period=24
 
-    ##print 'Attenzione, ho cambiato la variabile l_r_p_a\n prima indicavo short o long location ora indico right o left hopper'
     
     if l_r_p_a=='l':
         Off=TimeStamps['Give Pellet Left']
@@ -802,12 +793,12 @@ def F_Activity_x_Hour_GUI(TrialHour,**kwargs):
     Output:             -Act_x_Hour = vector,number of activity for each hour of the day.
     """
     Act_x_hour=[]
-    if kwargs.has_key('period'):
+    if 'period' in kwargs:
         period=kwargs['period']
     else:
         period=24
     TrialHour_period=TrialHour%period
-    if kwargs.has_key('Hours'):
+    if 'Hours' in kwargs:
         for h in kwargs['Hours']:
             Act_x_hour=Act_x_hour+[len(np.where(TrialHour_period==h)[0])]
     else:        
@@ -844,12 +835,12 @@ def F_Activity_x_TimeInterval_GUI(TrialInterval,TimeInterval,**kwargs):
     NumberOfIntervals = int(24*3600//TimeInterval)
     if len(TrialInterval):
         Act_x_hour=[]
-        if kwargs.has_key('period'):
+        if 'period' in kwargs:
             NumberOfIntervals=kwargs['period']
         else:
             NumberOfIntervals=np.ceil((24*3600)/TimeInterval)
         TrialInterval_period=TrialInterval%NumberOfIntervals
-        if kwargs.has_key('Intervals'):
+        if 'Intervals' in kwargs:
             for h in kwargs['Intervals']:
                 Act_x_hour=Act_x_hour+[len(np.where(TrialInterval_period==h)[0])]
         else:        
@@ -1000,7 +991,7 @@ def HourDark_And_Light_BinnedTotal_GUI(TimeUnit,Hour_Dark,Hour_Light,
             Label += ['%d-%d'%(hourBin[0],hourBin[-1])]
         else:
             Label += [str(hourBin[0])]
-#        #print 'New Bin'
+
         for hh in hourBin:
             # Per ogni "ora" (intervallo di tempo) nel vettore hourBin conto quante azioni avvengono a quell'
             # e le salvo nella matrice Counts = [c_ij] dove c_ij=num di azioni
@@ -1020,18 +1011,18 @@ def HourDark_And_Light_BinnedTotal_GUI(TimeUnit,Hour_Dark,Hour_Light,
                 
                 Counts[binInd] = np.hstack([Counts[binInd],len(np.where(TimeUnit==hhDay)[0])])
                 hhDay += dailyDur_In_TimeUnit
-                ##print hhDay,hhDay%dailyDur_In_TimeUnit
+
             lenInd=max(lenInd,len(Counts[binInd]))
             binInd+=1
         
         Values=np.zeros((Bin,lenInd),dtype=float)
-#        #print Counts
+
         for k in range(Bin):
             Values[k,:len(Counts[k])]=Counts[k]
         Values = np.sum(Values,axis=0)
-#        #print Values 
+
         MeanVector[indBin] = np.nanmean(Values)
-#        #print MeanVector[indBin]
+
         MedianVetor[indBin] = np.nanmedian(Values)
         StdErrorVector[indBin] = np.nanstd(Values)/np.sqrt(len(Values))
         indBin+=1
@@ -1045,7 +1036,7 @@ def HourDark_And_Light_BinnedTotal_GUI(TimeUnit,Hour_Dark,Hour_Light,
             Label += ['%d-%d'%(hourBin[0],hourBin[-1])]
         else:
             Label += [str(hourBin[0])]
-#        #print 'New Bin'
+
         for hh in hourBin:
             if hh<TimeUnit[0] or hh>TimeUnit[-1]:
                 hh+=dailyDur_In_TimeUnit
@@ -1055,18 +1046,18 @@ def HourDark_And_Light_BinnedTotal_GUI(TimeUnit,Hour_Dark,Hour_Light,
             while hhDay <= TimeUnit[-1]:
                 Counts[binInd] = np.hstack([Counts[binInd],len(np.where(TimeUnit==hhDay)[0])])
                 hhDay += dailyDur_In_TimeUnit
-                ##print hhDay,hhDay%dailyDur_In_TimeUnit
+
 
             lenInd=max(lenInd,len(Counts[binInd]))
             binInd+=1
-        ##print hourBin,Counts
+
         Values=np.zeros((Bin,lenInd),dtype=float)
         for k in range(Bin):
             Values[k,:len(Counts[k])]=Counts[k]
         Values = np.sum(Values,axis=0)
-#        #print Values
+
         MeanVector[indBin] = np.nanmean(Values)
-        ##print MeanVector[indBin] 
+
         MedianVetor[indBin] = np.nanmedian(Values)
         StdErrorVector[indBin] = np.nanstd(Values)/np.sqrt(len(Values))
         indBin+=1
@@ -1092,8 +1083,8 @@ def F_AIT_GUI(Y,TimeStamps,TimeInterval=3600,Light_Start=8):
     AIT_OnSet=F_OnSet_GUI(AIT_OffSet,AIT_OnSet)
 #    HourStart_AIT=F_TimeInterval_Trial_GUI(Y,TimeStamps,Start_exp,TimeInterval,AIT_OnSet,AIT_OffSet,'a',np.inf)[1]
     HourStart_AIT = F_TimeInterval_From_Light_Start(Y,Start_exp,TimeInterval,AIT_OnSet,Light_Start*3600)    
-    #print('Time Interval: ',TimeInterval)
-    #print('Hour Start: ',HourStart_AIT)
+ 
+    
     #HourStart_AIT=F_Hour_Trial_GUI(Y,TimeStamps,Start_exp,AIT_OnSet,AIT_OffSet,'a',np.inf,24)[1]
     AIT_Dur=Y['Time'][AIT_OffSet]-Y['Time'][AIT_OnSet]
     return(AIT_OnSet,AIT_OffSet,HourStart_AIT,AIT_Dur)
@@ -1121,7 +1112,7 @@ def F_AIT_x_Phase_GUI(Y,phase_vect,TimeStamps):
         median_ph[ind] = np.nanmedian(data_h)
         std_ph[ind] = np.nanstd(data_h)
         ind += 1
-    print('ANALYZING GUI AIT',np.nanmedian(AIT_Dur),np.nanmean(AIT_Dur),median_ph)
+
     return mean_ph,median_ph,std_ph
     
 def F_OffSet_GUI(TrialOnSet,OffSet):
@@ -1197,9 +1188,9 @@ def Subj_Median_Mean_Std_GUI(Vectors,HDay,Bias=True,HBin=3600):
     Mean={}
     Std={}
     if 3600%HBin!=0:
-        raise ValueError,'3600 must be an integer multiple of HBin'
+        raise ValueError('3600 must be an integer multiple of HBin')
     Fraction = 3600//HBin
-    for key in Vectors.keys():
+    for key in list(Vectors.keys()):
         Median[key] = np.zeros(24*Fraction)
         Mean[key] = np.zeros(24*Fraction)
         Std[key] = np.zeros(24*Fraction)
@@ -1225,7 +1216,7 @@ def daily_Median_Mean_Std_GUI(Vector,HDay,HBin=3600):
                         at hour i.
     """
     if 3600%HBin!=0:
-        raise ValueError,'3600 must be an integer multiple of HBin'
+        raise ValueError('3600 must be an integer multiple of HBin')
     Fraction = 3600//HBin
     
     Median = np.zeros(24*Fraction)
@@ -1261,11 +1252,10 @@ def F_Probes_x_TimeInterval_GUI(Y,TimeStamps,Start_exp,End_Time,l_r,tend=np.inf,
                             indexes of trials in the chosen interval
                       
     """
-    ##print 'Attenzione: ho cambiato la variabile l_r\n prima indicavo short o long location ora indico right o left hopper'
+
        
 
     if t_first<0 or t_last>3600*24:
-        #print 'Warning! The time interval you choose is not in a day range...'
         return()
 
     TrialOnset = np.where(Y['Action']==TimeStamps['Center Light On'])[0]
@@ -1274,7 +1264,6 @@ def F_Probes_x_TimeInterval_GUI(Y,TimeStamps,Start_exp,End_Time,l_r,tend=np.inf,
 #    if len(np.where(Y['Action']==36)[0])>0:
 #        TrialOffset = np.where(Y['Action']==36)[0]
 #    else:
-#        #print 'Old dataset without start ITI!'
 #        TrialOffset = np.where(Y['Action']==33)[0]
     Probes=np.where(Y['Action']==TimeStamps['Probe Trial'])[0]
     
@@ -1287,11 +1276,11 @@ def F_Probes_x_TimeInterval_GUI(Y,TimeStamps,Start_exp,End_Time,l_r,tend=np.inf,
     if len(end_trial) > len(TrialOffset):
         end_trial=end_trial[:-1]
     dt = Y['Time'][end_trial] - Y['Time'][TrialOnset]
-#    print 'TEND ',tend
+
     keep_index = np.where(dt<=tend)[0]
     TrialOffset = TrialOffset[keep_index]
     TrialOnset = TrialOnset[keep_index]
-#    print 'Toff-ton',Y['Time'][TrialOffset]-Y['Time'][TrialOnset]
+
 #   Here we keep only the onset and offset in our time interval
     
     Index = np.where((Y['Time'][TrialOnset] + Start_exp)%(3600*24)>=t_first)[0]
@@ -1319,7 +1308,7 @@ def F_Probes_x_TimeInterval_GUI(Y,TimeStamps,Start_exp,End_Time,l_r,tend=np.inf,
 
 #   for each day we find the indexies of probes trial between first trial on and
 #   last trial off in our choosen range
-#    #print('lung TimeOn ',len(TimeOn))
+
     for i in range(int(N_Day)):
         try:
            Index=np.where(TimeOff<=3600*24*(i+1))[0][-1]
@@ -1332,7 +1321,7 @@ def F_Probes_x_TimeInterval_GUI(Y,TimeStamps,Start_exp,End_Time,l_r,tend=np.inf,
            ProbesCut=np.hstack((ProbesCut,Probes[Temp_Ind]))
           
         except IndexError:
-           print('No Probes in day %i'%i)
+           print(('No Probes in day %i'%i))
            
     Probes = np.array(ProbesCut, dtype = int)
 
@@ -1358,7 +1347,6 @@ def F_Probes_x_TimeInterval_GUI(Y,TimeStamps,Start_exp,End_Time,l_r,tend=np.inf,
                 break
         
         try:
-            ##print(DeltaIndex)
             Probes = Probes[list(np.where(Y['Action'][list(Probes-DeltaIndex)] == 23)[0])]-1    
         except NameError:
             return(np.array([]),np.array([]))
@@ -1379,7 +1367,6 @@ def F_Probes_x_TimeInterval_GUI(Y,TimeStamps,Start_exp,End_Time,l_r,tend=np.inf,
                 break
         
         try:
-            ##print(DeltaIndex)
             Probes = Probes[list(np.where(Y['Action'][list(Probes-DeltaIndex)] == 27)[0])]-1    
         except NameError:
             return(np.array([]),np.array([]))
@@ -1426,7 +1413,6 @@ def F_PeakProbes_GUI(Y,TimeStamps,ProbesOn,ProbesOff,tend,l_r, TMAX=np.inf,
                         -Peaks = vector containig the peak distribution
     """
     
-    ##print 'Attenzione, ho cambiato la variabile l_r_p_a\n prima indicavo short o long location ora indico right o left hopper'
     if l_r=='l':
         
         On=TimeStamps['Left NP In']
@@ -1448,7 +1434,7 @@ def F_PeakProbes_GUI(Y,TimeStamps,ProbesOn,ProbesOff,tend,l_r, TMAX=np.inf,
         Raster=np.zeros((len(ProbesOn),tend*100), dtype = int)
     Times=np.arange(tend*100,dtype=float)/100
     for i in range(len(ProbesOn)):
-        print ProbesOn[i],ProbesOff[i]
+        print(ProbesOn[i],ProbesOff[i])
         temporarydata = Y[:][ProbesOn[i]:ProbesOff[i]]
         RespOn = np.where(temporarydata['Action']==On)[0]
         RespOff = np.where(temporarydata['Action']==Off)[0]
@@ -1502,7 +1488,7 @@ def F_Gr_Switch_Latency_GUI(Datas, TimeStamps, Mouse_Name, H_By_H=False, t0=3,
             l_side = Long_Side
         Datas[name] = Rescale_Time_GUI(Datas[name], TimeStamps[name], scale)
         x = Time_Details_GUI(Datas[name], TimeStamps[name])
-        print name
+        print(name)
         Record_SwitchTrial, Active_Trials =\
             F_Record_Switch_Trials_GUI(Datas[name], TimeStamps[name], x[0], x[2],
                                        Long_Side=l_side, Tend=Tend)
@@ -1587,12 +1573,9 @@ def F_Record_Switch_Trials_GUI(Y,TimeStamps,Start_exp,End_Time,Long_Side='r',Ten
                 Short_In = Right_In
                 Short_Out = Right_Out
             ###
-#            #print Y['Time'][Right_NP_in_Trial[trial]],Y['Action'][Right_NP_in_Trial[trial]]
-#            #print Y['Time'][Right_NP_out_Trial[trial]],Y['Action'][Right_NP_out_Trial[trial]] 
 #            if any(Long_Out) or len(Long_Out) is 0:
 #                Long_Out=np.hstack((Long_Out,Long_In[-1]))
 
-#            print 'Long',Long_In,Long_Out  
             try:  
                 Tmp_Short=np.zeros(len(Short_In), dtype={'names':('In','Out','Trial','Hour'),'formats':('f8','f8','int','int')})
                 Tmp_Short['In']=Short_In
@@ -1609,7 +1592,7 @@ def F_Record_Switch_Trials_GUI(Y,TimeStamps,Start_exp,End_Time,Long_Side='r',Ten
                 Record_SwitchTrial['Long']=np.hstack((Record_SwitchTrial['Long'],Tmp_Long))
                 Active_Trials=Active_Trials+[trial]
             except ValueError:
-                print 'Error in trial %d'%trial
+                print('Error in trial %d'%trial)
             
     return(Record_SwitchTrial,Active_Trials)
     
@@ -1642,14 +1625,13 @@ def F_Time_Response_GUI(Y,TimeStamps,Start_exp,End_Time,tend=np.inf,TrialOnOff=F
                             -StartTrial_Hour=vector, hours of the day of every
                             trial start
     """
-    if kwargs.has_key('Location') and kwargs['Location']=='l':
+    if 'Location' in kwargs and kwargs['Location']=='l':
         off=TimeStamps['Give Pellet Left']
-    elif kwargs.has_key('Location') and kwargs['Location']=='r':
+    elif 'Location' in kwargs and kwargs['Location']=='r':
         off=TimeStamps['Give Pellet Right']
-    elif kwargs.has_key('Location') and kwargs['Location']=='a':
+    elif 'Location' in kwargs and kwargs['Location']=='a':
         off=TimeStamps['Start Intertrial Interval']
     else:
-        #print 'Insert location'
         return()
         
     TrialOnSet=F_Trial_On_Set_GUI(Y,TimeStamps,Protocol='Switch')
@@ -1659,7 +1641,6 @@ def F_Time_Response_GUI(Y,TimeStamps,Start_exp,End_Time,tend=np.inf,TrialOnOff=F
     LocationTrialOn=F_OnSet_GUI(LocationTrialOff,TrialOnSet)
 #   If there are problems of trial cutted.
     LocationTrialOff=F_OffSet_GUI(LocationTrialOn,LocationTrialOff)
-    ##print len(LocationTrialOn),len(LocationTrialOff)
 #   Keep only trial of duration <=tend
     Reward_Time=Y['Time'][LocationTrialOff]-Y['Time'][LocationTrialOn]
     KeepIndexes=np.where(Reward_Time<=tend)[0]
@@ -1816,7 +1797,7 @@ def F_Gr_Fit_GMM_GUI(Record_Switch,Mouse_Grouped,n_gauss=10,FindBest=False):
                         -EmCdf[name]=vector,empiric cumulative function values
     """
     Best_Model,Pdf,Cdf,EmCdf={},{},{},{}
-    for group in Mouse_Grouped.keys():
+    for group in list(Mouse_Grouped.keys()):
         for name in Mouse_Grouped[group]:
             Best_Model[name],Pdf[name],Cdf[name],EmCdf[name]=F_Fit_GMM_GUI(Record_Switch[name],n_gauss=n_gauss,FindBest=FindBest) 
     return(Best_Model,Pdf,Cdf,EmCdf)
@@ -1843,7 +1824,7 @@ def F_Fit_GMM_GUI(Sample,n_gauss=1,FindBest=False,Ind0=0,SampleSize=10**4):
     """
     Sample=Sample[Ind0:]
     Sample = Sample.reshape((Sample.shape[0],1))
-    print Sample.shape
+    print(Sample.shape)
     if FindBest:    
         N = np.arange(1, n_gauss)
     else:
@@ -1864,7 +1845,7 @@ def F_Fit_GMM_GUI(Sample,n_gauss=1,FindBest=False,Ind0=0,SampleSize=10**4):
     x = x.reshape((x.shape[0],1))    
     # compute log probabilities
     logprob = np.zeros(x.shape[0])
-    for k in xrange(x.shape[0]):
+    for k in range(x.shape[0]):
         logprob [k] = Best_Model.score(x[k].reshape((1,1)))
     # compute theoretical pdf 
     Pdf={}
@@ -1876,7 +1857,6 @@ def F_Fit_GMM_GUI(Sample,n_gauss=1,FindBest=False,Ind0=0,SampleSize=10**4):
     Model_Sample_Ord=np.sort(Model_Sample)
 
     NormCum = np.arange(len(Model_Sample_Ord),dtype=float)/len(Model_Sample_Ord)
-    ##print(NormCum[:10])
     Cdf['x']=Model_Sample_Ord
     Cdf['y']=NormCum
     # compute empiric Cdf
@@ -1908,10 +1888,10 @@ def Gr_Mean_Std_GUI(Vector,Groups):
     Matrix={}
     Mean={}
     Std={}
-    for name in Groups.keys():
+    for name in list(Groups.keys()):
         if not len(Groups[name]):
             continue
-        Matrix[name]=np.zeros(len(Vector[Vector.keys()[0]]))
+        Matrix[name]=np.zeros(len(Vector[list(Vector.keys())[0]]))
         for subject in Groups[name]:
             Matrix[name]=np.vstack((Matrix[name],Vector[subject]))
         Matrix[name]=Matrix[name][1:,:]
@@ -1989,7 +1969,7 @@ def Extracting_Data_GUI(Y,TimeStamps,Actions,TrialOn,TrialOff,TimeInterval=3600,
             OrderedActions['Trial'][i] = (Only for InOutAll equal to In or OuT)\n
             scalar, contains the number of the trial in which action i took place
     """
-    AllCodes = [TimeStamps[Actions[i]] for i in xrange(len(Actions))]
+    AllCodes = [TimeStamps[Actions[i]] for i in range(len(Actions))]
     Start_exp = F_Start_exp_GUI(Y,TimeStamps)
     if InOutAll=='All':
         OrderedActions=np.array([], dtype={'names':('Action','Time','Hour','Index','Bins_Unit'),'formats':(int,float,'S5',int,int)})
@@ -2013,7 +1993,7 @@ def Extracting_Data_GUI(Y,TimeStamps,Actions,TrialOn,TrialOff,TimeInterval=3600,
                 else:
                     string='%d:%d'%(hour,minute)
                 CodeOrderedAction['Hour'][ind]=string
-            ##print(OrderedActions,CodeOrderedAction)
+
             OrderedActions = np.hstack((OrderedActions,CodeOrderedAction))
         OrderedActions = np.sort(OrderedActions,order='Index')
         
@@ -2029,7 +2009,7 @@ def Extracting_Data_GUI(Y,TimeStamps,Actions,TrialOn,TrialOff,TimeInterval=3600,
         TrialOffSet=TrialOffSet[KeepIndex]
         
         Activity=[]
-        ##print(AllCodes,TimeStamps[TrialOn],TimeStamps[TrialOff])
+
         #raw_input("Press enter to continue")
         for code in AllCodes:
             Activity = np.hstack((Activity,np.where(Y['Action']==code)[0]))
@@ -2113,7 +2093,7 @@ def Average_TotalActivity_Matrix_GUI(Dataset,Bin_Column_Label,HBin,Groups=None,E
             (the other columns are for the groups,subjsets and type of stat)
         
     """
-    Subjects = Dataset.keys()
+    Subjects = list(Dataset.keys())
     tmpDict = {}
     for key in Subjects:
         tmpDict[key] = Dataset[key][Bin_Column_Label]
@@ -2123,7 +2103,7 @@ def Average_TotalActivity_Matrix_GUI(Dataset,Bin_Column_Label,HBin,Groups=None,E
     ActivityBin = OrderedDict()    
     TotExtractedParameters = len(Extract)    
     
-    for key in Dataset.keys():
+    for key in list(Dataset.keys()):
         Activity_x_Bin = np.array(F_Activity_x_Hour_All_GUI(Dataset[key][Bin_Column_Label]))
         Hour_0=int(Dataset[key][Bin_Column_Label][0])
         Activity_x_Bin=Activity_x_Bin[Hour_0:]
@@ -2143,7 +2123,7 @@ def Average_TotalActivity_Matrix_GUI(Dataset,Bin_Column_Label,HBin,Groups=None,E
     
     if Groups:
         lenName=0
-        for group in Groups.keys():
+        for group in list(Groups.keys()):
             lenName = max(lenName,len(str(group)))
         listNames=['Group','Subject','Stat']
         tupleTypes=['|S%d'%lenName,int,'|S9']
@@ -2160,7 +2140,7 @@ def Average_TotalActivity_Matrix_GUI(Dataset,Bin_Column_Label,HBin,Groups=None,E
     ind=0
     
     if Groups:
-        for group in Groups.keys():
+        for group in list(Groups.keys()):
             for subject in Groups[group]:
                 for k in range(TotExtractedParameters):
                     Matrix[ind+k] = tuple(np.hstack((group,subject,Extract[k],ListOfParam[k][subject])))
@@ -2211,7 +2191,7 @@ def Average_TotalActivity_Matrix_Analyze_GUI(Matrix,GroupColLabel,StatColLabel,M
     
     for k in range(size[0]):
         ArrayMatrix[k,:] = list(Matrix[listNames][k])
-#        #print Matrix['Group'][k]
+
         k+=1
     Dark_Bin,Light_Bin=Hour_Light_and_Dark_GUI(Dark_Start,Dark_Len,TimeBinning_sec)
     Reorder_Vector = np.hstack([Dark_Bin,Light_Bin])
@@ -2252,7 +2232,7 @@ def F_FitSin_GUI(Vector,amplitude0,phase0,translation0,period0=24,MaxIter=1000):
     
     F = fit_sin(x,popt[0],popt[1],popt[2],popt[3])
     corr,p_value=sts.pearsonr(Vector,F)
-    #print 'Pearson Coeff.=%f \np-value=%e \nEstimated Period=%f'% (corr,p_value,popt[1])
+
     
     return F,popt,corr,p_value
 
@@ -2278,7 +2258,7 @@ def Extracting_Latencies_GUI(Y,TimeStamps,Action_A,Action_B,TrialOn,TrialOff,InO
             
             
     if np.abs(len(ActionCodeIndex_A)-len(ActionCodeIndex_B))>0:
-        raise ValueError,'Action A and B must be coupled.'
+        raise ValueError('Action A and B must be coupled.')
     
     
     if InOutAll=='All':
@@ -2420,7 +2400,7 @@ def FoodEaten_x_Day_GUI(Y,TimeStamps):
     AllFood=np.sort(np.hstack((AllFoodLeft,AllFoodRight)))
     HourFood = F_Hour_Trial_GUI(Y,TimeStamps,Start_exp,AllFood,0,'a',np.inf,24)[1]
     N_Day =int( max(HourFood) // 24  + 1)
-    ##print(AllFood)
+
     TotDailyFood=np.zeros(N_Day)
     for day in np.arange(N_Day,dtype=int):
         Ind0 = np.where(HourFood>=day*24)[0][0]
@@ -2471,10 +2451,10 @@ def F_Probe_Trials_GUI(Y, TimeStamps,Start_exp,End_Time,Probe_Side='r',Tend=np.i
     """
     
 #   With this function we calculate probes on and off in the specified hopper
-    print 'TEND in probes extract',Tend 
+    print('TEND in probes extract',Tend) 
     if not ProbesOn:
         ProbesOn,ProbesOff = F_Probes_x_TimeInterval_GUI(Y,TimeStamps,Start_exp,End_Time,Probe_Side,tend=Tend)
-        print 'MAX trial len', np.max(Y['Time'][ProbesOff]-Y['Time'][ProbesOn])
+        print('MAX trial len', np.max(Y['Time'][ProbesOff]-Y['Time'][ProbesOn]))
 #   Here we save the hour start for each trial
     Hour_Start_Trial = F_TimeInterval_Trial_GUI(Y, TimeStamps, Start_exp, 
                                                 TimeInterval, ProbesOn, [],
@@ -2545,12 +2525,12 @@ def F_binning_GUI(Probe_Trial,Delta,Fuat_Like=False):
     return(Delta_Int)
 
 def F_StartStop_Fuat_GUI(Delta_Int):
-    Trials = Delta_Int.keys()
+    Trials = list(Delta_Int.keys())
     Trial_Number = len(Trials)
     StartStop = np.zeros((Trial_Number,2))*np.nan
     for n in Trials:
         Temp_Data = np.hstack((0,np.hstack(Delta_Int[n])))
-        print n, len(Temp_Data)
+        print(n, len(Temp_Data))
         if len(Temp_Data)<=2:
             continue
         
@@ -2615,7 +2595,7 @@ def F_PowerDensity_GUI(dataDict, Group_Dict, freqLim_Hz,
     IndexGroup = {}
     IndexArray_dict = {}
     totSub  = 0
-    for key in Group_Dict.keys():
+    for key in list(Group_Dict.keys()):
         GroupNum[key] = len(Group_Dict[key])
         IndexGroup[key] = {}
         IndexArray_dict[key] = np.array([], dtype=int)
@@ -2629,7 +2609,7 @@ def F_PowerDensity_GUI(dataDict, Group_Dict, freqLim_Hz,
         
     flag = True
 
-    for group in Group_Dict.keys():
+    for group in list(Group_Dict.keys()):
         for subject in Group_Dict[group]:
             DataStruct = dataDict[subject]
             ind = IndexGroup[group][subject]
@@ -2688,9 +2668,6 @@ def NormalizFactor_PowerDensity_GUI(PowerSp, pw, pr, pnr):
     Tot_p[len(pw):len(pw) + len(pnr)] = np.nanmean(PowerSp[pnr,:], axis=1)
     Tot_p[len(pw) + len(pnr):] = np.nanmean(PowerSp[pr,:], axis=1)
     return np.nanmean(Tot_p)
-
-def intConv(x):
-    return int(x)
 
 
 def dateConvertion(dateString):
@@ -2788,9 +2765,9 @@ def F_DeltaRebound(Baseline, Sleep_Deprivation, Recovery, FreeRunning = None,
     DeltaReb  = {}
     TimeStamp = np.zeros(NumHour, dtype='|S19')
     first = True
-    for k in NormalizFactor.keys():
+    for k in list(NormalizFactor.keys()):
         DeltaReb[k] = np.zeros(NumHour, dtype=float) * np.nan
-        for h in xrange(NumHour):
+        for h in range(NumHour):
             Tmp = np.nanmean(DeltaNR[h*Bin: (h+1)*Bin])
             if first:
                 TimeStamp[h] = Day[h*Bin]
@@ -2801,7 +2778,6 @@ def F_DeltaRebound(Baseline, Sleep_Deprivation, Recovery, FreeRunning = None,
         Time_Limit = (Day[0],Day[(h+1)*Bin-1])
     except:
         Time_Limit = (Day[0],Day[-1])
-        print 'modificato by edo'
     return DeltaReb,NormalizFactor,Time_Limit,TimeStamp
 
 def F_DeltaRebound_Epoch_type(Baseline, Sleep_Deprivation, Recovery, FreeRunning = None,
@@ -2872,9 +2848,9 @@ def F_DeltaRebound_Epoch_type(Baseline, Sleep_Deprivation, Recovery, FreeRunning
     DeltaReb  = {}
     TimeStamp = np.zeros(NumHour, dtype='|S19')
     first = True
-    for k in NormalizFactor.keys():
+    for k in list(NormalizFactor.keys()):
         DeltaReb[k] = np.zeros(NumHour, dtype=float) * np.nan
-        for h in xrange(NumHour):
+        for h in range(NumHour):
             Tmp = np.nanmean(DeltaNR[h*Bin: (h+1)*Bin])
             if first:
                 TimeStamp[h] = Day[h*Bin]
@@ -2885,7 +2861,7 @@ def F_DeltaRebound_Epoch_type(Baseline, Sleep_Deprivation, Recovery, FreeRunning
         Time_Limit = (Day[0],Day[(h+1)*Bin-1])
     except:
         Time_Limit = (Day[0],Day[-1])
-        print 'modificato by edo'
+        print('modificato by edo')
     return DeltaReb,NormalizFactor,Time_Limit,TimeStamp
 
 def EndsWithStar(Char):
@@ -2969,8 +2945,8 @@ def NormalizationFactor_DeltaReb(PowerFreq, Timestamp, LightPhaseStart = 7,
     Index  = np.array([], dtype=int)
     NormalizFactor = {}
     for k in range(len(Index0)):
-        Index = np.hstack((Index, range(Index0[k],Index1[k])))
-#        #print Index0[k],Index1[k]
+        Index = np.hstack((Index, list(range(Index0[k],Index1[k]))))
+
         NormalizFactor[k]  = np.nanmean(PowerFreq[Index])
     return NormalizFactor
 
@@ -3067,7 +3043,7 @@ def EpisodsDurationXhour(Epoch, Bin, Type = [3,2]):
     DurEpisodes[:] = np.nan
     DurEpisodes[Start + 1] = Duration
     indE = np.where(DurEpisodes >= 60)[0]
-    for t in xrange(len(indE)):
+    for t in range(len(indE)):
         k = step
         DurEpisodes[indE[t] + k] =\
             DurEpisodes[indE[t]] - 60
@@ -3080,7 +3056,7 @@ def EpisodsDurationXhour(Epoch, Bin, Type = [3,2]):
     MeanDurEpisod = np.zeros(len(Epoch)//step)
     shorter = np.where(DurEpisodes <= 4.0/60)[0]
     DurEpisodes[shorter] = np.nan
-    for t in xrange(len(MeanDurEpisod)):
+    for t in range(len(MeanDurEpisod)):
         MeanDurEpisod[t] = np.nanmean(
             DurEpisodes[1 + t*step:(t+1)*step])
     return MeanDurEpisod, Duration
@@ -3110,7 +3086,7 @@ def Stat_Indexes_DeltaReb_GUI(DeltaReb_Dict, Group_Dict):
     Mean   = {}
     Median = {}
     SEM    = {}
-    for key in Group_Dict.keys():
+    for key in list(Group_Dict.keys()):
         Group = Group_Dict[key]
         GrSize[key] = len(Group)
         GroupDelta_Dict[key] = np.zeros((GrSize[key],
@@ -3132,7 +3108,7 @@ def Stat_Indexes_DeltaReb_GUI(DeltaReb_Dict, Group_Dict):
             
 def F_Reoder_SubjectiveTimes(timeVector,Hours,
                              ReturnArgSort=False):
-#    #print timeVector                 
+
     Ind = np.argsort(timeVector)
     if ReturnArgSort:
         return Ind
@@ -3218,7 +3194,7 @@ def stdMatrix_Group_Stat_Index_GUI(stdMatrix, Group_Dict):
                 A strucured array containing statistical indexes of values
                 in stdMatrix for every group at every time point
     """
-    GroupList = Group_Dict.keys()
+    GroupList = list(Group_Dict.keys())
     subject   = Group_Dict[GroupList[0]][0]
     HourList  = stdMatrix['Time'][np.where(stdMatrix['Subject'] == subject)[0]]
     timeStrLen = len(HourList[0])
@@ -3291,7 +3267,7 @@ def StepWiseRegression_sse_forward(predictor, Observations, p_entrance=0.15,
         add_constant(predictor)
     NumPredictor  = predictor.shape[1] - 1
     insertedPredictor = []
-    notInsertedPredictor = range(1, NumPredictor + 1)
+    notInsertedPredictor = list(range(1, NumPredictor + 1))
     bestRegFit = None
     History = OrderedDict()
     stepList = []
@@ -3303,7 +3279,7 @@ def StepWiseRegression_sse_forward(predictor, Observations, p_entrance=0.15,
             remove = Remove_Predictor(bestRegFit, p_exit)
             for pred in remove:
                 insertedPredictor.remove(pred)
-                bisect.insort_left(notInsertedPredictor, pred)
+                insort_left(notInsertedPredictor, pred)
             History['step %d'%step]['Removed'] = remove
         usePredictor  = OrderedDict()
         for pred in notInsertedPredictor:
@@ -3323,7 +3299,7 @@ def StepWiseRegression_sse_forward(predictor, Observations, p_entrance=0.15,
             break
         stepList += ['step %d'%step]
         notInsertedPredictor.remove(add)
-        bisect.insort_left(insertedPredictor, add)
+        insort_left(insertedPredictor, add)
         insertedPredictor.sort()
         step += 1
     return History, insertedPredictor, stepList
@@ -3353,7 +3329,7 @@ def Regression_Step(Observations, predictor, usePredictor):
                 
     """
     regFits = OrderedDict()
-    for numPredictor in usePredictor.keys():
+    for numPredictor in list(usePredictor.keys()):
         olsReg = OLS(Observations, predictor[:,[0] + usePredictor[numPredictor]])
         fit = olsReg.fit()
         regFits[numPredictor] = np.zeros(len(fit.params),
@@ -3394,7 +3370,7 @@ def Add_Predictor(regFits, p_entrance):
             We add the predictor with the min p_value stat if the p_value
             is lower than p_entrance.
     """
-    newPredictor = regFits.keys()
+    newPredictor = list(regFits.keys())
     p_val = np.zeros(len(newPredictor), dtype={'names':('Predictor','p_value'),
                      'formats':(int,float)})
     index = 0
@@ -3451,14 +3427,14 @@ def regression_Matrix(Datas, Group_Dict, predictor = True):
         
     """
     regression_Dict = {}
-    Hours = np.unique(Datas[Datas.keys()[0]]['Time'])
+    Hours = np.unique(Datas[list(Datas.keys())[0]]['Time'])
     numHours = len(Hours)
-    for group in Group_Dict[Datas.keys()[0]].keys():
-        regression_Dict[group] = np.zeros((numHours,len(Datas.keys())))
+    for group in list(Group_Dict[list(Datas.keys())[0]].keys()):
+        regression_Dict[group] = np.zeros((numHours,len(list(Datas.keys()))))
     predNum = 0
-    for predict in Datas.keys():
+    for predict in list(Datas.keys()):
         DataArray = Datas[predict]
-        for group in Group_Dict[predict].keys():
+        for group in list(Group_Dict[predict].keys()):
             grList = Group_Dict[predict][group]
             matrix_sub = np.zeros((len(grList),len(Hours)))
             
@@ -3472,16 +3448,16 @@ def regression_Matrix(Datas, Group_Dict, predictor = True):
             regression_Dict[group][:,predNum] = np.nanmean(matrix_sub)
         predNum += 1
     if predictor:
-        for group in Group_Dict[Datas.keys()[0]].keys():
+        for group in list(Group_Dict[list(Datas.keys())[0]].keys()):
             regression_Dict[group] = add_constant(regression_Dict[group])
     return regression_Dict
 
 def build_Rsquared_Matrix(regressionModels):
-    ObsName = regressionModels.keys()
+    ObsName = list(regressionModels.keys())
     lenObs = 0
     for name in ObsName:
         lenObs = max(lenObs, len(name))
-    GroupName = regressionModels[ObsName[0]].keys()
+    GroupName = list(regressionModels[ObsName[0]].keys())
     lenGr = 0
     for name in ObsName:
         lenGr = max(lenGr, len(name))
@@ -3499,10 +3475,10 @@ def build_Rsquared_Matrix(regressionModels):
         for group in GroupName:
             selectedCirca[obs][group] = {}
             selectedSleep[obs][group] = {}
-            for predCirca in regressionModels[obs][group].keys():
+            for predCirca in list(regressionModels[obs][group].keys()):
                 selectedCirca[obs][group][predCirca] = {}
                 selectedSleep[obs][group][predCirca] = {}
-                for predSleep in regressionModels[obs][group][predCirca].keys():
+                for predSleep in list(regressionModels[obs][group][predCirca].keys()):
                     reg = regressionModels[obs][group][predCirca][predSleep]
                     lenCirca = max(lenCirca, len(reg.varaibleDict[1]))
                     if 'x1' in reg.model:
@@ -3514,8 +3490,8 @@ def build_Rsquared_Matrix(regressionModels):
                     else:
                         selectedSleep[obs][group][predCirca][predSleep] = False
                     lenSleep = max(lenSleep, len(reg.varaibleDict[2]))
-    lenPredCirca = len(regressionModels[obs][group].keys())
-    lenPredSleep = len(regressionModels[obs][group][predCirca].keys())
+    lenPredCirca = len(list(regressionModels[obs][group].keys()))
+    lenPredSleep = len(list(regressionModels[obs][group][predCirca].keys()))
     Matrix = np.zeros(len(ObsName)*len(GroupName)*lenPredSleep*lenPredCirca,
                       dtype={'names':('Group','Observation', 'Circadian Predictor',
                                       'Sleep Predictor', 'R-squared',
@@ -3525,8 +3501,8 @@ def build_Rsquared_Matrix(regressionModels):
     ind = 0
     for obs in ObsName:
         for group in GroupName:
-            for predCirca in regressionModels[obs][group].keys():
-                for predSleep in regressionModels[obs][group][predCirca].keys():
+            for predCirca in list(regressionModels[obs][group].keys()):
+                for predSleep in list(regressionModels[obs][group][predCirca].keys()):
                     Matrix['Group'][ind] = group
                     Matrix['Observation'][ind] = obs
                     Matrix['Circadian Predictor'][ind] = predCirca
@@ -3559,7 +3535,7 @@ class multiple_Regression(object):
         self.observationName = observationName
         self.model = 'y = 1'
         self.varaibleDict = {}
-        #print(selectedVariables)
+
         try:
             self.selectedVariables =\
             np.array(varList)[np.array(selectedVariables)-1]
@@ -3577,7 +3553,7 @@ class multiple_Regression(object):
         string += 'Optimal circadian predictor lag: %s\n'%self.lagCircadian
         string += 'Selected model: %s\n'%self.model
         string += 'y = %s\n'%self.observationName
-        for num in self.varaibleDict.keys():
+        for num in list(self.varaibleDict.keys()):
             string += 'x%d = %s\n'%(num, self.varaibleDict[num])
         return string
 
@@ -3620,12 +3596,12 @@ def find_BestLag(Group_Dict, Predictors, Observation, p_entrance=0.15,
                     List of R-squared, one for every possible time shift
                     of the predictor
     """
-    predictorList = Predictors.keys()
-    genotypeNameList = Group_Dict[Group_Dict.keys()[0]].keys()
+    predictorList = list(Predictors.keys())
+    genotypeNameList = list(Group_Dict[list(Group_Dict.keys())[0]].keys())
     bestLag = {}
     R_squared = {}
     lagVect = {}
-    for obsKey in Observation.keys():
+    for obsKey in list(Observation.keys()):
         bestLag[obsKey] = {}
         R_squared[obsKey] = {}
         lagVect[obsKey] = {}
@@ -3709,10 +3685,10 @@ def multipleRegressionProcedure(dict_Predictor_Circadian, dict_Predictor_Sleep,
                     multiple regression procedure
     """
     regressionModels = {}
-    for observation in bestLagSleep.keys():
+    for observation in list(bestLagSleep.keys()):
         regressionModels[observation] = {}
         tmpObservation = {observation : dict_Observation[observation]}
-        for genotype in bestLagSleep[observation].keys():
+        for genotype in list(bestLagSleep[observation].keys()):
             regressionModels[observation][genotype] = {}
 #==============================================================================
 #   Create an observation matrix of the specified genotype
@@ -3729,9 +3705,9 @@ def multipleRegressionProcedure(dict_Predictor_Circadian, dict_Predictor_Sleep,
 #   generating the predictor matrix with 1 circadian predictor and one
 #   sleep predictor.
 #==============================================================================
-            for circadian in dict_Predictor_Circadian.keys():
+            for circadian in list(dict_Predictor_Circadian.keys()):
                 regressionModels[observation][genotype][circadian] = {}
-                for sleep in dict_Predictor_Sleep.keys():
+                for sleep in list(dict_Predictor_Sleep.keys()):
                     tmpPredictor = {}
                     tmpPredictor[circadian] = dict_Predictor_Circadian\
                         [circadian]
@@ -3747,7 +3723,7 @@ def multipleRegressionProcedure(dict_Predictor_Circadian, dict_Predictor_Sleep,
 #   extract this information. Finally we add one because first column is
 #   for the intercept
 #==============================================================================
-                    indCircadian = np.where(np.array(tmpPredictor.keys()) ==\
+                    indCircadian = np.where(np.array(list(tmpPredictor.keys())) ==\
                         circadian)[0][0]
                     indSleep = (1 + indCircadian) % 2
                     indCircadian += 1
@@ -3789,7 +3765,7 @@ def multipleRegressionProcedure(dict_Predictor_Circadian, dict_Predictor_Sleep,
                     except IndexError:
                         regressionModels[observation][genotype]\
                             [circadian][sleep] = multiple_Regression(
-                                hist[hist.keys()[-1]]['Best Fit'],
+                                hist[list(hist.keys())[-1]]['Best Fit'],
                                 bestLagSleep[observation][genotype][sleep],
                                 bestLagCircadian[observation][genotype]\
                                 [circadian],
@@ -3881,11 +3857,11 @@ def F_FitSin_FixPeriod(Vector,amplitude0,phase0,translation0, function):
 def std_Switch_Latency_GUI(Record_Switch, HSSwitch, DataGroup, Dark_start=20, Dark_length=12):
     Tot_Subjects = 0
     lenName = 0
-    for name in Record_Switch.keys():
+    for name in list(Record_Switch.keys()):
         Tot_Subjects += 1
         lenName = max(lenName, len(name))
-    for k in Record_Switch.keys():
-        print k, len(Record_Switch[k])
+    for k in list(Record_Switch.keys()):
+        print(k, len(Record_Switch[k]))
     Hour_Dark,Hour_Light = Hour_Light_and_Dark_GUI(Dark_start, Dark_length)
     Best_Model, Pdf, Cdf, EmCdf = F_Gr_Fit_GMM_GUI(Record_Switch, DataGroup,
                                               n_gauss=1)
@@ -3900,7 +3876,7 @@ def std_Switch_Latency_GUI(Record_Switch, HSSwitch, DataGroup, Dark_start=20, Da
     std_Matrix = np.zeros(DataLen, dtype = {
         'names':('Subject', 'Time','Mean', 'Median', 'SEM'),
         'formats':('|U%d'%lenName, '|U5',float, float, float)})
-    for name in Record_Switch.keys():
+    for name in list(Record_Switch.keys()):
         std_Matrix['Subject'][ind:len(Hour_label)+ind] = name
         std_Matrix['Mean'][ind:len(Hour_label)+ind] = Mean[name]
         std_Matrix['Median'][ind:len(Hour_label)+ind] = Median[name]
@@ -3945,19 +3921,19 @@ def Exp_Gain_Matrix_GUI(GMM_Fit, Short, Long, Group_dict, ProbeShort,
                 and the parameters used in the switch latency protocol
     """
     nameLen = 0
-    for name in GMM_Fit['Best_Model'].keys():
+    for name in list(GMM_Fit['Best_Model'].keys()):
         nameLen = max(nameLen,len(name))
     groupLen = 0
-    for group in Group_dict.keys():
+    for group in list(Group_dict.keys()):
         groupLen = max(groupLen, len(group))
     ProbeLong = 1 - ProbeShort
     std_Exp_Gain =\
-        np.zeros(len(GMM_Fit['Best_Model'].keys()),
+        np.zeros(len(list(GMM_Fit['Best_Model'].keys())),
                  dtype = {'names':('Group', 'Subject', 'Value', 'Fit Mean', 
                  'Fit CV'),'formats':('|S%d'%groupLen, '|S%d'%nameLen,
                  float, float, float)})
     ind = 0
-    for group in Group_dict.keys():
+    for group in list(Group_dict.keys()):
         for name in Group_dict[group]:
             m = GMM_Fit['Best_Model'][name].means_[0][0]
             var = GMM_Fit['Best_Model'][name].covariances_[0][0]
@@ -3980,15 +3956,15 @@ def std_Subjective_Error_Rate_GUI(Dataset_Dict, TimeStamps,
     HBin = max(1, TimeInterval // 3600)
     if TimeInterval > 3600:
         TimeInterval = 3600
-    NumSub = len(Dataset_Dict.keys())
+    NumSub = len(list(Dataset_Dict.keys()))
     LenSubName = []
-    for key in Dataset_Dict.keys():
+    for key in list(Dataset_Dict.keys()):
         LenSubName += [len(key)]
     Hour_Dark,Hour_Light = Hour_Light_and_Dark_GUI(DarkStart, DarkDuration,
                                                  TimeInterval)
     first = True
     ind = 0
-    for Datalabel in Dataset_Dict.keys():
+    for Datalabel in list(Dataset_Dict.keys()):
         Start_exp = Time_Details_GUI(Dataset_Dict[Datalabel],TimeStamps[Datalabel])[0]
         A, cr = F_Correct_Rate_New_GUI(Dataset_Dict[Datalabel],
                                 TimeStamps[Datalabel],Start_exp,24,tend=tend,
@@ -4053,7 +4029,7 @@ def EpisodsDurationXhour_GUI(Epoch, Time, Bin, timeFirst, timeLast,
     DurEpisodes[:] = np.nan
     DurEpisodes[Start + 1] = Duration
     indE = np.where(DurEpisodes >= Bin * 60)[0]
-    for t in xrange(len(indE)):
+    for t in range(len(indE)):
         print(  '\n\nLOOONG EPISODES SPLITTING TO BE CORRECTED\n\n')
         k = step
         DurEpisodes[indE[t] + k] =\
@@ -4070,7 +4046,7 @@ def EpisodsDurationXhour_GUI(Epoch, Time, Bin, timeFirst, timeLast,
     ExtrTime      = np.zeros(int(np.ceil(totEpochs/step)), dtype = 'S19')
     shorter = np.where(DurEpisodes <= EpochDur/60)[0]
     DurEpisodes[shorter] = np.nan
-    for t in xrange(len(MeanDurEpisod)):
+    for t in range(len(MeanDurEpisod)):
         if total_or_mean == 'Mean':
             MeanDurEpisod[t] = np.nanmean(
                 DurEpisodes[1 + t*step:(t+1)*step])
@@ -4084,6 +4060,7 @@ def F_DayAverage_GUI(Vector, Times, Hour_Dark,Hour_Light, Bin=3600):
     """
         Returns averages time bin by time bin
     """
+    
     vectFunc = np.vectorize(TimeBin_From_TimeString)
     Times = Parse_TimeVect(Times)
     timeBinned = vectFunc(Times, Binning=Bin)
@@ -4091,7 +4068,7 @@ def F_DayAverage_GUI(Vector, Times, Hour_Dark,Hour_Light, Bin=3600):
     AverageVector = np.zeros(len(Hours))
     HourString = np.zeros(len(Hours),'|S19')
     if max(timeBinned) != max(Hours):
-        raise ValueError,'Need more than one day'
+        raise ValueError('Need more than one day')
     k = 0
     for h in Hours:
         Ind = np.where(timeBinned==h)[0]
@@ -4102,13 +4079,13 @@ def F_DayAverage_GUI(Vector, Times, Hour_Dark,Hour_Light, Bin=3600):
 
 def std_Binned_TimeCourse_GUI(ValueDict, Time, rescaleBy=1):
     nameLen = 0
-    for name in ValueDict.keys():
+    for name in list(ValueDict.keys()):
         nameLen = max(nameLen, len(name))
-    std_Matrix = np.zeros(len(Time[name]) * len(ValueDict.keys()),
+    std_Matrix = np.zeros(len(Time[name]) * len(list(ValueDict.keys())),
                           dtype={'names':('Subject', 'Time', 'Value'),
                                  'formats':('|S%d'%nameLen, '|S19', float)})
     ind = 0
-    for name in ValueDict.keys():
+    for name in list(ValueDict.keys()):
         std_Matrix['Subject'][ind:ind + len(ValueDict[name])] = name
         std_Matrix['Time'][ind:ind + len(ValueDict[name])] = Time[name]
         std_Matrix['Value'][ind:ind + len(ValueDict[name])] =\
@@ -4119,8 +4096,8 @@ def std_Binned_TimeCourse_GUI(ValueDict, Time, rescaleBy=1):
 
 def std_TimeCourse_Group_GUI(std_Matrix, Group_Dict):
     groupLen = 0
-    subjectVect = np.unique(std_Matrix['Subject'])
-    for group in Group_Dict.keys():
+#    subjectVect = np.unique(std_Matrix['Subject'])
+    for group in list(Group_Dict.keys()):
         groupLen = max(len(group), groupLen)
     if 'Mean' in std_Matrix.dtype.names:
         varName = 'Mean'
@@ -4130,18 +4107,18 @@ def std_TimeCourse_Group_GUI(std_Matrix, Group_Dict):
         raise ValueError('Std Matrix must contain a colum \'Value\' or \'Mean\'')
     Time = np.unique(std_Matrix['Time'])
     timeLen = len(Time[0])
-    std_Group_Matrix = np.zeros(len(Group_Dict.keys()) *\
+    std_Group_Matrix = np.zeros(len(list(Group_Dict.keys())) *\
         len(Time), dtype={'names':('Group','Time','Mean','Median','SEM','25 perc','75 perc'),
                           'formats':('|S%d'%groupLen, '|S%d'%timeLen, float,
                                      float, float,float,float)})
     
     ind = 0
-    for group in Group_Dict.keys():
+    for group in list(Group_Dict.keys()):
         Matrix = np.zeros((len(Group_Dict[group]), len(Time))) * np.nan
-        #print Matrix.shape
+
         for k in range(len(Group_Dict[group])):
-            #print np.where(std_Matrix['Subject'] == Group_Dict[group][k])
-            #print group, Group_Dict[group][k]
+          
+            
             Matrix[k, :] = std_Matrix[varName]\
                 [np.where(std_Matrix['Subject'] == Group_Dict[group][k])[0]]
         std_Group_Matrix['Group'][ind:ind + len(Time)] = group
@@ -4224,15 +4201,15 @@ def EpocheTot_xTimebin_GUI(Epoch, Time, Bin, timeFirst, timeLast,
                            EpochDur=4, Type=[3,2]):
     totEpochs = np.ceil(((timeLast - timeFirst).seconds +\
                 (timeLast - timeFirst).days * 3600*24)/EpochDur) + 1
-#    #print('num epochs: ',totEpochs)
+
     initialVoidEpochs = ((Time[0]-timeFirst).seconds +\
         ((Time[0]-timeFirst).days * 3600 * 24))//EpochDur
-#    #print('Init voids: ',initialVoidEpochs)
+
     newTime = dateTimeArange(timeFirst, timeLast, sec=EpochDur)
     BoolVect = np.zeros(np.int(totEpochs),dtype=float)
     Epoch = Epoch[:np.int(totEpochs)]
-    #print 'Time first',timeFirst,'time last',timeLast
-    #print('epochs:',len(Epoch),'totEpoch',totEpochs)
+
+
     for thisType in Type:
         BoolVect[initialVoidEpochs:initialVoidEpochs + len(Epoch)]\
             [np.where(Epoch == thisType)[0]] = 1
@@ -4264,7 +4241,7 @@ def runningMeanFast(x, N):
 
 def runningMean(x, N):
     if N%2 is 1:
-        raise ValueError, 'N must be even'
+        raise ValueError('N must be even')
     x_smooth = []
     for k in range(x.shape[0]):
         x_smooth += [np.mean(x[max(0,k-N//2):min(x.shape[0],k+N//2)])]
@@ -4315,7 +4292,7 @@ def compute_LDA(x,y):
     X_norm = pca_res.a
 
     
-    LDA = lda.LDA(n_components = 1)
+    LDA = lda(n_components = 1)
 #    lda_res = LDA.fit(X_norm, y, store_covariance=True)
     lda_res = LDA.fit(X_norm, y)
 
@@ -4442,65 +4419,13 @@ def gaussian_fit(X_norm,v_ort,hd,hl):
     line_v = np.zeros((2,2))
     line_v[1,0] = np.min((x_light[0],x_dark[0])) 
     line_v[1,1] = np.max((x_light[-1],x_dark[-1])) 
-    rot_line = np.dot(Rot2,line_v) + transl
+#    rot_line = np.dot(Rot2,line_v) + transl
     rot_v_light = np.dot(Rot,v_light) + transl
     rot_v_dark = np.dot(Rot,v_dark) + transl
     line_light = (rot_v_light[0,:] - transl [0]- np.mean(X_norm,axis=0)[0])/v_ort[0]*v_ort[1]+np.mean(X_norm,axis=0)[1]  +transl[1]
     line_dark =  (rot_v_dark[0,:] - transl [0]- np.mean(X_norm,axis=0)[0])/v_ort[0]*v_ort[1]+np.mean(X_norm,axis=0)[1]  +transl[1]
     return line_light,line_dark,rot_v_light,rot_v_dark
 
-
-
-def F_Correct_Rate_GUI(Y,period,TimeStamps,*tend):
-    
-    """
-    Function Target:    This function calculate the rate of correct responses
-                        hour by hour.
-                        
-    Input:              -Y = Dataset, nx2 matrix.
-                        -Start_exp = start time of the experiment (seconds
-                        form midnight before the analisis begins)
-                        -tend[0] = scalar, max time of a trial.(optional,
-                        default=30).
-
-                        
-    Output:             -Correct_Rate = vector, element i of this vector contains
-                        the correct rate of hour i.
-                        -Act_x_Hour = dictionary containing number of trials per
-                        type of trial for each hour of the day.
-    """
-    Start_exp = F_Start_exp_GUI(Y,TimeStamps)
-    if len(tend)<1:
-        tend=30
-    else:
-        tend=tend[0]
-
-    TrialOnSet=np.where(Y['Action']==TimeStamps['Center Light On'])[0]
-    TrialOffSet=np.where(Y['Action']==TimeStamps['End Intertrial Interval'])[0]
-    StartITI=np.where(Y['Action']==TimeStamps['Start Intertrial Interval'])[0]
-
-    if TrialOnSet[0]>TrialOffSet[0]:
-        TrialOffSet=TrialOffSet[1:]
-        
-    elif TrialOnSet[-1]>TrialOffSet[-1]: 
-        TrialOnSet=TrialOnSet[:-1]
-    if StartITI[-1]>TrialOffSet[-1]:
-        StartITI=StartITI[:-1]
-    if StartITI[0]<TrialOnSet[0]:
-        StartITI=StartITI[1:]
-    Act_x_Hour={}
-    for lettera in 'arlp':
-        TrialHour=F_Hour_Trial_GUI(Y,TimeStamps,Start_exp,
-                              TrialOnSet,TrialOffSet,lettera,tend,period)[1]
-        if len(TrialHour)>0:
-            Act_x_Hour[lettera]=np.array(F_Activity_x_Hour_GUI(TrialHour),dtype=float)
-        else:
-            Act_x_Hour[lettera]=np.zeros(24,dtype=float)
-    Correct_Rate=(Act_x_Hour['r']+Act_x_Hour['l']+Act_x_Hour['p'])/Act_x_Hour['a']
-
-    
-    return(Act_x_Hour,Correct_Rate)
-    
 
 def computeReactionTime(Y,TimeStamps):
     onset = np.where(Y['Action']==TimeStamps['Center Light On'])[0]
@@ -4510,10 +4435,10 @@ def computeReactionTime(Y,TimeStamps):
     if onset[-1] > offset[-1]:
         onset = onset[:-1]
     if onset.shape[0] != offset.shape[0]:
-        raise ValueError, 'onset and offset must have same dimention'
+        raise ValueError('onset and offset must have same dimention')
     react_time = np.zeros(onset.shape[0]) * np.nan
     actionList = Y['Action'].tolist()
-    for k in xrange(onset.shape[0]):
+    for k in range(onset.shape[0]):
         i = onset[k]
         end = offset[k]
         try:
@@ -4585,7 +4510,7 @@ def performLDA_Analysis(behaviorData, sleepData, TimeStamps, parBeh, parSleep, d
     
     dailyScore_beh,dailyScore_sleep = computeDailyScore(behaviorData, sleepData, TimeStamps, parBeh, parSleep)
     
-    print dailyScore_beh
+    print(dailyScore_beh)
     X = np.zeros((24,2))
     X[:,0] = dailyScore_beh
     X[:,1] = dailyScore_sleep
