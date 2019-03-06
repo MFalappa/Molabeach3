@@ -14,20 +14,18 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future_builtins import *
+
 import os,sys
 file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 lib_dir = os.path.join(file_path,'libraries')
 sys.path.append(lib_dir)
 from Modify_Dataset_GUI import OrderedDict
-import urllib2
-from PyQt4.QtCore import (Qt, SIGNAL)
-from PyQt4.QtGui import (QApplication, QDialog, QLabel, QHBoxLayout,
-                         QFont, QPushButton,QVBoxLayout, QSizePolicy,
-                         QSpacerItem)
+import urllib.request, urllib.error, urllib.parse
+from PyQt5.QtCore import (Qt, pyqtSignal)
+from PyQt5.QtWidgets import (QApplication, QDialog, QLabel, QHBoxLayout,
+                         QPushButton,QVBoxLayout, QSizePolicy,QSpacerItem)
+                             
+from PyQt5.QtGui import (QFont)
 
 from MyDnDDialog import MyDnDListWidget
 
@@ -68,12 +66,12 @@ class deleteDlg(QDialog):
         
         self.continueButton.setEnabled(False)
         
-        self.connect(self.continueButton,SIGNAL('clicked()'),self.accept)
-        self.connect(cancelButton,SIGNAL('clicked()'),self.reject)
-        self.connect(self.deletefunc,SIGNAL('dropped()'),self.enableOk)
-        self.connect(self.deletefunc,SIGNAL('dragged()'),self.enableOk) 
-        self.connect(self.keepFunc,SIGNAL('dropped()'),self.enableOk)
-        self.connect(self.keepFunc,SIGNAL('dragged()'),self.enableOk)
+        self.connect(self.continueButton,pyqtSignal('clicked()'),self.accept)
+        self.connect(cancelButton,pyqtSignal('clicked()'),self.reject)
+        self.connect(self.deletefunc,pyqtSignal('dropped()'),self.enableOk)
+        self.connect(self.deletefunc,pyqtSignal('dragged()'),self.enableOk) 
+        self.connect(self.keepFunc,pyqtSignal('dropped()'),self.enableOk)
+        self.connect(self.keepFunc,pyqtSignal('dragged()'),self.enableOk)
         
     def enableOk(self):
         if self.deletefunc.count() > 0:
@@ -84,7 +82,7 @@ class deleteDlg(QDialog):
         item = self.deletefunc.takeItem(0)
         listDel = []
         while item:
-            listDel += [unicode(item.text())]
+            listDel += [str(item.text())]
             item = self.deletefunc.takeItem(0)
         return listDel
             

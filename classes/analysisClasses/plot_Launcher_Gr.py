@@ -19,7 +19,9 @@ import sys,os
 lib_fld = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'libraries')
 sys.path.append(lib_fld)
 
-from custom_Plots_Gr import (F_Error_Rate_New_plt_GUI,plotPowerDensity,plt_Error_Rate_Gr,
+from Plotting_GUI import F_Error_Rate_New_plt_GUI
+
+from custom_Plots_Gr import (plt_Error_Rate_Gr,plotPowerDensity,
                              plotSleepTimeCourse,plotLDA,plotMRA,
                              plotSwitchLatency,delta_reb_plt)
 

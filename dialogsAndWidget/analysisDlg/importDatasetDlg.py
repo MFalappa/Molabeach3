@@ -67,7 +67,6 @@ class importDlg(QDialog,Ui_Dialog):
         self.pushButton_load.setEnabled(False)
         
     def getFiles(self):
-        print('questo non funzion')
         dire = os.path.dirname(os.path.abspath(os.path.join(__file__ ,"../..")))
         Qfnames,_ = QFileDialog.getOpenFileNames(self,
                     "Phenopy - Load Dataset", dire)

@@ -1328,12 +1328,20 @@ class EEG_Data_Struct(object):
                                            usecols = useCol, dtype = float,
                                            delimiter=delimiter)
             self.Stage     = np.genfromtxt(PathToFile, skip_header = header,
-                                           usecols = [StageCol], dtype = '|S3',
+                                           usecols = [StageCol], dtype = 'unicode',
                                            delimiter=delimiter)
+                        
+#            self.Stage     = np.genfromtxt(PathToFile, skip_header = header,
+#                                           usecols = [StageCol], dtype = '|S3',
+#                                           delimiter=delimiter)
 
             self.Timestamp = np.genfromtxt(PathToFile, skip_header = header,
-                                           usecols = [timeCol], dtype = '|S20',
+                                           usecols = [timeCol], dtype = 'unicode',
                                            delimiter=delimiter)
+            
+#            self.Timestamp = np.genfromtxt(PathToFile, skip_header = header,
+#                                           usecols = [timeCol], dtype = '|S20',
+#                                           delimiter=delimiter)
 
             self.Timestamp = vectDateConvertion(self.Timestamp)
 

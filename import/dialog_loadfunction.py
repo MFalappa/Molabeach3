@@ -19,8 +19,9 @@ import os,sys
 file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 lib_dir = os.path.join(file_path,'libraries')
 sys.path.append(lib_dir)
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import QDialog
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from ui_import_function import *
 #from messageLib import *
 
@@ -36,7 +37,7 @@ class dialog_upload_function(QDialog, Ui_Dialog):
         self.input_dict = None
         refr = QPixmap.fromImage(QImage(os.path.join(file_path,'images','refresh.jpg')))
         icon = QIcon(refr)
-        print os.path.join(file_path,'images','refresh.jpg')
+        print(os.path.join(file_path,'images','refresh.jpg'))
         self.pushButton_refresh.setIcon(icon)
         self.pushButton_refresh.setText('')
         
@@ -65,13 +66,13 @@ class dialog_upload_function(QDialog, Ui_Dialog):
         string = ''
         try:
             inp = return_input_count(self.pathAnalysis)
-            for key in inp.keys():
+            for key in list(inp.keys()):
                 if inp[key] > 0:
                     string += 'Found %d input of type %s\n'%(inp[key],key)
-        except NameError, e:
+        except NameError as e:
             string += 'NameError, '+ e.message
-            print e.args
-            print e.__dict__
+            print(e.args)
+            print(e.__dict__)
             inp = None
         self.textBrowser_inputDetected.setText(string)
         self.input_dict = inp
@@ -89,7 +90,7 @@ class dialog_upload_function(QDialog, Ui_Dialog):
         self.controlFunctions()   
         
     def addType(self):
-        print 'Adding'
+        print('Adding')
         self.type_list_available += self.type_list_selected
         self.type_list_selected = []
         dialog = listTypeDlg(self.type_list_available,parent=self)
@@ -165,10 +166,11 @@ class listTypeDlg(QDialog):
 
 def main():
     import sys
-    fld = 'C:\Users\ebalzani\IIT\myPython\Phenopy\OldCode\New_Analysis_Gui\\upload script'
+    import os
+    fld = '/Users/Matte/Python_script/Phenopy3/future'
     app = QApplication(sys.argv)
-    form = dialog_upload_function(pathAnalysis=fld+'\\new_switch.py',pathPlotting=fld+'\\new_switch_plt.py',
-                                  type_list=['siamo troppo fighi','abbasso bj']*40)
+    form = dialog_upload_function(pathAnalysis=os.path.join(fld,'new_switch.py'),pathPlotting=os.path.join(fld,'new_switch_plt.py'),
+                                  type_list=['siamo troppo fighi','abbasso bk']*40)
     form.show()
     app.exec_()
 
