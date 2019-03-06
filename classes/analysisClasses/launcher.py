@@ -15,7 +15,7 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 
-from custom_Analysis import *
+from custom_Analysis import spikeStatistics
 
 def function_Launcher(name,*myInput):
     if name == 'spikeStatistics':

@@ -18,8 +18,10 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import os,sys
 lib_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'libraries')
 sys.path.append(lib_dir)
-import PyQt4.QtCore as QtCore
-import PyQt4.QtGui as QtGui
+from PyQt5.QtWidgets import (QTableView,QWidget,QDialog,QApplication,
+                             QHBoxLayout,QPushButton)
+import PyQt5.QtCore as QtCore
+import PyQt5.QtGui as QtGui
 import pandas as pd
 import numpy as np
 from copy import copy
@@ -60,8 +62,8 @@ class PandasModel(QtCore.QAbstractTableModel):
             try:
                 self._data.set_value(self._data.index[index.row()],self._data.columns[index.column()],value)
                 self.dataChanged.emit(index, index)
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 return False
         return False
     
@@ -106,12 +108,12 @@ class StructuredNumpyModel(QtCore.QAbstractTableModel):
             try:
                 self._data[self._data.dtype.names[column]][row] = value
                 self.dataChanged.emit(index, index)
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 return False
         return False
         
-class MyTableView(QtGui.QTableView):
+class MyTableView(QTableView):
     def __init__(self,model,data,nrows,adjust_every=100,parent=None):
         super(MyTableView,self).__init__(parent)
         self.adjust_every = adjust_every
@@ -120,7 +122,7 @@ class MyTableView(QtGui.QTableView):
         self.data = data
         self.nrows = nrows
         self.irange = (0,min(adjust_every,self.model().rowCount()))
-        self.connect(self.verticalScrollBar(),QtCore.SIGNAL('valueChanged (int)'),self.adjustTable)
+        self.verticalScrollBar().valueChanged.connect(self.adjustTable)
         
     def adjustTable(self,val):
         MAX = self.verticalScrollBar().maximum()
@@ -144,7 +146,7 @@ class MyTableView(QtGui.QTableView):
         return self.model()._data
         
 
-class TableView_excelFile(QtGui.QWidget):
+class TableView_excelFile(QWidget):
     def __init__(self,excel,parent=None):
         super(TableView_excelFile,self).__init__(parent)
         layout = QtGui.QVBoxLayout()
@@ -178,14 +180,14 @@ class TableView_excelFile(QtGui.QWidget):
         self.tableWidget.data = self.dict_excel[string]
         
 
-class TableView_dictionary(QtGui.QWidget):
+class TableView_dictionary(QWidget):
     def __init__(self,dictionary,parent=None):
         super(TableView_dictionary,self).__init__(parent)
         layout = QtGui.QVBoxLayout()
         hlayout = QtGui.QHBoxLayout()
         self.dict_excel = dictionary
         self.dict_nrows = {}
-        self.list_sheet = dictionary.keys()
+        self.list_sheet = list(dictionary.keys())
         combo = QtGui.QComboBox()
         for key in self.list_sheet:
             try:
@@ -243,26 +245,26 @@ def table_view_setter(data):
     
     return MyTableView(model,data,nrows),''
     
-class prova(QtGui.QDialog):
+class prova(QDialog):
     def __init__(self,df,adjust_every=100,parent=None):
         super(prova,self).__init__(parent)
         table, string = table_view_setter(df)
         if not table:
             return string
           
-        layout = QtGui.QHBoxLayout()
+        layout = QHBoxLayout()
         self.tw = table
         layout.addWidget(self.tw)
-        button = QtGui.QPushButton('Test')
+        button = QPushButton('Test')
         layout.addWidget(button)
         self.setLayout(layout)
-        self.connect(button,QtCore.SIGNAL('clicked()'),self.test)
+        button.clicked.connect(self.test)
     def test(self):
         self.tw.setItem(1,1,np.inf)
         
 def main():
     import sys
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 #    excel = pd.ExcelFile('C:\Users\ebalzani\IIT\Dottorato\Tracking\Lab book  Cancedda\\Final DREADDs huddling analyses up to p10_8_11_16.xlsx')
 #    widget = TableView_excelFile(excel)
 #    widget.show()

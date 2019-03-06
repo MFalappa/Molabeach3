@@ -15,7 +15,10 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 
-from custom_Analysis_Gr import *
+from custom_Analysis_Gr import (Power_Density,Group_Error_Rate,Sleep_Time_Course,
+                                Linear_Discriminant_Analysis,Multiple_Regression_Analysis,
+                                LDA,Switch_Latency,delta_rebound)
+
 def function_Launcher_Gr(name,*myInput):
     if name == 'Power_Density':
         outputData, inputForPlots, info = Power_Density(*myInput)

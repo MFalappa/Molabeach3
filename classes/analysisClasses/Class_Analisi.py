@@ -15,10 +15,10 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 
-from inputDlgCreator import *
+from inputDlgCreator import inputDlgCreator
 
 def createComboTuple(string, label, intTuple,listValues, value):
-    comboList = (((u'%d ' + u'%s;'%string)*len(intTuple))%intTuple).split(';')[:-1]
+    comboList = ((('%d ' + '%s;'%string)*len(intTuple))%intTuple).split(';')[:-1]
     return (label,comboList,listValues,value)
 
 class inputDict_Creator(object):
@@ -41,9 +41,9 @@ class inputDict_Creator(object):
     def addNewInput(self,inputName,inputData):
         self.inputDict[self._input_ind][inputName] = inputData
     def returnListDlg(self):
-        return self.inputDict.keys()
+        return list(self.inputDict.keys())
     def returnInput(self, keyDlg, keyInput):
-        if keyInput in self.inputDict[keyDlg].keys():
+        if keyInput in list(self.inputDict[keyDlg].keys()):
             return self.inputDict[keyDlg][keyInput]
         else:
             return None
@@ -63,12 +63,12 @@ class Analysis_Single_GUI(object):
     def getInput(self,analysisName):
         self.inputCreator.refresh()
         if analysisName == 'Actogram':
-            comboInput = [createComboTuple('min',u'Time binning:',\
+            comboInput = [createComboTuple('min','Time binning:',\
                 (10,15,20,30,60),[10,15,20,30,60],1)]
             Hours = []
             for h in range(24):
                 Hours += ['%d:00'%h]
-            comboInput += [('Light phase start:', Hours, range(24),7)]
+            comboInput += [('Light phase start:', Hours, list(range(24)),7)]
             self.inputCreator.addNewInput('Combo', comboInput)
             Range = [('Periodicity range:',(0.5,100),22,27)]
             self.inputCreator.addNewInput('Range', Range)
@@ -85,8 +85,8 @@ class Analysis_Single_GUI(object):
 #            self.inputCreator.addNewInput('Combo', comboInput)
 #            self.inputCreator.addNewDlg()
             Hours, Hours1 = [], []
-            valueHours = range(24)
-            valueHours1 = range(25)
+            valueHours = list(range(24))
+            valueHours1 = list(range(25))
             labels = (('%d min;'*3)%(10,15,30) + ('%d h;'*6)%(1,2,3,4,6,12)).split(';')[:-1]
             value_Labels = [600, 900, 1800, 3600, 7200, 10800, 14400,\
                               21600, 43200]
@@ -94,32 +94,32 @@ class Analysis_Single_GUI(object):
                 Hours += ['%d:00'%h]
                 Hours1 += ['%d h'%h]
             Hours1 += ['24 h']
-            comboBox=[(u'Time binning:', labels, value_Labels, 3),
-                      (u'Dark Phase Start:', Hours, valueHours, 20),
-                      (u'Dark Phase Duration:', Hours1, valueHours1, 12)]
+            comboBox=[('Time binning:', labels, value_Labels, 3),
+                      ('Dark Phase Start:', Hours, valueHours, 20),
+                      ('Dark Phase Duration:', Hours1, valueHours1, 12)]
             self.inputCreator.addNewInput('Combo', comboBox)
             if analysisName == 'Error_Rate':              
-                doubleList = [(u'Trial duration (sec):', (1,100000), 30)]
+                doubleList = [('Trial duration (sec):', (1,100000), 30)]
                 self.inputCreator.addNewInput('DoubleSpinBox',doubleList)
             self.inputCreator.addNewInput('SavingDetails',True)
             
         elif analysisName in ['Peak_Procedure', 'Raster_Plot']:
-            comboBox = [(u'Trial type:',['All','Probe left','Probe right'],
+            comboBox = [('Trial type:',['All','Probe left','Probe right'],
                          ['All','Probe Left','Probe Right'],0),
-                        (u'Print location:', ['Both', 'Left','Right'],
+                        ('Print location:', ['Both', 'Left','Right'],
                          ['Both', 'Left','Right'], 0),
                          ]
             if analysisName == 'Peak_Procedure':
-                comboBox = [(u'Trial type:',['All','Probe left','Probe right'],
+                comboBox = [('Trial type:',['All','Probe left','Probe right'],
                          ['All','Probe Left','Probe Right'],0),
-                        (u'Print location:', ['Left','Right'],
+                        ('Print location:', ['Left','Right'],
                          ['Left','Right'], 0),
                          ]
-                doubleList = [(u'Light signal:', (0, 1000), 3),
-                              (u'Trial duration (sec):', (15,10000), 30)]
+                doubleList = [('Light signal:', (0, 1000), 3),
+                              ('Trial duration (sec):', (15,10000), 30)]
                 
             else:
-                doubleList = [(u'Trial duration (sec):', (15,100000), 30)]
+                doubleList = [('Trial duration (sec):', (15,100000), 30)]
             self.inputCreator.addNewInput('DoubleSpinBox',doubleList)
 
             self.inputCreator.addNewInput('Combo', comboBox)         
@@ -130,11 +130,11 @@ class Analysis_Single_GUI(object):
         else:
             try:
                 dictInput = inputDlgCreator(analysisName)
-                for key in dictInput.keys():
+                for key in list(dictInput.keys()):
                     self.inputCreator.addNewInput(key,dictInput[key])
                     self.inputCreator.addNewInput('SavingDetails',True)
             except:
-                raise KeyError,'No single subject analysis named %s'%analysisName    
+                raise KeyError('No single subject analysis named %s'%analysisName)    
 
 class Analysis_Group_GUI(object):
     """ Questa classe crea un oggetto input creator a seconda dell'analisi.
@@ -147,22 +147,22 @@ class Analysis_Group_GUI(object):
             self.getInput(analysisName, group_list)
         
     def getInput(self,analysisName, group_list):
-        print 'Gr List:',group_list
+        print('Gr List:',group_list)
         self.inputCreator.refresh()
         try:
             dictInput = inputDlgCreator(analysisName, group_list)
-            for key in dictInput.keys():
+            for key in list(dictInput.keys()):
                 self.inputCreator.addNewInput(key,dictInput[key])
                 self.inputCreator.addNewInput('SavingDetails',True)
         except:
-            raise KeyError,'No single subject analysis named %s'%analysisName    
+            raise KeyError('No single subject analysis named %s'%analysisName)    
 
 if __name__ == '__main__':
-    an=Analysis_Single_GUI('Actual Inter Trial (AIT)').inputCreator
-    print 'list dlg: ', an.returnListDlg()
-    print 'combo: ', an.returnInput(0,'Combo')
-    print 'DoubleSpinBox: ',an.returnInput(0,'DoubleSpinBox')
+    an=Analysis_Single_GUI('AIT').inputCreator
+    print('list dlg: ', an.returnListDlg())
+    print('combo: ', an.returnInput(0,'Combo'))
+    print('DoubleSpinBox: ',an.returnInput(0,'DoubleSpinBox'))
     if an.returnListDlg() ==  [0,1]:
-        print 'combo: ', an.returnInput(1,'Combo')
-    anGr=Analysis_Group_GUI('Error_Rate').inputCreator
-    print anGr.inputDict
+        print('combo: ', an.returnInput(1,'Combo'))
+    anGr=Analysis_Group_GUI('Group_Error_Rate').inputCreator
+    print(anGr.inputDict)

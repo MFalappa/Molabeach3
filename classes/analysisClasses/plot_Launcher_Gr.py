@@ -18,8 +18,11 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import sys,os
 lib_fld = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'libraries')
 sys.path.append(lib_fld)
-from Plotting_GUI import *
-from custom_Plots_Gr import *
+
+from custom_Plots_Gr import (F_Error_Rate_New_plt_GUI,plotPowerDensity,plt_Error_Rate_Gr,
+                             plotSleepTimeCourse,plotLDA,plotMRA,
+                             plotSwitchLatency,delta_reb_plt)
+
 def select_Function_GUI_Gr(funcName, *otherInputs):
     
     if funcName == 'Error Rate':

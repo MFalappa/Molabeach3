@@ -46,11 +46,11 @@ def inputDlgCreator(analysisName,group_list=[]):
             10800,21600,43200],4)]
         return dictInput
     if analysisName == 'Sleep_Time_Course':
-        print 'Enterd sleep time course'
+        print('Enterd sleep time course')
         dictInput['SpinBox'] = [('Time binning:',(1,24),1),
             ('Epoch duration:',(1,60),4),('Tick number:',(1,100),10),
             ('Dark phase start:',(0,23),20)]
-        print 'spin ok'
+        print('spin ok')
         
         dictInput['Combo'] = [('Epoch type:',['Sleep','Rem','NRem','Wake'],
                   [[2,3],[2],[3],[1]],0),

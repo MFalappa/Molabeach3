@@ -20,7 +20,7 @@ import numpy as np
 import sys,os
 import_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'import')
 sys.path.append(import_dir)
-from functionCaller_Generator import get_Function_List
+#from functionCaller_Generator import get_Function_List
 from copy import copy
 
 class DataType_x_Analysis(object):
@@ -45,12 +45,12 @@ class DataType_x_Analysis(object):
             self.anList[anName][data_type[0]] = data_type[1]
             
     def __iter__(self):
-        for anName in self.anList.keys():
-            for data_type in self.anList[anName].keys():
+        for anName in list(self.anList.keys()):
+            for data_type in list(self.anList[anName].keys()):
                 yield anName, data_type,self.anList[anName][data_type]
     def __getitem__(self,key):
         tuple_res = []
-        for  data_type in self.anList[key].keys():
+        for  data_type in list(self.anList[key].keys()):
             tuple_res += [(data_type,self.anList[key][data_type])]
         return tuple_res
     
@@ -62,9 +62,9 @@ class DataType_x_Analysis(object):
     
     def __repr__(self):
         string = 'Class DataType_x_Analysis:\n'
-        for anName in self.anList.keys():
+        for anName in list(self.anList.keys()):
             string += '\t' + anName + ':\n'
-            for data_type in self.anList[anName].keys():
+            for data_type in list(self.anList[anName].keys()):
                 string += '\t\t' + data_type + ':\t' + self.anList[anName][data_type].__repr__()+'\n\n'
         return string
 
@@ -171,7 +171,7 @@ def returnStartEndSets(line,setStart,setEnd):
             else:
                 stop_ch = line.find(line[start_ch],start_ch+1)
         ind += 1
-    print 'square',listBorder
+#    print('square',listBorder)
     return listBorder
 
 def returnStringBorder(line):
@@ -206,17 +206,17 @@ def getFuncInputString(line,funcName):
     tmp = line[:line.find(funcName)+len(funcName)]
     isAssign, assignInd = findAssigmentEqual(tmp)
     if not isAssign:
-        raise ValueError,'String "line" must contain an assignment'
+        raise ValueError('String "line" must contain an assignment')
     line = line[assignInd + 1:].split(funcName)[1]
-    print 'bline',line
+#    print('bline',line)
     parentIndex = returnStartEndSets(line,'(',')')
     dist_vect = np.zeros(len(parentIndex))
     k = 0
     for i0,i1 in parentIndex:
        dist_vect[k] = i0-assignInd
        k+=1
-    print 'line',line
-    print dist_vect,parentIndex
+#    print('line',line)
+#    print(dist_vect,parentIndex)
     parent = parentIndex[np.argmin(dist_vect)]
     return line[parent[0]+1:parent[1]]
 
@@ -403,7 +403,7 @@ def getTypeInfo(input_list,ind=3):
         
 def getTypes(pathToImport):
     type_list = []
-    fh = open(pathToImport,'U')
+    fh = open(pathToImport)
     all_lines = fh.readlines()
     fh.close()
     # merge continued strings
@@ -421,7 +421,7 @@ def getTypes(pathToImport):
     ii=0
     for function in def_list:
         line = returnFirstCalledFunc(function,'Dataset_GUI')
-        print line
+#        print(line)
         ii+=1
         if line is None:
             continue
@@ -439,8 +439,8 @@ def refreshTypeList(path_to_phenopy):
     return
 
 if __name__ == '__main__':
-    tl = getTypes(import_dir+'\\importDataset.py')
-    print tl
+    tl = getTypes(import_dir+'/importDataset.py')
+#    print(tl)
 #    a = ['ciao(,{,[' , 'mucca{,{','miao}}},)' ,']sa', 'sa']
 #    l=merge_split_parenthesis(a,'{','}')
 #    

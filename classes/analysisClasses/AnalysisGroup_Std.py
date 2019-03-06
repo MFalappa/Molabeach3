@@ -15,20 +15,20 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 
-from PyQt4.QtCore import (SIGNAL, QThread)
+from PyQt5.QtCore import (pyqtSignal, QThread)
 import os,sys
 lib_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'libraries')
 phenoDlg_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'dialogsAndWidget','analysisDlg')
 sys.path.append(lib_dir)
 sys.path.append(phenoDlg_dir)
-from Analyzing_GUI import *
-from Plotting_GUI import *
+
 from Modify_Dataset_GUI import OrderedDict
 from copy import copy
-import matplotlib
 from launcher_Gr import function_Launcher_Gr
-matplotlib.use('qt4agg')
 import traceback
+
+#from Analyzing_GUI import *
+#from Plotting_GUI import *
 
 class analysisGroup_thread(QThread):
     def __init__(self, Datas, lock, parent = None):
@@ -41,7 +41,7 @@ class analysisGroup_thread(QThread):
         
     def initialize(self, Input, analysisName, GroupsDict,TimeStamps,pairedGroups,
                    Other = None):
-        print 'start initialize Gr'
+        print('start initialize Gr')
         self.Input = Input
         self.analysisName = analysisName
         self.TimeStamps = copy(TimeStamps)
@@ -49,25 +49,25 @@ class analysisGroup_thread(QThread):
         self.pairedGroups = pairedGroups
         self.Other = Other
         flag = True
-        for key in Input.keys():
-            if Input[key].has_key('SavingDetails'):
+        for key in list(Input.keys()):
+            if 'SavingDetails' in Input[key]:
                 self.savingDetails = Input[key]['SavingDetails']
                 flag = False
                 break
         if flag:
             self.savingDetails = False
-        print 'end initialize ',self.savingDetails
+        print('end initialize ',self.savingDetails)
     def run(self):
         self.outputData, self.inputForPlots, self.info =\
             self.analyze(self.analysisName)
-        self.emit(SIGNAL('threadFinished()'))
+        self.emit(pyqtSignal('threadFinished()'))
         
     def setInput(self, Input, DataList):
         self.Input = Input
-        self.GroupsDict = GroupsDict
+#        self.GroupsDict = GroupsDict
     
     def analyze(self, analysisName):
-        print 'Gr analyze called',':',analysisName
+        print('Gr analyze called',':',analysisName)
         try:
             outputData, inputForPlot, info = \
                 function_Launcher_Gr(analysisName,self.Datas,
@@ -75,11 +75,11 @@ class analysisGroup_thread(QThread):
                                      self.TimeStamps, self.lock,self.pairedGroups,
                                      self.Other)
         except Exception as inst:
-            print(type(inst))    # the exception instance
-            print(inst.args)     # arguments stored in .args
+            print((type(inst)))    # the exception instance
+            print((inst.args))     # arguments stored in .args
             print(inst)
             x = inst.args     # unpack args
-            print('x =', x)
+            print(('x =', x))
             outputData, inputForPlot, info = None, None, None
             traceback.print_exc()
         return outputData, inputForPlot, info
