@@ -111,7 +111,7 @@ class Ui_Dialog(object):
         self.pushButtonFunction.setText(_translate("Dialog", "Select Function"))
         self.label_3.setText(_translate("Dialog", "Select a python function for plotting results:"))
         self.pushButtonFunction_2.setText(_translate("Dialog", "Select Function"))
-        self.label_2.setText(_translate("Dialog", "Select path to \"Autonomice\":"))
+        self.label_2.setText(_translate("Dialog", "Select path to \"Phenopy\":"))
         self.pushButtonFolder.setText(_translate("Dialog", "Select Folder"))
         self.pushButton_2.setText(_translate("Dialog", "Cancel"))
         self.pushButton.setText(_translate("Dialog", "Create"))

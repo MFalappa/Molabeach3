@@ -19,13 +19,16 @@ import os,sys
 file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 lib_dir = os.path.join(file_path,'libraries')
 sys.path.append(lib_dir)
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from ui_import_function import *
-#from messageLib import *
+from PyQt5.QtWidgets import (QDialog,QAbstractItemView,QListWidgetItem,
+                             QListWidget,QLabel,QSizePolicy,QSpacerItem,QHBoxLayout,
+                             QVBoxLayout,QPushButton,QApplication)
+from PyQt5.QtGui import QPixmap,QIcon,QImage
+from PyQt5.QtCore import pyqtSignal,Qt
+from ui_import_function import Ui_Dialog
 
-from automatic_input_detection import return_input_count, check_analysis_function, check_plot_function
+
+from automatic_input_detection import (return_input_count, check_analysis_function, 
+                                       check_plot_function)
 
 
 class dialog_upload_function(QDialog, Ui_Dialog):
@@ -53,11 +56,13 @@ class dialog_upload_function(QDialog, Ui_Dialog):
         self.controlFunctions()
         self.addDetectedInput()
         
-        self.connect(self.pushButton_addType,SIGNAL('clicked()'),self.addType)
-        self.connect(self.pushButton_Cancel,SIGNAL('clicked()'),self.close)
-        self.connect(self.pushButton_Continue,SIGNAL('clicked()'),self.emit_signal)
-        self.connect(self.pushButton_remove,SIGNAL('clicked()'),self.removeType)
-        self.connect(self.pushButton_refresh,SIGNAL('clicked()'),self.controlFunctions)
+        self.pushButton_addType.clicked.connect(self.addType)
+        self.pushButton_Cancel.clicked.connect(self.close)
+        self.pushButton_Continue.clicked.connect(self.emit_signal)
+        self.pushButton_remove.clicked.connect(self.removeType)
+        self.pushButton_refresh.clicked.connect(self.controlFunctions)
+       
+        
         
     def addDetectedInput(self):
         if not self.pathAnalysis:
@@ -152,8 +157,10 @@ class listTypeDlg(QDialog):
         hlayout.addWidget(pushButtonAdd)
         vlayout.addLayout(hlayout)
         self.setLayout(vlayout)
-        self.connect(pushButtonAdd,SIGNAL('clicked()'),self.addTypes)
-        self.connect(pushButtonCancel,SIGNAL('clicked()'),self.reject)
+        pushButtonAdd.clicked.connect(self.addTypes)
+        pushButtonCancel.clicked.connect(self.reject)
+      
+        
         
     def addTypes(self):
         list_items = self.listWidget.selectedItems()

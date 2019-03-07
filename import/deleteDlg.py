@@ -19,9 +19,7 @@ import os,sys
 file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 lib_dir = os.path.join(file_path,'libraries')
 sys.path.append(lib_dir)
-from Modify_Dataset_GUI import OrderedDict
-import urllib.request, urllib.error, urllib.parse
-from PyQt5.QtCore import (Qt, pyqtSignal)
+#from PyQt5.QtCore import (pyqtSignal)
 from PyQt5.QtWidgets import (QApplication, QDialog, QLabel, QHBoxLayout,
                          QPushButton,QVBoxLayout, QSizePolicy,QSpacerItem)
                              
@@ -66,12 +64,13 @@ class deleteDlg(QDialog):
         
         self.continueButton.setEnabled(False)
         
-        self.connect(self.continueButton,pyqtSignal('clicked()'),self.accept)
-        self.connect(cancelButton,pyqtSignal('clicked()'),self.reject)
-        self.connect(self.deletefunc,pyqtSignal('dropped()'),self.enableOk)
-        self.connect(self.deletefunc,pyqtSignal('dragged()'),self.enableOk) 
-        self.connect(self.keepFunc,pyqtSignal('dropped()'),self.enableOk)
-        self.connect(self.keepFunc,pyqtSignal('dragged()'),self.enableOk)
+        self.continueButton.clicked.connect(self.accept)
+        cancelButton.clicked.connect(self.reject)
+   
+#        self.connect(self.deletefunc,pyqtSignal('dropped()'),self.enableOk)
+#        self.connect(self.deletefunc,pyqtSignal('dragged()'),self.enableOk) 
+#        self.connect(self.keepFunc,pyqtSignal('dropped()'),self.enableOk)
+#        self.connect(self.keepFunc,pyqtSignal('dragged()'),self.enableOk)
         
     def enableOk(self):
         if self.deletefunc.count() > 0:

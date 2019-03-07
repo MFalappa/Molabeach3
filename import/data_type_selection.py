@@ -14,9 +14,10 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5.QtWidgets import (QDialog,QHBoxLayout,QVBoxLayout,QLineEdit,QAbstractItemView,
+                             QScrollArea,QWidget,QFormLayout,QPushButton,QSpacerItem,
+                             QSizePolicy,QApplication)
+from PyQt5.QtCore import QObject
 from ui_data_type_selection import Ui_Dialog
 import numpy as np
 import sys,os
@@ -160,9 +161,11 @@ class data_type_selection(QDialog, Ui_Dialog):
         buttonLayout.addWidget(pushButtonCancel)
         buttonLayout.addWidget(self.pushButtonContinue)
         self.verticalLayout.addLayout(buttonLayout)
-        self.connect(self.spinBox_typeNum,SIGNAL('valueChanged(int)'),self.spinBoxChanged)
-        self.connect(pushButtonCancel,SIGNAL('clicked()'),self.reject)
-        self.connect(self.pushButtonContinue,SIGNAL('clicked()'),self.getTypesAndAccept)
+        
+        self.spinBox_typeNum.valueChanged[int].connect(self.spinBoxChanged)
+        pushButtonCancel.clicked.connect(self.spinBoxChanged)
+        self.pushButtonContinue.clicked.connect(self.spinBoxChanged)
+       
     
     def setup_ScrollArea(self):
         self.layout_container = layout_container(self.checkOk)

@@ -27,47 +27,47 @@ class PathSelection(QDialog, ui_PathSelection.Ui_Dialog):
         self.setupUi(self)
         self.pushButton.setEnabled(False)
 
-    @pyqtSlot('void')
+    @pyqtSlot()
     def on_pushButtonFolder_clicked(self):
         path = QFileDialog.getExistingDirectory(self, 
-                                           "Select Autonomice Folder",
+                                           "Select Phenopy Folder",
                                            ".")
         self.lineEdit_2.setText(path)
         
-    @pyqtSlot('void')
+    @pyqtSlot()
     def on_pushButtonFunction_clicked(self):
-        path = QFileDialog.getOpenFileName(self, 
+        path,_ = QFileDialog.getOpenFileName(self, 
                                            "Select a Python File",
                                            ".", "Python files (*.py *.pyw)")
         self.lineEdit.setText(path)
     
-    @pyqtSlot('void')
+    @pyqtSlot()
     def on_pushButtonFunction_2_clicked(self):
-        path = QFileDialog.getOpenFileName(self, 
+        path,_ = QFileDialog.getOpenFileName(self, 
                                            "Select a Python File",
                                            ".", "Python files (*.py *.pyw)")
         self.lineEdit_3.setText(path)
         
-    @pyqtSlot('const QString&')
+    @pyqtSlot(str)
     def on_lineEdit_textChanged(self,path):
         self.enableCreate()
         
-    @pyqtSlot('const QString&')
+    @pyqtSlot(str)
     def on_lineEdit_2_textChanged(self,path):
         self.enableCreate()
         
-    @pyqtSlot('const QString&')
+    @pyqtSlot(str)
     def on_lineEdit_3_textChanged(self,path):
         self.enableCreate()
         
-    @pyqtSlot('void')
+    @pyqtSlot()
     def on_pushButton_clicked(self):
         self.function     = str(self.lineEdit.text())
         self.directory    = str(self.lineEdit_2.text())
         self.functionPlot = str(self.lineEdit_3.text())
         self.accept()
     
-    @pyqtSlot('void')
+    @pyqtSlot()
     def on_pushButton_2_clicked(self):
         self.reject()
         

@@ -18,10 +18,11 @@ import os,sys
 file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 lib_dir = os.path.join(file_path,'libraries')
 sys.path.append(lib_dir)
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from ui_import_function_integrative import *
+from PyQt5.QtWidgets import (QDialog,QApplication)
+from PyQt5.QtGui import QPixmap,QIcon,QImage
+from PyQt5.QtCore import pyqtSignal,Qt
+
+from ui_import_function_integrative import Ui_Dialog
 #from messageLib import *
 
 from automatic_input_detection import return_input_count, check_analysis_function, check_plot_function
@@ -47,11 +48,12 @@ class dialog_upload_function_integrative(QDialog, Ui_Dialog):
         
         self.addDetectedInput()
         self.controlFunctions()
+         
+        self.pushButton_Cancel.clicked.connect(self.close)
+        self.pushButton_Continue.clicked.connect(self.emit_signal)
+        self.pushButton_refresh.clicked.connect(self.controlFunctions)
         
-        
-        self.connect(self.pushButton_Cancel,SIGNAL('clicked()'),self.close)
-        self.connect(self.pushButton_Continue,SIGNAL('clicked()'),self.emit_signal)
-        self.connect(self.pushButton_refresh,SIGNAL('clicked()'),self.controlFunctions)
+       
         
     def addDetectedInput(self):
         if not self.pathAnalysis:
@@ -97,7 +99,8 @@ def main():
     import sys
     fld = '/Users/Matte/Python_script/Phenopy3/future'
     app = QApplication(sys.argv)
-    form = dialog_upload_function_integrative(pathAnalysis=s.path.join(fld,'new_switch.py'),pathPlotting=s.path.join(fld,'new_switch_plt.py'))
+    form = dialog_upload_function_integrative(pathAnalysis=os.path.join(fld,'new_switch.py'),
+                                              pathPlotting=os.path.join(fld,'new_switch_plt.py'))
     form.show()
     app.exec_()
 
