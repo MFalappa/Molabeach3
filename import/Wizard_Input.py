@@ -14,23 +14,19 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+
+
+
 import sys,os
 
 file_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.join(file_dir,'libraries'))
 
-from future_builtins import *
-import urllib2
-from PyQt4.QtCore import (Qt, SIGNAL, SLOT)
-from PyQt4.QtGui import (QApplication, QComboBox, QDialog,
-        QSpinBox, QLabel, QHBoxLayout,QGridLayout, QFont, QPushButton,
-        QVBoxLayout, QSpacerItem, QSizePolicy,QListWidget, QDoubleSpinBox,QTimeEdit,
-        QLineEdit)
-from Modify_Dataset_GUI import OrderedDict
-from MyDnDDialog import MyDnDListWidget
+from PyQt5.QtCore import ( pyqtSignal)
+from PyQt5.QtWidgets import (QLineEdit, QDialog,QApplication,QPushButton,QVBoxLayout)
+from PyQt5.QtWidgets import (QSpinBox, QLabel, QHBoxLayout)
+from PyQt5.QtGui import (QFont)
+from PyQt5.QtWidgets import ( QDoubleSpinBox,QTimeEdit)
 
 class inputDialog_Wizard(QDialog):
     """
@@ -59,14 +55,15 @@ class inputDialog_Wizard(QDialog):
             Hlayout = QHBoxLayout()
             Hlayout.addWidget(Label_1)
             Hlayout.addWidget(self.Label_LineEdit)
-            self.connect(self.Label_LineEdit, SIGNAL('textEdited (const QString&)'),self.checkCombo)
+            
+            self.Label_LineEdit.textEdited[str].connect(self.checkCombo)
             Vlayout.addLayout(Hlayout)
             Label_2               = QLabel('Item list (separated by , and string between \" \")): ')
             self.Itemlist   = QLineEdit()
             Hlayout = QHBoxLayout()
             Hlayout.addWidget(Label_2)
             Hlayout.addWidget(self.Itemlist)
-            self.connect(self.Itemlist, SIGNAL('textEdited (const QString&)'),self.checkCombo)
+            self.Itemlist.textEdited[str].connect(self.checkCombo)
             Vlayout.addLayout(Hlayout)
             Label_3               = QLabel('Item values (separated by , and string between \" \"):')
             self.Itemvalues = QLineEdit()
@@ -74,14 +71,14 @@ class inputDialog_Wizard(QDialog):
             Hlayout.addWidget(Label_3)
             Hlayout.addWidget(self.Itemvalues)
             Vlayout.addLayout(Hlayout)
-            self.connect(self.Itemvalues, SIGNAL('textEdited (const QString&)'),self.checkCombo)
+            self.Itemvalues.textEdited[str].connect(self.checkCombo)
             self.spinboxItemInd = QSpinBox()
             self.spinboxItemInd.setRange(0,1000)
             labelSpin = QLabel('Default combo index: ')
             Hlayout = QHBoxLayout()
             Hlayout.addWidget(labelSpin)
             Hlayout.addWidget(self.spinboxItemInd)
-            self.connect(self.spinboxItemInd, SIGNAL('valueChanged (int)'),self.checkCombo)
+            self.spinboxItemInd.valueChanged[int].connect(self.checkCombo)
             Vlayout.addLayout(Hlayout)
             
         elif InputName == 'SpinBox':
@@ -105,9 +102,11 @@ class inputDialog_Wizard(QDialog):
             Hlayout.addWidget(Label_2)
             Hlayout.addWidget(self.spinboxItemInd)
             Vlayout.addLayout(Hlayout)
-            self.connect(self.spinboxItemInd, SIGNAL('valueChanged (int)'),self.checkSpinBox)
-            self.connect(self.Label_LineEdit, SIGNAL('textEdited (const QString&)'),self.checkSpinBox)
-            self.connect(self.rangeLineEdit, SIGNAL('textEdited (const QString&)'),self.checkSpinBox)            
+            self.spinboxItemInd.valueChanged[int].connect(self.checkSpinBox)
+            self.Label_LineEdit.textEdited[str].connect(self.checkSpinBox)
+            self.rangeLineEdit.textEdited[str].connect(self.checkSpinBox)
+            
+                    
         
         elif InputName == 'DoubleSpinBox':
             Label_1 = QLabel('Spinbox label: ')
@@ -131,9 +130,10 @@ class inputDialog_Wizard(QDialog):
             Hlayout.addWidget(Label_2)
             Hlayout.addWidget(self.spinboxItemInd)
             Vlayout.addLayout(Hlayout)
-            self.connect(self.spinboxItemInd, SIGNAL('valueChanged (double)'),self.checkDoubleSpinBox)
-            self.connect(self.Label_LineEdit, SIGNAL('textEdited (const QString&)'),self.checkDoubleSpinBox)
-            self.connect(self.rangeLineEdit, SIGNAL('textEdited (const QString&)'),self.checkDoubleSpinBox)            
+            
+            self.spinboxItemInd.valueChanged[float].connect(self.checkDoubleSpinBox)
+            self.Label_LineEdit.textEdited[str].connect(self.checkDoubleSpinBox)
+            self.rangeLineEdit.textEdited[str].connect(self.checkDoubleSpinBox)
         
         elif InputName == 'Range':
             Label_1 = QLabel('Range label: ')
@@ -161,11 +161,18 @@ class inputDialog_Wizard(QDialog):
             Hlayout.addWidget(QLabel('-'))
             Hlayout.addWidget(self.spinboxMax)
             Vlayout.addLayout(Hlayout)
-            self.connect(self.spinboxMin, SIGNAL('valueChanged (double)'),self.checkRange)
-            self.connect(self.spinboxMax, SIGNAL('valueChanged (double)'),self.checkRange)
+            
+            self.spinboxMin.valueChanged[float].connect(self.checkRange)
+            self.spinboxMax.valueChanged[float].connect(self.checkRange)
 
-            self.connect(self.Label_LineEdit, SIGNAL('textEdited (const QString&)'),self.checkRange)
-            self.connect(self.rangeLineEdit, SIGNAL('textEdited (const QString&)'),self.checkRange)            
+            self.Label_LineEdit.textEdited[str].connect(self.checkRange)
+            self.rangeLineEdit.textEdited[str].connect(self.checkRange)  
+            
+#            self.connect(self.spinboxMin, pyqtSignal('valueChanged (double)'),self.checkRange)
+#            self.connect(self.spinboxMax, pyqtSignal('valueChanged (double)'),self.checkRange)
+#
+#            self.connect(self.Label_LineEdit, pyqtSignal('textEdited (const QString&)'),self.checkRange)
+#            self.connect(self.rangeLineEdit, pyqtSignal('textEdited (const QString&)'),self.checkRange)            
         
         
         elif InputName == 'TimeRange':
@@ -190,7 +197,8 @@ class inputDialog_Wizard(QDialog):
             
             self.default0.timeChanged.connect(self.checkTimeRange)
             self.default1.timeChanged.connect(self.checkTimeRange)
-            self.connect(self.Label_LineEdit, SIGNAL('textEdited (const QString&)'),self.checkTimeRange)
+#            self.connect(self.Label_LineEdit, pyqtSignal('textEdited (const QString&)'),self.checkTimeRange)
+            self.Label_LineEdit.textEdited[str].connect(self.checkTimeRange)
             
         elif InputName == 'LineEdit':
             Label_1 = QLabel('LineEdit label: ')
@@ -199,8 +207,8 @@ class inputDialog_Wizard(QDialog):
             Hlayout = QHBoxLayout()
             Hlayout.addWidget(Label_1)
             Hlayout.addWidget(self.Label_LineEdit)
-            Vlayout.addLayout(Hlayout)          
-            self.connect(self.Label_LineEdit, SIGNAL('textEdited (const QString&)'),self.checkLineEdit)
+            Vlayout.addLayout(Hlayout)     
+            self.Label_LineEdit.textEdited[str].connect(self.checkLineEdit)
        
         elif InputName == 'TimeSpinBox':
             Label_1 = QLabel('TimeSpinbox label: ')
@@ -224,9 +232,14 @@ class inputDialog_Wizard(QDialog):
             Vlayout.addLayout(Hlayout)  
             self.spinboxMinute.setRange(0,59)
             self.spinboxHour.setRange(0,23)
-            self.connect(self.Label_LineEdit, SIGNAL('textEdited (const QString&)'),self.checkTimeSpinBox)
-            self.connect(self.spinboxMinute, SIGNAL('valueChanged (int)'),self.checkTimeSpinBox)
-            self.connect(self.spinboxHour, SIGNAL('valueChanged (int)'),self.checkTimeSpinBox)
+            
+            self.Label_LineEdit.textEdited[str].connect(self.checkTimeSpinBox)
+            self.spinboxMinute.valueChanged[int].connect(self.checkTimeSpinBox)
+            self.spinboxHour.valueChanged[int].connect(self.checkTimeSpinBox)
+            
+#            self.connect(self.Label_LineEdit, pyqtSignal('textEdited (const QString&)'),self.checkTimeSpinBox)
+#            self.connect(self.spinboxMinute, pyqtSignal('valueChanged (int)'),self.checkTimeSpinBox)
+#            self.connect(self.spinboxHour, pyqtSignal('valueChanged (int)'),self.checkTimeSpinBox)
 
         self.ButtonContinue = QPushButton(ButtonText)
         ButtonCancel = QPushButton('Cancel')
@@ -236,14 +249,16 @@ class inputDialog_Wizard(QDialog):
         self.ButtonContinue.setEnabled(False)
         Vlayout.addLayout(Hlayout)
         self.setLayout(Vlayout)
-        self.connect(self.ButtonContinue, SIGNAL('clicked()'), self.accept)
-        self.connect(ButtonCancel, SIGNAL('clicked()'), self.reject)
+
+        self.ButtonContinue.clicked.connect(self.accept)
+        ButtonCancel.clicked.connect(self.reject)
+       
         
     def checkCombo(self):
         
-        Itemvalues   = unicode(self.Itemvalues.text())
-        Itemlist     = unicode(self.Itemlist.text())
-        Combolabel   = unicode(self.Label_LineEdit.text())
+        Itemvalues   = str(self.Itemvalues.text())
+        Itemlist     = str(self.Itemlist.text())
+        Combolabel   = str(self.Label_LineEdit.text())
         DefaultIndex = self.spinboxItemInd.value()
         if Itemvalues != '' and Itemlist != '' and Combolabel != '':
             tmp1   = Itemvalues.split(',')
@@ -281,7 +296,7 @@ class inputDialog_Wizard(QDialog):
                                                       Itemvalues,DefaultIndex)
                 print(self.input)
                 if tmp2[0][0] != '\'' and tmp2[0][0] != '\"':
-                    newList = u''
+                    newList = ''
                     for word in tmp2:
                          newList =  newList + '\'' + word + '\'' + ','
                     newList = newList.rstrip(',')
@@ -294,8 +309,8 @@ class inputDialog_Wizard(QDialog):
             self.ButtonContinue.setEnabled(False)
             
     def checkSpinBox(self):
-        Combolabel = unicode(self.Label_LineEdit.text())
-        strRange = unicode(self.rangeLineEdit.text())
+        Combolabel = str(self.Label_LineEdit.text())
+        strRange = str(self.rangeLineEdit.text())
         Range = strRange.split(',')
         val = self.spinboxItemInd.value()
         print( Range)
@@ -312,8 +327,8 @@ class inputDialog_Wizard(QDialog):
             self.ButtonContinue.setEnabled(False)
     
     def checkDoubleSpinBox(self):
-        Combolabel = unicode(self.Label_LineEdit.text())
-        strRange = unicode(self.rangeLineEdit.text())
+        Combolabel = str(self.Label_LineEdit.text())
+        strRange = str(self.rangeLineEdit.text())
         Range = strRange.split(',')
         val = self.spinboxItemInd.value()
         print( Range)
@@ -330,7 +345,7 @@ class inputDialog_Wizard(QDialog):
             self.ButtonContinue.setEnabled(False)
             
     def checkLineEdit(self):
-        lineEdit = unicode(self.Label_LineEdit.text())
+        lineEdit = str(self.Label_LineEdit.text())
         try:
             boolean = len(lineEdit) > 0 and lineEdit.find('\'') == -1
         except ValueError:
@@ -343,7 +358,7 @@ class inputDialog_Wizard(QDialog):
             self.ButtonContinue.setEnabled(False)
     
     def checkTimeSpinBox(self):
-        lineEdit = unicode(self.Label_LineEdit.text())
+        lineEdit = str(self.Label_LineEdit.text())
         h = self.spinboxHour.value()
         m = self.spinboxMinute.value()
         try:
@@ -359,7 +374,7 @@ class inputDialog_Wizard(QDialog):
             self.ButtonContinue.setEnabled(False)
             
     def checkTimeRange(self):
-        rangeLabel = unicode(self.Label_LineEdit.text())
+        rangeLabel = str(self.Label_LineEdit.text())
         boolean = len(rangeLabel) > 0
         if boolean:
             time0 = self.default0.time().toPyTime()
@@ -369,8 +384,8 @@ class inputDialog_Wizard(QDialog):
         self.ButtonContinue.setEnabled(boolean)
         
     def checkRange(self):
-        rangeLabel = unicode(self.Label_LineEdit.text())
-        strRange = unicode(self.rangeLineEdit.text())
+        rangeLabel = str(self.Label_LineEdit.text())
+        strRange = str(self.rangeLineEdit.text())
         Range = strRange.split(',')
         MIN = self.spinboxMin.value()
         MAX = self.spinboxMax.value()

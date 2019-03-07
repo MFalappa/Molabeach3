@@ -16,8 +16,8 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 
 import ui_Wizard_2
-from PyQt4.QtCore import (pyqtSignature,SIGNAL)
-from PyQt4.QtGui import (QApplication, QDialog)
+from PyQt5.QtCore import (pyqtSlot,pyqtSignal)
+from PyQt5.QtWidgets import (QApplication, QDialog)
 import sys
 
 class Wizard_2(QDialog, ui_Wizard_2.Ui_Dialog):
@@ -26,12 +26,13 @@ class Wizard_2(QDialog, ui_Wizard_2.Ui_Dialog):
         self.setupUi(self)
         self.analysisType = 'Single'
         self.radioButton.setChecked(True)
-        self.connect(self.pushButtonCancel,SIGNAL('clicked()'),self.reject)
-        self.connect(self.pushButtonContinue,SIGNAL('clicked()'),self.accept)
-    @pyqtSignature('void')
+        self.pushButtonCancel.clicked.connect(self.reject)
+        self.pushButtonContinue.clicked.connect(self.accept)
+     
+    @pyqtSlot()
     def on_radioButton_clicked(self):
         self.analysisType = 'Single'
-    @pyqtSignature('void')
+    @pyqtSlot()
     def on_radioButton_2_clicked(self):
         self.analysisType = 'Group'
         

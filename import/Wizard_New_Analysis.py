@@ -26,16 +26,16 @@ from Wizard_1 import Wizard_1
 from Wizard_2 import Wizard_2
 from dialog_loadfunction import dialog_upload_function
 from dialog_loadfunction_integrative import dialog_upload_function_integrative
-from PathSelection import PathSelection
-from Wizard_Input import inputDialog_Wizard
+from Wizard_input import inputDialog_Wizard
 
-from PyQt4.QtGui import (QApplication, QDialog, QLabel, QPushButton,
-                         QVBoxLayout,QHBoxLayout,QFileDialog,QFont,
-                         QSizePolicy,QSpacerItem)
-from PyQt4.QtCore import (SIGNAL)
+from PyQt5.QtWidgets import (QLabel,QDialog,QApplication,QPushButton,QVBoxLayout,
+                             QHBoxLayout,QSpacerItem,QSizePolicy)
+
+from PyQt5.QtGui import (QFont)
+#from PyQt5.QtCore import (pyqtSignal)
 from inputDlg_creating_input import inputDlg_creating_input
-from functionCaller_Generator import *
-from inputDlg_creating_input import inputDlg_creating_input
+from functionCaller_Generator import (functionCaller_Generator,add_To_Custom_Analysis,
+                                      add_To_Plot_Launcher,get_Function_List,remove_Functions)
 from deleteDlg import deleteDlg
 import numpy as np
 from data_type_selection import data_type_selection
@@ -44,7 +44,7 @@ from analysis_data_type_class import refreshTypeList
 class new_Analysis_Wizard(QDialog):
     def __init__(self,parent = None):
         super(new_Analysis_Wizard,self).__init__(parent)
-        print 'VERSIONE DA TESTARE, NUOVA ORGANIZZAZIONE ANALISI'
+        print('VERSIONE DA TESTARE, NUOVA ORGANIZZAZIONE ANALISI')
         refreshTypeList(import_dir)
         Label = QLabel('Add a new analysis:  ')
         Start = QPushButton('Add')
@@ -80,9 +80,12 @@ class new_Analysis_Wizard(QDialog):
         Hlayout.addWidget(Cancel)
         layout.addLayout(Hlayout)
         
-        self.connect(Cancel,SIGNAL('clicked ()'), self.reject)
-        self.connect(Start,SIGNAL('clicked ()'), self.startWizard)
-        self.connect(Delete,SIGNAL('clicked ()'), self.remove_Functions_)
+        Cancel.clicked.connect(self.reject)
+        Start.clicked.connect(self.startWizard)
+        Delete.clicked.connect(self.remove_Functions_)
+       
+  
+        
         self.setLayout(layout)
         
     def startWizard(self):
@@ -126,14 +129,14 @@ class new_Analysis_Wizard(QDialog):
         self.check_and_continue(dialog.dict_res, input_dict)
     
     def check_and_continue(self,type_list,input_dict):
-        print 'CHECK AND CONTINUE'
-        print input_dict
-        print type_list
+        print('CHECK AND CONTINUE')
+        print(input_dict)
+        print(type_list)
 #        Includo funzione in custom analysis
         tot_num = sum(input_dict.values())
         ind = 0
         dictionaryInput = {}
-        for inputName in input_dict.keys():
+        for inputName in list(input_dict.keys()):
             if inputName == 'PhaseSel' and input_dict['PhaseSel'] == 1:
                 dictionaryInput['PhaseSel'] = []
                 continue
@@ -183,7 +186,7 @@ class new_Analysis_Wizard(QDialog):
         if not dialog.exec_():
             return
         analysisType = dialog.analysisType
-        path = unicode(path) 
+        path = str(path) 
         
         if analysisType == 'Single':
             String = ''
@@ -196,7 +199,7 @@ class new_Analysis_Wizard(QDialog):
             self.reject()
             return
         deleteList = dialog.get_List()
-        print 'delete list ',deleteList
+        print('delete list ',deleteList)
         remove_Functions(path,deleteList,String)
         dictionary = np.load(os.path.join(phenopy_dir,'Analysis.npy')).all()
         if analysisType == 'Single':
