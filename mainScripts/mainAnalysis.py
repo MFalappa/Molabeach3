@@ -120,7 +120,8 @@ class MainWindow(QMainWindow):
                           60,61,62,63,64,65,66,67,68,69]
         
         refreshTypeList(import_dir)
-
+        # dictionary with keys group or single, contains a dict with
+        # keys function names and values a list of the accepted types
         self.AnalysisAndLabels = np.load(os.path.join(os.path.dirname(__file__),'Analysis.npy')).all()
 
         self.AnalysisAndLabels['Single'] = OrderedDict(self.AnalysisAndLabels['Single'])
@@ -464,15 +465,13 @@ class MainWindow(QMainWindow):
         
         for name in fname:
 
-            try:
+            if type(name) is str:
                 if os.path.exists(name) and name.endswith('.phz'):
-                    # need to ckeck if it is a file since the list contains also things that are not file names.
+                    # need to ckeck if it is a string since the list contains also other objects.
                     # need to check why when it closes
                     # saves in memory weird stuff... anyway this will work smoothly anyway
                     existingFile += [name]
-            except:
-                # if it is not a path this error will be raised... orrible solution but works
-                pass
+
         if len(existingFile):
             self.loadFile(existingFile)
  
@@ -774,12 +773,13 @@ class MainWindow(QMainWindow):
         else:
             tabWidget = QTabWidget() 
             
-        dlg = sleep_gui_class(self.Dataset,parent = self)
+        dlg = sleep_gui_class(self.Dataset,self.AnalysisAndLabels,parent = self)
         
         tabWidget.addTab(dlg,'Sleep Toolbox')
         self.setCentralWidget(tabWidget)
         func = lambda : self.removeTab(sleep_gui_class)
         dlg.closeSig.connect(func)
+        dlg.startAnalysisSignal.connect(self.startAnalysis)
         print('non funziona la connessione a remouve tab')
         
         
@@ -791,13 +791,17 @@ class MainWindow(QMainWindow):
                     return
         else:
             tabWidget = QTabWidget() 
-            
-        dlg = behav_gui_class(self.Dataset,parent=self)
-        
+
+        # In order to keep pheopy flexible we need to pass the available analysis to the widget
+        # the checker box and layout them by itself...
+        # we don't have a distinction
+        dlg = behav_gui_class(self.Dataset,self.AnalysisAndLabels,parent=self)
+
         tabWidget.addTab(dlg,'Behaviour Toolbox')
         self.setCentralWidget(tabWidget)
         func = lambda : self.removeTab(behav_gui_class)
         dlg.closeSig.connect(func)
+        dlg.startAnalysisSignal.connect(self.startAnalysis)
     
     def startIntegrativeAnalysis(self):
         print('parte il widget centrale per le analisi di integrative')
@@ -819,7 +823,7 @@ class MainWindow(QMainWindow):
             self.imageLabel.setPixmap(QPixmap.fromImage(Logo))
             self.setCentralWidget(self.imageLabel)
         
-    def startAnalysis(self):
+    def startAnalysis(self,analysisDict):
         """
             SHOULD BE GENERAL FOR LAUNCHING ANY TYPE OF ANALYSIS
             Perform analysis single subject.
@@ -830,17 +834,24 @@ class MainWindow(QMainWindow):
             status. While the thread is running no changes to the dataset
             must be done, for that reason the module for editing and saving
             will be unabled.
+
+            NEW FEATURES, only need to pass a dictionary with the info regarding the selected abnalysis to the dialog.
         """
         # self.AnalysisAndLabels contiene
         # key1: Single,Group or Integrative
         # key2: nome funzione analisi
         # value: tipo dato tipo "string"
-        dialog = SearchDlg(self.AnalysisAndLabels,self.dataTypeList(),self)
-        if not dialog.exec_():
-            return
-        anType = dialog.selectedType
-        dataType = dialog.selectedDataTypes
-        analysisName = dialog.selectedAnalysis
+        # dialog = SearchDlg(self.AnalysisAndLabels,self.dataTypeList(),self)
+        # if not dialog.exec_():
+        #     return
+        # anType = dialog.selectedType
+        # dataType = dialog.selectedDataTypes
+        # analysisName = dialog.selectedAnalysis
+
+        anType = analysisDict['anType']
+        dataType = analysisDict['dataType']
+        analysisName = analysisDict['analysisName']
+
         if anType == 'Integrative':
             # Data select and pairing
             type_list = []
@@ -848,7 +859,7 @@ class MainWindow(QMainWindow):
                 type_list += tl
             paired_matrix = self.integrativeSpecificProcessing(analysisName)
             data_list = list(paired_matrix[paired_matrix.dtype.names[1]])
-            if  paired_matrix is None:
+            if paired_matrix is None:
                 return
         else:
             type_list = dataType
