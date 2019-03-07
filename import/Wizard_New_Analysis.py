@@ -21,12 +21,13 @@ import_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../..')),'impor
 classes_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../..')),'classes','analysisClasses')
 sys.path.append(lib_dir)
 sys.path.append(classes_dir)
-
+sys.path.append(import_dir)
+print('here',import_dir)
 from Wizard_1 import Wizard_1
 from Wizard_2 import Wizard_2
 from dialog_loadfunction import dialog_upload_function
 from dialog_loadfunction_integrative import dialog_upload_function_integrative
-from Wizard_input import inputDialog_Wizard
+from Wizard_Input import inputDialog_Wizard
 
 from PyQt5.QtWidgets import (QLabel,QDialog,QApplication,QPushButton,QVBoxLayout,
                              QHBoxLayout,QSpacerItem,QSizePolicy)
