@@ -21,10 +21,10 @@ def inputDlg_creating_input(pathToAutonomice,dictInput,func_Name):
     try:
         fh = open(pathToAutonomice + 'inputDlgCreator.py','a')
         line =  '    if analysisName == \'%s\':\n'%func_Name
-        for key in dictInput.keys():
+        for key in list(dictInput.keys()):
             line += '        dictInput[\'%s\'] = %s\n'%(key,dictInput[key])
         line += '        return dictInput\n'
         fh.write(line)
     except:
-        raise ValueError,'Unable to write new input'
+        raise ValueError('Unable to write new input')
         

@@ -192,7 +192,7 @@ def set_Trial_Timeout_ms(Id, ms, source_address=None):
     
 def set_Probability_Array(Id,probArray, source_address=None):
     if len(probArray)>20:
-        raise ValueError,'You can choose at max 20 different probability'
+        raise ValueError('You can choose at max 20 different probability')
     MsgList = []
     arrayInd = 0
     try:
@@ -315,7 +315,7 @@ if __name__ == "__main__":
         text += string[k:k+2] + '\t'
     text = text.rstrip('\t')
     text += '\n'
-    fh = open('C:\Users\ebalzani\IIT\Microsystems\\wifi_msg_example.txt','w')
+    fh = open('C:\\Users\ebalzani\IIT\Microsystems\\wifi_msg_example.txt','w')
     fh.write(text)
     fh.close()
 #    import canportreader

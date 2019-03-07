@@ -69,19 +69,15 @@ from export_files import select_export
 from editDatasetDlg import editDlg
 from Analyzing_GUI import Extracting_Data_GUI
 from Modify_Dataset_GUI import (OrderedDict,DatasetContainer_GUI,Dataset_GUI,
-                                TimeUnit_to_Hours_GUI)
+                                TimeUnit_to_Hours_GUI,save_A_Data_GUI,
+                                Time_Details_GUI,Select_Interval_GUI)
 
 from AnalysisGroup_Std  import analysisGroup_thread
+from analysis_data_type_class import refreshTypeList
 
-
-from MergeDlg import MergeDlg
-from ChangeRescalingFactordlg import ChangeRescalingFactordlg
-from analysis_data_type_class import refreshTypeList, getTypes
-from Plotting_GUI import *
-from AnalysisSingle_Std import *
-from spikeGUI import *
-#from sleepGUI import *
-#from behaviourGUI import *
+from spikeGUI import spk_gui
+from sleepGUI import sleep_gui_class
+from behavGUI import behav_gui_class
 #from integrariveGUI import *
 
 
@@ -285,7 +281,7 @@ class MainWindow(QMainWindow):
         analysisMenu=self.menuBar().addMenu("&Analysis")
         
         self.integrativenAction.setEnabled(False)
-        self.spikeAction.setEnabled(False)
+        self.spikeAction.setEnabled(True)
         self.sleepAction.setEnabled(False)
         self.behaviourAction.setEnabled(False)
         
@@ -453,7 +449,6 @@ class MainWindow(QMainWindow):
             
         
     def importExternalData(self):
-        print('ci arrivo')
         dlg = importDlg(parent=self)
         dlg.errorImport.connect(self.listWidgetRight.addItem)
         dlg.show()
@@ -480,7 +475,7 @@ class MainWindow(QMainWindow):
         dire = (self.lastOpenFileDirectory
                if self.lastOpenFileDirectory is not None else ".")
         formats =(['*.phz'])
-        Qfnames=(QFileDialog.getOpenFileNames(self,
+        Qfnames,_=(QFileDialog.getOpenFileNames(self,
                     "Phenopy - Load Dataset", dire,
                     "Input files ({0})".format(" ".join(formats))))
         fnames = []  
@@ -503,7 +498,7 @@ class MainWindow(QMainWindow):
                 list_npz += [File]
         self.Dataset = load_npz(list_npz, self.Dataset)
 
-#questo va sistemato in base a se trova sleep, behavior o entrambe
+    # questo va sistemato in base a se trova sleep, behavior o entrambe
     def updateDataListWidget(self):
         """
             Metodo chiamato da datacontainer ogni volta che viene aggiunto
@@ -514,14 +509,41 @@ class MainWindow(QMainWindow):
             item = QListWidgetItem(item_name)
             item.setIcon(QIcon(os.path.join(image_dir,"table.png")))
             self.listWidgetLeft.addItem(item)
+        
+        # va ancora aggiunta la possibilita delle integrative
         if len(list(self.Dataset.keys())) >= 1:
-            self.analysisAction.setEnabled(True)
-            self.editSelectIntervalAction.setEnabled(True)
-            for name,data in self.Dataset:
-                if 'single unit struct' in self.Dataset.dataType(name):
+            for dts in self.Dataset.keys():
+                if self.Dataset[dts].Types == ['TSE']:
+                    self.behaviourAction.setEnabled(True)
+                
+                elif self.Dataset[dts].Types == ['MED_SW']:
+                    self.behaviourAction.setEnabled(True)
+                
+                elif self.Dataset[dts].Types == ['AM-Microsystems']:
+                    self.behaviourAction.setEnabled(True)
+                
+                elif self.Dataset[dts].Types == ['EEG Binned Frequencies']:
+                    self.sleepAction.setEnabled(True)
+            
+                elif self.Dataset[dts].Types == ['EEG Full Power Spectrum']:
+                    self.sleepAction.setEnabled(True)
+                
+                elif self.Dataset[dts].Types == ['Unparsed Excel File']:
+                    print('decidere con edo')
+                
+                elif self.Dataset[dts].Types == ['Parsed Excel']:
+                    print('decidere con edo')
+                
+                elif self.Dataset[dts].Types == ['single unit struct']:
                     self.spikeAction.setEnabled(True)
+                
+                elif self.Dataset[dts].Types == ['nex_file']:
+                    print('decidere con edo, pensavo ad un modulo ad hoc per la detection')    
+            self.editSelectIntervalAction.setEnabled(True)
         else:
-            self.analysisAction.setEnabled(False)
+            self.behaviourAction.setEnabled(False)
+            self.sleepAction.setEnabled(False)
+            self.integrativenAction.setEnabled(False)
             self.editSelectIntervalAction.setEnabled(False)
             self.spikeAction.setEnabled(True)
 
@@ -720,34 +742,64 @@ class MainWindow(QMainWindow):
             self.lock.unlock()
         return data_list
     
-# qui vanno lanciate le varie analisi    
+    # qui vanno lanciate le varie analisi    
     def startSpikeAnalysis(self):
+        print('andrebbe ridesignato in base a cio che vogliamo mettere')
+#        if type(self.centralWidget()) is QTabWidget:
+#            tabWidget = self.centralWidget()
+#            for idx in range(tabWidget.count()):
+#                if type(tabWidget.widget(idx)) == spk_gui:
+#                    return
+#        else:
+#            tabWidget = QTabWidget() 
+#            
+#        dlg = spk_gui(self.Dataset,parent=self)
+#        
+#        tabWidget.addTab(dlg,'Spike Toolbox')
+#        self.setCentralWidget(tabWidget)
+#        func = lambda : self.removeTab(spk_gui)
+#        dlg.closeSpike.connect(func)
+    
+    def startSleepAnalysis(self):
         if type(self.centralWidget()) is QTabWidget:
             tabWidget = self.centralWidget()
             for idx in range(tabWidget.count()):
-                if type(tabWidget.widget(idx)) == spk_gui:
+                if type(tabWidget.widget(idx)) == sleep_gui_class:
                     return
         else:
             tabWidget = QTabWidget() 
             
-        dlg = spk_gui(self.Dataset,parent=self)
+        dlg = sleep_gui_class(self.Dataset,parent = self)
         
-        tabWidget.addTab(dlg,'Spike Toolbox')
+        tabWidget.addTab(dlg,'Sleep Toolbox')
         self.setCentralWidget(tabWidget)
-        func = lambda : self.removeTab(spk_gui)
-        dlg.closeSpike.connect(func)
-    
-    def startSleepAnalysis(self):
-        print('parte il widget centrale per le analisi di sleep')
+        func = lambda : self.removeTab(sleep_gui_class)
+        dlg.closeSleep.connect(func)
+        print('non funziona la connessione a remouve tab')
+        
         
     def startBehaviourAnalysis(self):
-        print('parte il widget centrale per le analisi di comportamento')
+        if type(self.centralWidget()) is QTabWidget:
+            tabWidget = self.centralWidget()
+            for idx in range(tabWidget.count()):
+                if type(tabWidget.widget(idx)) == behav_gui_class:
+                    return
+        else:
+            tabWidget = QTabWidget() 
+            
+        dlg = behav_gui_class(self.Dataset,parent=self)
+        
+        tabWidget.addTab(dlg,'Behaviour Toolbox')
+        self.setCentralWidget(tabWidget)
+        func = lambda : self.removeTab(behav_gui_class)
+        dlg.closeBehav.connect(func)
     
     def startIntegrativeAnalysis(self):
         print('parte il widget centrale per le analisi di integrative')
+        print('o forse potremmo lasciare come è gia ora, parliamone')
     
     def removeTab(self,tabName):
-        # questo rimuove il widget centrale dopo la chiusura
+        print('questo rimuove il widget centrale dopo la chiusura')
         tabWidget = self.centralWidget()
         for idx in range(tabWidget.count()):
             if type(tabWidget.widget(idx)) == tabName:
@@ -820,6 +872,7 @@ class MainWindow(QMainWindow):
                                  parent=self)
         if not dialog.exec_():
             return
+       
         # da qui in poi da scrivere i select groups in caso di gruppo/integrative
         # numero gruppi = 1 in caso di single 
         # pairing in caso di integrative
@@ -837,6 +890,7 @@ class MainWindow(QMainWindow):
         
         analysisThread.initialize(Input, analysisName,
                                   selectedDataDict, self.TimeStamps,pairedGroups)
+
 #        analysisThread.start() # uncomment for parallel execution
         analysisThread.run()
         self.status.showMessage('%s analysis is running...'%analysisName)

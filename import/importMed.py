@@ -17,7 +17,7 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 
 import numpy as np
 
-raw = np.loadtxt('C:\Users\MFalappa\Downloads\\150424_12_05_Grattachecca.txt')
+raw = np.loadtxt('C:\\Users\MFalappa\Downloads\\150424_12_05_Grattachecca.txt')
 
 startDate = np.zeros(3)
 startDate[0] = int(raw[0]) # year

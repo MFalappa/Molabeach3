@@ -45,7 +45,7 @@ def spikeStatistics(*myInput):
         num_vars = data_spk['FileHeader']['NumVars']
         ch_list = []
         num_ch = 0
-        for ch in xrange(num_vars):
+        for ch in range(num_vars):
             if data_spk['Variables'][ch]['Header']['Type'] == 0: # if it is a spike train
                 ch_list += [ch]
                 num_ch += 1
@@ -68,7 +68,7 @@ def spikeStatistics(*myInput):
             log2isi = np.log2(spk_ts[1:] - spk_ts[:-1])
             histisi, edgeisi = np.histogram(log2isi,bins=bins,normed=True)
             firingRate = np.zeros(steps)
-            for k in xrange(steps):
+            for k in range(steps):
                 bl = (spk_ts >= k * fr_bin_sec) * (spk_ts < (k + 1) * fr_bin_sec)
                 firingRate[k] = np.sum(bl) / fr_bin_sec
                 k += 1

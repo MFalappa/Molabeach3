@@ -18,8 +18,8 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import ui_PathSelection
 import sys
 import os
-from PyQt4.QtCore import (pyqtSignature)
-from PyQt4.QtGui import (QApplication, QDialog,QFileDialog)
+from PyQt5.QtCore import (pyqtSlot)
+from PyQt5.QtWidgets import (QApplication, QDialog,QFileDialog)
 
 class PathSelection(QDialog, ui_PathSelection.Ui_Dialog):
     def __init__(self,parent=None):
@@ -27,56 +27,56 @@ class PathSelection(QDialog, ui_PathSelection.Ui_Dialog):
         self.setupUi(self)
         self.pushButton.setEnabled(False)
 
-    @pyqtSignature('void')
+    @pyqtSlot('void')
     def on_pushButtonFolder_clicked(self):
         path = QFileDialog.getExistingDirectory(self, 
-                                           u"Select Autonomice Folder",
+                                           "Select Autonomice Folder",
                                            ".")
         self.lineEdit_2.setText(path)
         
-    @pyqtSignature('void')
+    @pyqtSlot('void')
     def on_pushButtonFunction_clicked(self):
         path = QFileDialog.getOpenFileName(self, 
-                                           u"Select a Python File",
-                                           ".", u"Python files (*.py *.pyw)")
+                                           "Select a Python File",
+                                           ".", "Python files (*.py *.pyw)")
         self.lineEdit.setText(path)
     
-    @pyqtSignature('void')
+    @pyqtSlot('void')
     def on_pushButtonFunction_2_clicked(self):
         path = QFileDialog.getOpenFileName(self, 
-                                           u"Select a Python File",
-                                           ".", u"Python files (*.py *.pyw)")
+                                           "Select a Python File",
+                                           ".", "Python files (*.py *.pyw)")
         self.lineEdit_3.setText(path)
         
-    @pyqtSignature('const QString&')
+    @pyqtSlot('const QString&')
     def on_lineEdit_textChanged(self,path):
         self.enableCreate()
         
-    @pyqtSignature('const QString&')
+    @pyqtSlot('const QString&')
     def on_lineEdit_2_textChanged(self,path):
         self.enableCreate()
         
-    @pyqtSignature('const QString&')
+    @pyqtSlot('const QString&')
     def on_lineEdit_3_textChanged(self,path):
         self.enableCreate()
         
-    @pyqtSignature('void')
+    @pyqtSlot('void')
     def on_pushButton_clicked(self):
-        self.function     = unicode(self.lineEdit.text())
-        self.directory    = unicode(self.lineEdit_2.text())
-        self.functionPlot = unicode(self.lineEdit_3.text())
+        self.function     = str(self.lineEdit.text())
+        self.directory    = str(self.lineEdit_2.text())
+        self.functionPlot = str(self.lineEdit_3.text())
         self.accept()
     
-    @pyqtSignature('void')
+    @pyqtSlot('void')
     def on_pushButton_2_clicked(self):
         self.reject()
         
     def enableCreate(self):
-        if os.path.exists(unicode(self.lineEdit.text()))\
+        if os.path.exists(str(self.lineEdit.text()))\
            and\
-           os.path.exists(unicode(self.lineEdit_2.text()))\
+           os.path.exists(str(self.lineEdit_2.text()))\
            and\
-           os.path.exists(unicode(self.lineEdit_3.text())):
+           os.path.exists(str(self.lineEdit_3.text())):
             self.pushButton.setEnabled(True)
         else:
             self.pushButton.setEnabled(False)
