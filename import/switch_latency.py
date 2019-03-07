@@ -16,7 +16,7 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 
 import sys
-sys.path.append('C:\Users\MFalappa\Documents\Phenopy\MyPython_Lib')
+sys.path.append('C:\\Users\MFalappa\Documents\Phenopy\MyPython_Lib')
 import numpy as np
 import scipy.stats as sts
 from Modify_Dataset_GUI import *
@@ -254,9 +254,9 @@ def create_np_activity(Y,TimeStamps):
 
     
 if __name__ == '__main__' : 
-    Y = np.genfromtxt('C:\Users\MFalappa\Desktop\\prova.csv',
+    Y = np.genfromtxt('C:\\Users\MFalappa\Desktop\\prova.csv',
                       delimiter='\t', dtype={'names':('Time','Action'),'formats':(float,float)})
-    TimeStamps = np.load('C:\Users\MFalappa\Documents\Phenopy\Timestamps_repo\TSE.npy').all()
+    TimeStamps = np.load('C:\\Users\MFalappa\Documents\Phenopy\Timestamps_repo\TSE.npy').all()
     t0 = clock()
     Y = Y[:np.where(Y['Action']==36)[0][-1]+1]
     d = {'ciccio':Y}
