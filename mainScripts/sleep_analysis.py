@@ -60,7 +60,7 @@ def norm_fact_calc(data_eeg, norm_hrs, array_epi,skip_bef_aft = 1, col=0, epoch 
         power_vect[end-skip_bef_aft:end] = np.nan
         index = np.array(np.where(data_eeg.Stage[start+skip_bef_aft:end-skip_bef_aft]!=epoch)[0],dtype=int)
         power_vect[start+skip_bef_aft:end-skip_bef_aft][index] = np.nan
-    print np.nanmean(power_vect)
+    print(np.nanmean(power_vect))
     return np.nanmedian(power_vect),power_vect
     
 def consecutive_bins(ts,bins,startfromzero=True):
@@ -125,9 +125,9 @@ def diurnal_ratio_of_wakefulness(data_sleep, phase_vector,light_hours,
       
         if 'WT_344_PT' in sub_name:
             if index_light.shape[0] == 0:
-                print 'sto eseguendo l eccezione'
+                print('sto eseguendo l eccezione')
                 index_light = np.array([1,2])
-                print 'shape not is %d' %index_light.shape[0]
+                print('shape not is %d' %index_light.shape[0])
                 tot_wake_light = 1
                 
         
@@ -186,9 +186,9 @@ def diurnal_ratio_of_rem(data_sleep, phase_vector, light_hours,
         
         if 'WT_344_PT' in sub_name:
             if index_light.shape[0] == 0:
-                print 'sto eseguendo l eccezione'
+                print('sto eseguendo l eccezione')
                 index_light = np.array([1,2])
-                print 'shape noy is %d' %index_light.shape[0]
+                print('shape noy is %d' %index_light.shape[0])
                 
         results['REM_Percent_Light'][ind_ph] = 100*(tot_rem_light / index_light.shape[0])
         results['REM_Percent_Dark'][ind_ph] = 100*(tot_rem_dark / index_dark.shape[0])
@@ -237,9 +237,9 @@ def diurnal_ratio_of_nrem(data_sleep, phase_vector, light_hours,
         
         if 'WT_344_PT' in sub_name:
             if index_light.shape[0] == 0:
-                print 'sto eseguendo l eccezione'
+                print('sto eseguendo l eccezione')
                 index_light = np.array([1,2])
-                print 'shape noy is %d' %index_light.shape[0]
+                print('shape noy is %d' %index_light.shape[0])
                 
         
         results['NREM_Percent_Light'][ind_ph] = 100*(tot_nrem_light / index_light.shape[0])
@@ -298,9 +298,9 @@ def diurnal_ratio_of_total_sleep(data_sleep, phase_vector, light_hours,
         
         if 'WT_344_PT' in sub_name:
             if index_light.shape[0] == 0:
-                print 'sto eseguendo l eccezione'
+                print('sto eseguendo l eccezione')
                 index_light = np.array([1,2])
-                print 'shape noy is %d' %index_light.shape[0]
+                print('shape noy is %d' %index_light.shape[0])
                 
         
         results['light_Percent_sleep'][ind_ph] = 100*(tot_nrem_light / index_light.shape[0])
@@ -353,9 +353,9 @@ def sleep_efficiency_x_phase(data_sleep, phase_vector, light_hours,
         
         if 'WT_344_PT' in sub_name:
             if index_light.shape[0] == 0:
-                print 'sto eseguendo l eccezione'
+                print('sto eseguendo l eccezione')
                 index_light = np.array([1,2])
-                print 'shape noy is %d' %index_light.shape[0]
+                print('shape noy is %d' %index_light.shape[0])
                 
         
         results['Diurnal_Sleep_Efficiency_Light'][ind_ph] = 100*(tot_rem_light+tot_nrem_light) / index_light.shape[0]
@@ -477,7 +477,7 @@ def rem_latency(data_sleep, phase_vector, light_hours,
         dict_epi_index_original.pop(epi_ind)
         dict_epi_index.pop(epi_ind)
         dict_sleep_epi.pop(epi_ind)
-        keys = np.sort(dict_epi_index.keys())
+        keys = np.sort(list(dict_epi_index.keys()))
         for k in keys[:-1]:
             if dict_epi_index[k+1][0] - dict_epi_index[k][-1] < cons_w_for_split:
                 dict_epi_index[k+1] = dict_epi_index[k] + dict_epi_index[k+1]
@@ -490,7 +490,7 @@ def rem_latency(data_sleep, phase_vector, light_hours,
         episode_dict_phase[phase[2]] = {'index':dict_epi_index_original,'stage':dict_sleep_epi}
         duration_light = np.zeros(0)
         duration_dark = np.zeros(0)
-        keys = np.sort(dict_epi_index.keys())
+        keys = np.sort(list(dict_epi_index.keys()))
         for k in keys:
             find_rem = np.where(np.array(dict_sleep_epi[k]) == 'R')[0]
             if find_rem.shape[0]:
@@ -532,22 +532,22 @@ def extract_epi(data_eeg,epoch='NR',merge_if=3,min_epi_len=3):
         dict_episodes[k] = [start,end]
         k += 1
      
-    list_keys = np.sort(dict_episodes.keys()[:-1])
+    list_keys = np.sort(list(dict_episodes.keys())[:-1])
     for key in list_keys:
         if dict_episodes[key+1][0] - dict_episodes[key][1] <= merge_if:
             start,end = dict_episodes.pop(key)
             dict_episodes[key+1] = [start,dict_episodes[key+1][1]]
            
             
-    list_keys = np.sort(dict_episodes.keys())
+    list_keys = np.sort(list(dict_episodes.keys()))
     for key in list_keys:
         num_nrem = len(np.where(epoch_vect[dict_episodes[key][0]:dict_episodes[key][1]]==epoch)[0])
         if num_nrem < min_epi_len:
             dict_episodes.pop(key) 
     
-    array_episodes = np.zeros(len(dict_episodes.keys()),dtype={'names':('Start','End'),'formats':(int,int)}) 
-    list_keys = np.sort(dict_episodes.keys()) 
-    for k in xrange(array_episodes.shape[0]):
+    array_episodes = np.zeros(len(list(dict_episodes.keys())),dtype={'names':('Start','End'),'formats':(int,int)}) 
+    list_keys = np.sort(list(dict_episodes.keys())) 
+    for k in range(array_episodes.shape[0]):
         array_episodes['Start'][k],array_episodes['End'][k] = dict_episodes[list_keys[k]]
     return array_episodes
 
@@ -571,7 +571,7 @@ def merge_epi(episodes,merge_if=1):
             else:
                 episodes['Stage'][i] = episodes['Stage'][i+1]
     type_prev = episodes['Stage'][0]
-    for i in xrange(1,episodes.shape[0]):
+    for i in range(1,episodes.shape[0]):
         if episodes['Stage'][i] == type_prev:
             episodes['Start'][i] = episodes['Start'][i-1]
             episodes['Start'][i-1] = -1
@@ -592,7 +592,7 @@ def power_per_phase(data_sleep, phase_vector, deltaCol=0,
         epi_ph = extract_epi(data_ph,epoch=epoch,merge_if=merge_if,min_epi_len=min_epi_len)
         delta_index = []
         for start,end in epi_ph:
-            delta_index = np.hstack((delta_index,range(start,end)))
+            delta_index = np.hstack((delta_index,list(range(start,end))))
         delta_index = np.array(delta_index,dtype=int)
         mask = np.ones(data_ph.Stage.shape[0], dtype=bool)
         mask[delta_index] = False
@@ -609,7 +609,7 @@ def power_per_phase(data_sleep, phase_vector, deltaCol=0,
 def delta_power(data_eeg,array_episodes,epoch='NR',bins=3600,normFact=1,deltaCol=0,sub_name='Sub1'):
     delta_index = []
     for start,end in array_episodes:
-        delta_index = np.hstack((delta_index,range(start,end)))
+        delta_index = np.hstack((delta_index,list(range(start,end))))
     delta_index = np.array(delta_index,dtype=int)
     mask = np.ones(data_eeg.Stage.shape[0], dtype=bool)
     mask[delta_index] = False
@@ -722,8 +722,8 @@ if __name__=='__main__':
     datas = np.load('/Users/Matte/Scuola/Dottorato/Projects/Pace/Paper mch/sleep/RTM/male22.phz')
     light_hours = np.arange(16+12,16+24)%24
     dark_hours = np.arange(16,16+12)%24
-    print datas.keys()[0]
-    data_eeg = datas[datas.keys()[0]].all().Dataset
+    print(list(datas.keys())[0])
+    data_eeg = datas[list(datas.keys())[0]].all().Dataset
     phase_vector = [(data_eeg.Timestamp[0],data_eeg.Timestamp[-900*12]+dt.timedelta(0,4),'first'),
                     (data_eeg.Timestamp[-900*12]+dt.timedelta(0,4),data_eeg.Timestamp[-1]+dt.timedelta(0,4),'last')]
     matrix = Stage_2_Stage_dist(data_eeg,phase_vector,'R',merge_if=3,min_epi_len=3)
