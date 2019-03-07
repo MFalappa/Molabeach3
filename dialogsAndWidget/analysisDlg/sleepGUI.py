@@ -26,7 +26,7 @@ sys.path.append(classes_dir)
 sys.path.append(phenopy_dir)
         
 class sleep_gui_class(QMainWindow, Ui_MainWindow, QObject):
-    sleepSig = pyqtSignal(str,name='sleepSignal')
+    closeSig = pyqtSignal(str,name='sleepSignal')
     def __init__(self,data,parent=None):
         super(sleep_gui_class, self).__init__(parent)
         self.setupUi(self)
@@ -41,7 +41,7 @@ class sleep_gui_class(QMainWindow, Ui_MainWindow, QObject):
     
     def closeTab(self):
         self.close()
-        self.closeSleep.emit('sleep_gui_class')
+        self.closeSig.emit('close_sleep')
         super(sleep_gui_class, self).close()
       
 def main():

@@ -26,7 +26,7 @@ sys.path.append(classes_dir)
 sys.path.append(phenopy_dir)
         
 class behav_gui_class(QMainWindow, Ui_MainWindow, QObject):
-    sleepSig = pyqtSignal(str,name='behavSignal')
+    closeSig = pyqtSignal(str,name='behavSignal')
     def __init__(self,data,parent=None):
         super(behav_gui_class, self).__init__(parent)
         self.setupUi(self)
@@ -41,7 +41,7 @@ class behav_gui_class(QMainWindow, Ui_MainWindow, QObject):
     
     def closeTab(self):
         self.close()
-        self.closeBehav.emit('behav_gui_class')
+        self.closeSig.emit('close_beahv')
         super(behav_gui_class, self).close()
       
 def main():

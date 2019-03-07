@@ -463,8 +463,16 @@ class MainWindow(QMainWindow):
         existingFile=[]
         
         for name in fname:
-            if name and QFile.exists(name) and name.endswith(('.csv','.phz','.txt')):
-                existingFile += [name]
+
+            try:
+                if os.path.exists(name) and name.endswith('.phz'):
+                    # need to ckeck if it is a file since the list contains also things that are not file names.
+                    # need to check why when it closes
+                    # saves in memory weird stuff... anyway this will work smoothly anyway
+                    existingFile += [name]
+            except:
+                # if it is not a path this error will be raised... orrible solution but works
+                pass
         if len(existingFile):
             self.loadFile(existingFile)
  
@@ -771,7 +779,7 @@ class MainWindow(QMainWindow):
         tabWidget.addTab(dlg,'Sleep Toolbox')
         self.setCentralWidget(tabWidget)
         func = lambda : self.removeTab(sleep_gui_class)
-        dlg.closeSleep.connect(func)
+        dlg.closeSig.connect(func)
         print('non funziona la connessione a remouve tab')
         
         
@@ -789,7 +797,7 @@ class MainWindow(QMainWindow):
         tabWidget.addTab(dlg,'Behaviour Toolbox')
         self.setCentralWidget(tabWidget)
         func = lambda : self.removeTab(behav_gui_class)
-        dlg.closeBehav.connect(func)
+        dlg.closeSig.connect(func)
     
     def startIntegrativeAnalysis(self):
         print('parte il widget centrale per le analisi di integrative')
