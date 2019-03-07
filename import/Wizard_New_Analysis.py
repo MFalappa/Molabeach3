@@ -22,7 +22,6 @@ classes_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../..')),'clas
 sys.path.append(lib_dir)
 sys.path.append(classes_dir)
 sys.path.append(import_dir)
-print('here',import_dir)
 from Wizard_1 import Wizard_1
 from Wizard_2 import Wizard_2
 from dialog_loadfunction import dialog_upload_function
