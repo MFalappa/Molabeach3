@@ -228,7 +228,7 @@
             <item>
              <widget class="QCheckBox" name="checkBox">
               <property name="text">
-               <string>Save as excel</string>
+               <string>Save excel</string>
               </property>
              </widget>
             </item>
@@ -276,7 +276,6 @@
        </layout>
       </item>
      </layout>
-     <zorder></zorder>
      <zorder></zorder>
     </widget>
    </widget>

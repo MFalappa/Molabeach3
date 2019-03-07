@@ -81,10 +81,6 @@ from behavGUI import behav_gui_class
 #from integrariveGUI import *
 
 
-
-
-
-
 __version__ = "2.0.0"
 
 
@@ -236,7 +232,7 @@ class MainWindow(QMainWindow):
                                              None,'wave_spike','Perform spike analysis')
         
         self.sleepAction = self.createAction('&Sleep Analysis',self.startSleepAnalysis,
-                                             None,'sleep_logo','Perform sleep analysis, EEG and EMG data')    
+                                             None,None,'Perform sleep analysis, EEG and EMG data')    
         
         self.behaviourAction = self.createAction('&Behaviour Analysis',self.startBehaviourAnalysis,
                                                  None,None,'Perform behavioural analysis, code action data')
@@ -281,7 +277,7 @@ class MainWindow(QMainWindow):
         analysisMenu=self.menuBar().addMenu("&Analysis")
         
         self.integrativenAction.setEnabled(False)
-        self.spikeAction.setEnabled(True)
+        self.spikeAction.setEnabled(False)
         self.sleepAction.setEnabled(False)
         self.behaviourAction.setEnabled(False)
         
@@ -395,7 +391,7 @@ class MainWindow(QMainWindow):
         self.listWidgetLeft.itemSelectionChanged.connect(self.enable_disable_actions)
 
 # vecchia modalità
-# vecchia modalità
+# vecchia modalità, lho cambiat ma non debuggata, vedi sopra
 #        self.connect(self.analysisSingleThread,pyqtSignal('threadFinished()'),\
 #                     lambda Type = 'Single': self.completedAnalysis(Type))
 #        self.connect(self.analysisGroupThread,pyqtSignal('threadFinished()'),\
@@ -545,7 +541,7 @@ class MainWindow(QMainWindow):
             self.sleepAction.setEnabled(False)
             self.integrativenAction.setEnabled(False)
             self.editSelectIntervalAction.setEnabled(False)
-            self.spikeAction.setEnabled(True)
+            self.spikeAction.setEnabled(False)
 
 
     def createAction(self, text, slot=None, shortcut=None, icon=None,

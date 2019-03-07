@@ -140,7 +140,7 @@ class Ui_MainWindow(object):
         self.label_3.setText(_translate("MainWindow", "Circadian"))
         self.checkBox_actogram.setText(_translate("MainWindow", "Actogram"))
         self.checkBox_plot.setText(_translate("MainWindow", "Show results"))
-        self.checkBox.setText(_translate("MainWindow", "Save as excel"))
+        self.checkBox.setText(_translate("MainWindow", "Save excel"))
         self.pushButton.setText(_translate("MainWindow", "Cancel"))
         self.pushButton_run.setText(_translate("MainWindow", "Run"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Behaviour analysis"))
