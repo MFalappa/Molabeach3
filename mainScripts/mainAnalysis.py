@@ -77,9 +77,9 @@ from AnalysisGroup_Std  import analysisGroup_thread
 from analysis_data_type_class import refreshTypeList
 
 #from spikeGUI import spk_gui
-from sleepGUI import sleep_gui_class
-from behavGUI import behav_gui_class
-#from integrariveGUI import *
+from sleepGUI2 import sleepDlg
+from behavGUI2 import behavDlg
+from integrariveGUI2 import integrativeDlg
 
 
 __version__ = "2.0.0"
@@ -765,44 +765,30 @@ class MainWindow(QMainWindow):
     # qui vanno lanciate le varie analisi    
     def startSpikeAnalysis(self):
         print('andrebbe ridesignato in base a cio che vogliamo mettere')
-#        if type(self.centralWidget()) is QTabWidget:
-#            tabWidget = self.centralWidget()
-#            for idx in range(tabWidget.count()):
-#                if type(tabWidget.widget(idx)) == spk_gui:
-#                    return
-#        else:
-#            tabWidget = QTabWidget() 
-#            
-#        dlg = spk_gui(self.Dataset,parent=self)
-#        
-#        tabWidget.addTab(dlg,'Spike Toolbox')
-#        self.setCentralWidget(tabWidget)
-#        func = lambda : self.removeTab(spk_gui)
-#        dlg.closeSpike.connect(func)
     
     def startSleepAnalysis(self):
         if type(self.centralWidget()) is QTabWidget:
             tabWidget = self.centralWidget()
             for idx in range(tabWidget.count()):
-                if type(tabWidget.widget(idx)) == sleep_gui_class:
+                if type(tabWidget.widget(idx)) == sleepDlg:
                     return
         else:
             tabWidget = QTabWidget() 
             
-        dlg = sleep_gui_class(self.Dataset,self.AnalysisAndLabels,parent = self)
+        dlg = sleepDlg(self.Dataset,self.AnalysisAndLabels,parent = self)
         
         tabWidget.addTab(dlg,'Sleep Toolbox')
         self.setCentralWidget(tabWidget)
-        func = lambda : self.removeTab(sleep_gui_class)
+        func = lambda : self.removeTab(sleepDlg)
         dlg.closeSig.connect(func)
-        dlg.startAnalysisSignal.connect(self.startAnalysis)
+#        dlg.startAnalysisSignal.connect(self.startAnalysis)
     
         
     def startBehaviourAnalysis(self):
         if type(self.centralWidget()) is QTabWidget:
             tabWidget = self.centralWidget()
             for idx in range(tabWidget.count()):
-                if type(tabWidget.widget(idx)) == behav_gui_class:
+                if type(tabWidget.widget(idx)) == behavDlg:
                     return
         else:
             tabWidget = QTabWidget() 
@@ -810,18 +796,35 @@ class MainWindow(QMainWindow):
         # In order to keep pheopy flexible we need to pass the available analysis to the widget
         # the checker box and layout them by itself...
         # we don't have a distinction
-        dlg = behav_gui_class(self.Dataset,self.AnalysisAndLabels,parent=self)
+        dlg = behavDlg(self.Dataset,self.AnalysisAndLabels,parent=self)
 
         tabWidget.addTab(dlg,'Behaviour Toolbox')
         self.setCentralWidget(tabWidget)
-        func = lambda : self.removeTab(behav_gui_class)
+        func = lambda : self.removeTab(behavDlg)
         dlg.closeSig.connect(func)
         dlg.startAnalysisSignal.connect(self.startAnalysis)
     
     def startIntegrativeAnalysis(self):
-        print('parte il widget centrale per le analisi di integrative')
-        print('o forse potremmo lasciare come è gia ora, parliamone')
-    
+        if type(self.centralWidget()) is QTabWidget:
+            tabWidget = self.centralWidget()
+            for idx in range(tabWidget.count()):
+                if type(tabWidget.widget(idx)) == integrativeDlg:
+                    return
+        else:
+            tabWidget = QTabWidget() 
+
+        # In order to keep pheopy flexible we need to pass the available analysis to the widget
+        # the checker box and layout them by itself...
+        # we don't have a distinction
+        dlg = integrativeDlg(self.Dataset,self.AnalysisAndLabels,parent=self)
+
+        tabWidget.addTab(dlg,'Behaviour Toolbox')
+        self.setCentralWidget(tabWidget)
+        func = lambda : self.removeTab(integrativeDlg)
+        dlg.closeSig.connect(func)
+        dlg.startAnalysisSignal.connect(self.startAnalysis)
+        
+        
     def removeTab(self,tabName):
         tabWidget = self.centralWidget()
         for idx in range(tabWidget.count()):
