@@ -79,7 +79,7 @@ from analysis_data_type_class import refreshTypeList
 #from spikeGUI import spk_gui
 from sleepGUI2 import sleepDlg
 from behavGUI2 import behavDlg
-from integrariveGUI2 import integrativeDlg
+from integrativeGUI2 import integrativeDlg
 
 
 __version__ = "2.0.0"

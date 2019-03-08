@@ -36,9 +36,10 @@ from Modify_Dataset_GUI import (Rescale_Time_GUI,MultipleHour_Light_and_Dark,
                                 dateTimeArange,Parse_TimeVect,TimeBin_From_TimeString)
 
 
-def F_New_Gr_Switch_Latency_GUI(Datas, TimeStamps, Mouse_Name, H_By_H=False, ts=3,
-                            tl=6, type_tr='Long', scale=1, Tend=15,
-                            Long_Side='r',isMEDDict={}):
+def F_New_Gr_Switch_Latency_GUI(Datas,TimeStamps,Mouse_Name,H_By_H=False,ts=3,tl=6, type_tr='Long',scale=1,Tend=15,Long_Side='r',isMEDDict={}):
+    """
+aggoingere qui la descrizione della funzione
+    """
 
     switch_dict = {}
     table_dict = {}
@@ -355,7 +356,6 @@ def create_np_activity(Y,TimeStamps,startTrial='Center Light On'):
     
     return(left_in,left_out,right_in,right_out,start,stop)
 def F_Actogram_GUI(Y,Start_Time,End_Time,interval,TimeStamps,*period,**kwargs):
-
     """
     Function targets: This function calculate the numbers of NP per interval of time
                     (interval length is given as input).
