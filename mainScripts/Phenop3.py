@@ -515,8 +515,8 @@ class Msg_Server(QMainWindow):
                 self.send_email_thread.initialize(Id, self.block_num[Id],
                                                   self.pdict,self.__password) ##### AGGIUNGI EMAIL TYPE
                 self.send_email_thread.start()
-            if action == 50: # bactery level
-                self.update_bactery(Id,log)
+            if action == 50: # battery level
+                self.update_battery(Id,log)
 
             self.logString[Id] += log
             if self.finalizing:
@@ -598,8 +598,8 @@ class Msg_Server(QMainWindow):
        for Id in lisId:
             self.dict_cage_widget[Id].setPath2save(Dir)
             
-    def update_bactery(self,Id,level):
-        self.dict_cage_widget[Id].setBacteryLevel(level)
+    def update_battery(self,Id,level):
+        self.dict_cage_widget[Id].setBatteryLevel(level)
                     
     def add_stack(self, list_of_msg):
         DT = 50

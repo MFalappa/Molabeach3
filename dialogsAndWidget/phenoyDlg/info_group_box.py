@@ -64,7 +64,7 @@ class info_group_box(QWidget):
             self.verticalLayout.addWidget(self.label_2)
         self.label_3 = QLabel('Status:', self.groupBox_info)
         self.verticalLayout.addWidget(self.label_3)
-        self.label_4 = QLabel('Bactery level:')
+        self.label_4 = QLabel('Battery level:')
         self.verticalLayout.addWidget(self.label_4)
         self.label_5 = QLabel('Directory to save:')
         self.verticalLayout.addWidget(self.label_5)
