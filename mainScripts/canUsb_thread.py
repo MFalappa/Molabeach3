@@ -12,8 +12,8 @@ file_dir = os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__fi
 sys.path.append(os.path.join(file_dir,'libraries'))
 from PyQt5.QtCore import pyqtSignal,QThread,QTimer
 from Modify_Dataset_GUI import OrderedDict
-from time import sleep
-#import binascii
+#from time import sleep
+import binascii
 from serial.tools import list_ports
 
 # message flags
@@ -56,6 +56,15 @@ class CANMsg(Structure):
             else:
                 s = s + '00'
         return s
+    
+    def to_byte(self):
+        x = b't'
+        x = (x + bytes(hex(self.id)[2:],'utf-8') + 
+             bytes(hex(self.len)[2:],'utf-8')+
+             binascii.hexlify(self.data))
+        x = x + b'\r'
+                          
+        return x
         
     def copy(self):
         m = CANMsg()
@@ -92,43 +101,49 @@ class recievingCanUsbThread(QThread):
         self.exec_()
         
     def connectCanUsb(self):
-        self.canUsb = serial.Serial(self.serialPort, baudrate=500000,timeout=1)
-        print('va connesso con readSerial')
+        self.canUsb = serial.Serial(self.serialPort, baudrate=500000,timeout=0)
+        self.canUsb.write(OPEN)
+        self.canUsb.write(CLOSE)
+        self.canUsb.write(canbaud+CR)
+        self.canUsb.write(OPEN)
+        
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.readSerial)
+        self.timer.start(1)
+        self.exec_()
         
     def readSerial(self):
         self.timer.stop()
         byte = self.canUsb.read() 
         if byte is not b'':
             if byte[0] == 116:
-                print('qui')
                 while byte[-1] != 13:
-                    print('qua')
                     byte += self.canUsb.read()
                 
+#                print('byte is: ', byte)
                 msg = CANMsg()
                 msg.id = int(byte[1:4],16)
-                if not msg.id in list(self.address_dict.keys()):
-                    msg.len = int(byte[4:5],16)
-                    byteNew = byte[-3:-1] + b'0'*(16-2*msg.len)
-                    list_msg = []
-                    for kk in range(0,len(byteNew),2):
-                        list_msg += [int(byteNew[kk:kk+2],16)]
-                    X = (c_ubyte * 8)(*[c_ubyte(c) for c in list_msg])
-                    print(X)
-                    msg.data = X
-                    self.addNewDevice.emit(msg)
+                msg.len = int(byte[4:5],16)
+                byteNew = byte[-3:-1] + b'0'*(16-2*msg.len)
+                list_msg = []
+                for kk in range(0,len(byteNew),2):
+                    list_msg += [int(byteNew[kk:kk+2],16)]
+                X = (c_ubyte * 8)(*[c_ubyte(c) for c in list_msg])
+                msg.data = X
+                self.recieved.emit(msg)
 
         self.timer = QTimer()    
-        self.timer.timeout.connect(self.add_new_address)
+        self.timer.timeout.connect(self.readSerial)
         self.timer.start(1)
+        
+    def writeSerial(self,byte_msg):
+        self.canUsb.write(byte_msg)
 
     def terminate(self):
         if self.isRunning() == True:
             self.exit()
             self.wait() 
-            print('all disconnected')
         super(recievingCanUsbThread,self).terminate()
-        print('thread reciever terminated ')
 
 
 
@@ -174,7 +189,7 @@ class canUsb_thread(QThread):
                     for kk in range(0,len(byteNew),2):
                         list_msg += [int(byteNew[kk:kk+2],16)]
                     X = (c_ubyte * 8)(*[c_ubyte(c) for c in list_msg])
-                    print(X)
+#                    print(X)
                     msg.data = X
                     self.addNewDevice.emit(msg)
 
@@ -184,17 +199,19 @@ class canUsb_thread(QThread):
 
  
 def parsing_can_log(message):
-    print('io sono il messaggio lanciato')
-    print(message)
+    print('===============================')
+    print('message is: ', message)
+    print('Log', 55, '%d\t%d\n'%(int(message.dataAsHexStr()[4:12],16),
+                                              message.data[6]))
     if message.data[0] is 76 and message.data[1] is 1:
         Id = message.id - 640
         return 'Log', Id, '%d\t%d\n'%(int(message.dataAsHexStr()[4:12],16),
                                               message.data[6])
-    elif message.data[0] is 96 and message.data[1] is 2:
+    elif message.data[0] is 35 and message.data[1] is 2:
         if message.data[3] is 5:
-            return 'Set Date',message.id-1408, None
+            return 'Set Date',message.id-1536, None
         elif message.data[3] is 6:
-            return 'Set Time',message.id-1408, None
+            return 'Set Time',message.id-1536, None
             
     elif message.data[0] is 96:
         Id = message.id - 1408
@@ -215,10 +232,13 @@ def parsing_can_log(message):
         elif message.data[3] == 6:
             return 'Time',Id, '%d:%d:%d'%(message.data[7],message.data[6],
                                    message.data[5])
+    elif message.data[0] is 127:
+        return
+    
     else:
-        print('matto')
-        return 'Set Date',message.id-1408, None
-#        print('Not recognize data')
+#        print('Not recognize data: ', message.data[0])
+        return 'Log',message.id-1408, None
+
 #        print(message,'\n')
 #        raise ValueError
   

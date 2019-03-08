@@ -132,6 +132,7 @@ class find_device_or_analysis(QDialog):
     @pyqtSlot()
     def startThread_can(self):
         self.MODE = 0 
+        self.serialPort = self.canusb
         self.thread = canUsb_thread(self.canusb,parent=self)
         self.thread.start()
         self.thread.addNewDevice.connect(self.add_text)
@@ -252,8 +253,8 @@ class Msg_Server(QMainWindow):
 
 #===============================================================================
         #questo va sistemato
-#        self.write_if_stack   # controlla se ci sono mex in stack e li manda
-#        self.timer_stack.timeout.connect()
+        self.write_if_stack()   # controlla se ci sono mex in stack e li manda
+        self.timer_stack.timeout.connect(self.timeout_time)
 #        self.connect(self.timer_stack, SIGNAL('timeout()'),
 
 #        if check_status_every is None:
@@ -563,13 +564,17 @@ class Msg_Server(QMainWindow):
         dialog.show()
    
     def sendMessage(self,msg): 
-        print('manda un messaggio')
 #        try:
 #            print('Write message:',binascii.hexlify(msg))
 #        except: 
 #            print('Write message:',msg)
 #        
-        self.serialPort.write(msg)
+        print('scrivo questo: ',msg.to_byte())
+        if self.MODE == 0:
+            self.Reader.writeSerial(msg.to_byte())
+        else:
+            self.serialPort.write(msg)
+        
         return 
 
         
@@ -612,29 +617,27 @@ class Msg_Server(QMainWindow):
             self.timer_stack.start(DT)
     
     def write_if_stack(self):
-        print('fare qualcosa')
-
-#        MAXCOUNTER = 10
-#        DT = 1500
-#        if self.stack_counter <= MAXCOUNTER:
-#            if self.stack_list:
-#                self.sendMessage(self.stack_list[0][0])
-#                self.timer_stack.stop()
-#                self.timer_stack.start(DT)
-#                self.stack_counter += 1
-#            else:
-#                self.stack_counter = 0
-#                self.timer_stack.stop()
-#        else:
-#            if self.stack_list:
-#                msg = self.stack_list.pop(0)[0]
-#                self.write_if_stack()
-#                self.stack_counter = 0
-#                string = 'Cannot send a message\n' + stringFromMsg(msg)
-#                dialog = QMessageBox(QMessageBox.Warning,'Cannot send a message',string,
-#                                QMessageBox.Ok,parent=self)
-#                dialog.show()
-#    
+        MAXCOUNTER = 10
+        DT = 1500
+        if self.stack_counter <= MAXCOUNTER:
+            if self.stack_list:
+                self.sendMessage(self.stack_list[0][0])
+                self.timer_stack.stop()
+                self.timer_stack.start(DT)
+                self.stack_counter += 1
+            else:
+                self.stack_counter = 0
+                self.timer_stack.stop()
+        else:
+            if self.stack_list:
+                msg = self.stack_list.pop(0)[0]
+                self.write_if_stack()
+                self.stack_counter = 0
+                string = 'Cannot send a message\n' + msg
+                dialog = QMessageBox(QMessageBox.Warning,'Cannot send a message',string,
+                                QMessageBox.Ok,parent=self)
+                dialog.show()
+    
     def check_answ(self, msg):
         self.timer_stack.stop()
         if not self.stack_list:
@@ -652,13 +655,10 @@ class Msg_Server(QMainWindow):
             self.write_if_stack()
     
     def start_message_gui(self):
-        print('lancio la gui')
         bl = self.get_not_recording_box()
         box_list = []
         for ID in bl:
             box_list += [(ID,self.source_address[ID])]
-            print(ID)
-            print(self.source_address[ID])
         self.microsystemGUI = msg_sender_gui(box_list=box_list, MODE=self.MODE, parent=self)
         self.microsystemGUI.sendGUImessage.connect(self.sendGUIMessage)
         self.microsystemGUI.show()
@@ -668,6 +668,9 @@ class Msg_Server(QMainWindow):
     
     def sendGUIMessage(self,msg_list):
         self.add_stack(msg_list)
+        
+    def timeout_time(self):
+        self.write_if_stack() 
         
     def closeEvent(self, event):
         if self.Phenopy3:
