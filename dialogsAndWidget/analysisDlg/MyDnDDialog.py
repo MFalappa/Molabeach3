@@ -18,27 +18,30 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import sys
 import os
 from PyQt5.QtCore import (QByteArray, QDataStream, QIODevice, QMimeData,
-        QPoint, pyqtSignal)
+        QPoint, pyqtSignal, Qt)
 
 
 from PyQt5.QtWidgets import (QAbstractItemView, QGridLayout,QDialog,
                              QApplication,QListWidgetItem,QListWidget)
 
 from PyQt5.QtGui import (QCursor,QDrag, QIcon)
-from PyQt5.QtCore import Qt
+
 
 
 class MyDnDListWidget(QListWidget):
+    dropped = pyqtSignal(int)
+    dragged = pyqtSignal(int)
     def __init__(self, parent=None):
         super(MyDnDListWidget, self).__init__(parent)
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        
+
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasFormat("application/x-icon-and-text"):
             event.accept()
-            #event.ignore()
         else:
             event.ignore()
 
@@ -47,8 +50,6 @@ class MyDnDListWidget(QListWidget):
         if event.mimeData().hasFormat("application/x-icon-and-text"):
             event.setDropAction(Qt.MoveAction)
             event.accept()
-            
-            #event.ignore()
         else:
             event.ignore()
 
@@ -56,7 +57,6 @@ class MyDnDListWidget(QListWidget):
     def dropEvent(self, event):
         
         if event.mimeData().hasFormat("application/x-icon-and-text"):
-            
             data = event.mimeData().data("application/x-icon-and-text")
             stream = QDataStream(data, QIODevice.ReadOnly)
             num_drag = stream.readInt()
@@ -69,7 +69,6 @@ class MyDnDListWidget(QListWidget):
                 items=self.findItems(text,Qt.MatchExactly)
                 if len(items)>1:
                     event.setDropAction(Qt.CopyAction)
-                    #self.takeItem(self.row(items[0]))
                     event.ignore()
                     print('Ignora')
                 else:
@@ -81,49 +80,19 @@ class MyDnDListWidget(QListWidget):
                     else:
                         drop_row += 1
                     self.insertItem(drop_row, item)
-#                    self.addItem(item) 
                     event.setDropAction(Qt.MoveAction)
                     event.accept()
-#                    self.emit(pyqtSignal('dropped()'))
-                
+                    self.dropped.emit(drop_row)      
         else:
             event.ignore()
-            
-#            stream = QDataStream(data, QIODevice.ReadOnly)
-#            text = stream.readQString()
-##            self.setText(text)
-#            icon = QIcon()
-#            stream >> icon
-#            item = QListWidgetItem(text)#, self) # questo self serve a dire, creami un item di questa lista
-#            
-##   al posto del self potrei mettere
-#                       
-#            item.setIcon(icon)
-#            items=self.findItems(text,Qt.MatchExactly)
-#            #print(len(items))
-#            if len(items)>0:
-#                event.setDropAction(Qt.CopyAction)
-#                #self.takeItem(self.row(items[0]))
-#                event.ignore()
-#               
-#                
-#            else:
-#                self.addItem(item) 
-#                event.setDropAction(Qt.MoveAction)
-#                event.accept()
-#                self.emit(SIGNAL('dropped()'))
-#            
-#        else:
-#            event.ignore()
+
 
     def startDrag(self, dropActions):
         list_items = self.selectedItems()
         data = QByteArray()
         stream = QDataStream(data, QIODevice.WriteOnly)
         stream.writeInt(len(list_items))
-        for item in list_items:
-#        item = self.currentItem()
-            
+        for item in list_items:            
             icon = item.icon()
             stream.writeQString(item.text())
             stream << icon
@@ -137,7 +106,7 @@ class MyDnDListWidget(QListWidget):
         if drag.exec_(Qt.MoveAction) == Qt.MoveAction:
             for item in list_items:
                 self.takeItem(self.row(item))
-#            self.emit(pyqtSignal('dragged()'))
+            self.dragged.emit(list_items)
             
 class Form(QDialog):
 

@@ -31,6 +31,7 @@ import traceback
 #from Plotting_GUI import *
 
 class analysisGroup_thread(QThread):
+    threadFinished = pyqtSignal()
     def __init__(self, Datas, lock, parent = None):
         super(analysisGroup_thread, self).__init__(parent)
         self.lock = lock
@@ -60,7 +61,8 @@ class analysisGroup_thread(QThread):
     def run(self):
         self.outputData, self.inputForPlots, self.info =\
             self.analyze(self.analysisName)
-        self.emit(pyqtSignal('threadFinished()'))
+        self.threadFinished.emit()
+#        self.emit(pyqtSignal('threadFinished()'))
         
     def setInput(self, Input, DataList):
         self.Input = Input

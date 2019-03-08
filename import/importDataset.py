@@ -145,7 +145,7 @@ or the following: Epoch, Stage, Time, Delta + power from Theta, Gamma,...
     flagBreak = False
     line = fh.readline()
     while line:
-        print(line)
+#        print(line)
         for head in ['EpochNo',	'Stage','Time',	'0.000000Hz']:
             if head in line:
                 flagBreak = True

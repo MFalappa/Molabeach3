@@ -16,7 +16,7 @@
 
 
 import sys
-from PyQt5.QtCore import (QPluginLoader, pyqtSlot)
+from PyQt5.QtCore import (QPluginLoader)
 from PyQt5.QtWidgets import (QApplication, QDialog, QVBoxLayout, QHBoxLayout,
                          QLabel, QLineEdit,QListWidgetItem, QGridLayout, 
                          QDialogButtonBox,QComboBox)
@@ -96,10 +96,9 @@ class CreateGroupsDlg(QDialog):
         VLayout.addWidget(self.ButtonBox)
         self.setLayout(VLayout)
         
-        self.ButtonBox.accepted.connect(pyqtSlot())
-        self.ButtonBox.rejected.connect(pyqtSlot())
-#        self.connect(self.ButtonBox,SIGNAL('rejected()'),self,SLOT('reject()'))
-#        self.connect(self.ButtonBox,SIGNAL('accepted()'),self,SLOT('accept()'))
+        self.ButtonBox.accepted.connect(self.accept)
+        self.ButtonBox.rejected.connect(self.reject)
+
         
         
         self.filterComboBox.currentIndexChanged[int].connect(self.refreshDataList)
@@ -109,13 +108,16 @@ class CreateGroupsDlg(QDialog):
         self.filterComboBox.setCurrentIndex(0)
         self.refreshDataList()
         
-        self.dataListWidget.dropEvent(lambda Key=None:self.enableOk(Key))
-        self.dataListWidget.startDrag(self.startDrag)
+#        self.dataListWidget.dropEvent(lambda Key=None:self.enableOk(Key))
+        
+        self.dataListWidget.dropped.connect(lambda Key=None:self.enableOk(Key))
+        self.dataListWidget.dragged.connect(self.startDrag)
 #        self.connect(self.dataListWidget,SIGNAL('dropped()'),lambda Key=None:self.enableOk(Key))
 #        self.connect(self.dataListWidget,SIGNAL('dragged()'),self.startDrag)
         for key in list(self.groupListWidget.keys()):
-            self.groupListWidget[key].dropEvent(lambda Key=key:self.refreshAllData(Key))
-            self.groupListWidget[key].startDrag(lambda Key=key:self.enableOk(Key))
+            
+            self.groupListWidget[key].dropped.connect(lambda Key=key:self.refreshAllData(Key))
+            self.groupListWidget[key].dragged.connect(lambda Key=key:self.enableOk(Key))
 #            self.connect(self.groupListWidget[key],SIGNAL('dropped()'), lambda Key=key:self.refreshAllData(Key))
 #            self.connect(self.groupListWidget[key],SIGNAL('dragged()'),lambda Key=key:self.enableOk(Key))    
         self.setWindowTitle("Select Groups")
@@ -143,7 +145,7 @@ class CreateGroupsDlg(QDialog):
                 self.dataListWidget.addItem(item)
                 print('added an item to datalistwidget')
                 return
-        
+            print('matte',ThisKey )
             itemInd = self.groupListWidget[ThisKey].count() - 1
             item = self.groupListWidget[ThisKey].item(itemInd)
             try:

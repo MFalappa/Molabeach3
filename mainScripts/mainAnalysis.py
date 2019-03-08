@@ -32,7 +32,7 @@ sys.path.append(os.path.join(file_dir,'export'))
 sys.path.append(os.path.join(file_dir,'future'))
 sys.path.append(import_dir)
 
-from PyQt5.QtCore import (QFile, QSettings,QTimer, Qt, QReadWriteLock)
+from PyQt5.QtCore import (QSettings,QTimer, Qt, QReadWriteLock)
 from PyQt5.QtWidgets import (QAction, QApplication, QDockWidget, QFileDialog,
                              QFrame, QInputDialog, QLabel, QListWidget, 
                              QListWidgetItem,QMainWindow, QMessageBox,
@@ -47,7 +47,7 @@ from pairDataDlg import pairDataDlg
 from datainfodlg import datainfodlg 
 from protocol_save_files import load_npz,save_data_container
 from AnalysisSingle_Std import analysisSingle_thread
-from SearchDlg import SearchDlg
+#from SearchDlg import SearchDlg
 from input_Dlg_std import inputDialog
 from CreateGroupsDlg import CreateGroupsDlg   
 from copy import copy
@@ -76,7 +76,7 @@ from Modify_Dataset_GUI import (OrderedDict,DatasetContainer_GUI,Dataset_GUI,
 from AnalysisGroup_Std  import analysisGroup_thread
 from analysis_data_type_class import refreshTypeList
 
-from spikeGUI import spk_gui
+#from spikeGUI import spk_gui
 from sleepGUI import sleep_gui_class
 from behavGUI import behav_gui_class
 #from integrariveGUI import *
@@ -780,8 +780,7 @@ class MainWindow(QMainWindow):
         func = lambda : self.removeTab(sleep_gui_class)
         dlg.closeSig.connect(func)
         dlg.startAnalysisSignal.connect(self.startAnalysis)
-        print('non funziona la connessione a remouve tab')
-        
+    
         
     def startBehaviourAnalysis(self):
         if type(self.centralWidget()) is QTabWidget:
@@ -808,7 +807,6 @@ class MainWindow(QMainWindow):
         print('o forse potremmo lasciare come è gia ora, parliamone')
     
     def removeTab(self,tabName):
-        print('questo rimuove il widget centrale dopo la chiusura')
         tabWidget = self.centralWidget()
         for idx in range(tabWidget.count()):
             if type(tabWidget.widget(idx)) == tabName:
@@ -967,7 +965,7 @@ class MainWindow(QMainWindow):
         return Input
 
     def disableActionDuringAnalysis(self,Type):
-        self.analysisAction.setEnabled(False)
+#        self.analysisAction.setEnabled(False)
         self.renameDatasetAction.setEnabled(False)
 #        self.rescaleADatasetAction.setEnabled(False)
         self.removeAllDatasetAction.setEnabled(False)
@@ -975,7 +973,7 @@ class MainWindow(QMainWindow):
         
     def enableActionAfterAnalysis(self,Type):
         
-        self.analysisAction.setEnabled(True)
+#        self.analysisAction.setEnabled(True)
         self.renameDatasetAction.setEnabled(True)
 #        self.rescaleADatasetAction.setEnabled(True)
         self.removeAllDatasetAction.setEnabled(True)

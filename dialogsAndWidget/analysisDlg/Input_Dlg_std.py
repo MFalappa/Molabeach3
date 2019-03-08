@@ -331,7 +331,8 @@ class inputDialog(QDialog):
             spacerItem=QSpacerItem(40, 20, QSizePolicy.Expanding,\
                                     QSizePolicy.Minimum)
             VLayout.addSpacerItem(spacerItem)
-            self.connect(browseButton,pyqtSignal('clicked()'),self.getDir)
+            browseButton.clicked.connect(self.getDir)
+#            self.connect(browseButton,pyqtSignal('clicked()'),self.getDir)
         
         if NewDataLineEdit:
             LabelNewData = QLabel('<b>Dataset Names</b> (spearated by ;):')
@@ -344,64 +345,116 @@ class inputDialog(QDialog):
             
            
         if folderSave and NewDataLineEdit:
-            self.connect(self.NewDataLineEdit,pyqtSignal('textEdited (const QString&)'),
-                         lambda par=None,ToF=False, ToF2 = True:\
+            self.NewDataLineEdit.textEdited[str].connect(lambda par=None,ToF=False, ToF2 = True:\
                          self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
-            self.connect(self.LineEditFileSaveDir, pyqtSignal('textChanged (const QString&)'),
-                     lambda par=None,ToF=False, ToF2 = True:\
+            
+#            self.connect(self.NewDataLineEdit,pyqtSignal('textEdited (const QString&)'),
+#                         lambda par=None,ToF=False, ToF2 = True:\
+#                         self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
+            
+            self.LineEditFileSaveDir.textEdited[str].connect(lambda par=None,ToF=False, ToF2 = True:\
                      self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
-            self.connect(self.saveCheckBox,pyqtSignal('stateChanged (int)'),
-                         lambda ToF=False, ToF2 = True:\
+#            
+#            self.connect(self.LineEditFileSaveDir, pyqtSignal('textChanged (const QString&)'),
+#                     lambda par=None,ToF=False, ToF2 = True:\
+#                     self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
+            
+            self.saveCheckBox.stateChanged[int].connect(lambda ToF=False, ToF2 = True:\
                          self.enableOk(BoolData=ToF,BoolSave=ToF2))
+            
+#            self.connect(self.saveCheckBox,pyqtSignal('stateChanged (int)'),
+#                         lambda ToF=False, ToF2 = True:\
+#                         self.enableOk(BoolData=ToF,BoolSave=ToF2))
+            
             if self.ActivityListBool:
-                self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
-                             lambda ToF=True,ToF2 = True:\
+                self.activitySelectedWidget.dropped.connect(lambda ToF=True,ToF2 = True:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
-                self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
-                             lambda ToF=True,ToF2 = True:\
+                
+#                self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
+#                             lambda ToF=True,ToF2 = True:\
+#                             self.enableOk(BoolData=ToF,BoolSave=ToF2))
+                
+                self.activitySelectedWidget.dragged.connect(lambda ToF=True,ToF2 = True:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
+                
+#                self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
+#                             lambda ToF=True,ToF2 = True:\
+#                             self.enableOk(BoolData=ToF,BoolSave=ToF2))
         elif folderSave:
             print('folderSave Connect')
-            self.connect(self.LineEditFileSaveDir, pyqtSignal('textChanged (const QString&)'),
-                     lambda par=None,ToF=True, ToF2 = True:\
+            self.LineEditFileSaveDir.textChanged[str].connect(lambda par=None,ToF=True, ToF2 = True:\
                      self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
-            self.connect(self.saveCheckBox,pyqtSignal('stateChanged (int)'),
-                         lambda par=None,ToF=True, ToF2 = True:\
+            
+#            self.connect(self.LineEditFileSaveDir, pyqtSignal('textChanged (const QString&)'),
+#                     lambda par=None,ToF=True, ToF2 = True:\
+#                     self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
+            
+            self.saveCheckBox.stateChanged[int].connect(lambda par=None,ToF=True, ToF2 = True:\
                          self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
+            
+#            self.connect(self.saveCheckBox,pyqtSignal('stateChanged (int)'),
+#                         lambda par=None,ToF=True, ToF2 = True:\
+#                         self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
+           
             if self.ActivityListBool:
-                self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
-                             lambda ToF=True,ToF2 = True:\
+                self.activitySelectedWidget.dropped.connect(lambda ToF=True,ToF2 = True:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
-                self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
-                             lambda ToF=True,ToF2 = True:\
+                
+#                self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
+#                             lambda ToF=True,ToF2 = True:\
+#                             self.enableOk(BoolData=ToF,BoolSave=ToF2))
+                
+                self.activitySelectedWidget.dragged.connect(lambda ToF=True,ToF2 = True:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
+                
+#                self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
+#                             lambda ToF=True,ToF2 = True:\
+#                             self.enableOk(BoolData=ToF,BoolSave=ToF2))
                          
         elif NewDataLineEdit:
-            self.connect(self.NewDataLineEdit,pyqtSignal('textEdited (const QString&)'),
-                         lambda par=None,ToF=False, ToF2 = False:\
+            self.NewDataLineEdit.textEdited[str].connect(lambda par=None,ToF=False, ToF2 = False:\
                          self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
+            
+#            self.connect(self.NewDataLineEdit,pyqtSignal('textEdited (const QString&)'),
+#                         lambda par=None,ToF=False, ToF2 = False:\
+#                         self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
             if self.ActivityListBool:
-                self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
-                             lambda ToF=True,ToF2 = False:\
+                self.activitySelectedWidget.dropped.connect(lambda ToF=True,ToF2 = False:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
-                self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
-                             lambda ToF=True,ToF2 = False:\
+                
+#                self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
+#                             lambda ToF=True,ToF2 = False:\
+#                             self.enableOk(BoolData=ToF,BoolSave=ToF2))
+                
+                self.activitySelectedWidget.dragged.connect(  lambda ToF=True,ToF2 = False:\
                              self.enableOk(BoolData=ToF,BoolSave=ToF2))
+                
+#                self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
+#                             lambda ToF=True,ToF2 = False:\
+#                             self.enableOk(BoolData=ToF,BoolSave=ToF2))
         elif self.ActivityListBool:
-            self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
-                         lambda ToF=True,ToF2 = False:\
+            self.activitySelectedWidget.dropped.connect( lambda ToF=True,ToF2 = False:\
                          self.enableOk(BoolData=ToF,BoolSave=ToF2))
-            self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
-                         lambda ToF=True,ToF2 = False:\
+            
+#            self.connect(self.activitySelectedWidget,pyqtSignal('dropped()'),
+#                         lambda ToF=True,ToF2 = False:\
+#                         self.enableOk(BoolData=ToF,BoolSave=ToF2))
+            
+            self.activitySelectedWidget.dragged.connect(lambda ToF=True,ToF2 = False:\
                          self.enableOk(BoolData=ToF,BoolSave=ToF2))
+            
+#            self.connect(self.activitySelectedWidget,pyqtSignal('dragged()'),
+#                         lambda ToF=True,ToF2 = False:\
+#                         self.enableOk(BoolData=ToF,BoolSave=ToF2))
         
         spacerItem=QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         VLayout.addSpacerItem(spacerItem)
         VLayout.addWidget(self.ButtonBox)      
         self.setLayout(VLayout)
         
-        self.connect(self.ButtonBox,pyqtSignal('rejected()'),self)
-        self.connect(self.ButtonBox,pyqtSignal('accepted()'),self)
+        self.ButtonBox.accepted.connect(self.accept)
+        self.ButtonBox.rejected.connect(self.reject)
+       
 #        self.connect(self.ButtonBox,pyqtSignal('rejected()'),self,SLOT('reject()'))
 #        self.connect(self.ButtonBox,pyqtSignal('accepted()'),self,SLOT('accept()'))
         self.setWindowTitle('Input Dialog')
