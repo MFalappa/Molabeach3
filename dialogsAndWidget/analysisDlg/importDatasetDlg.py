@@ -33,6 +33,7 @@ from importLauncher import launchLoadingFun
 
 
 class importDlg(QDialog,Ui_Dialog):
+    closeSig = pyqtSignal(str,name='importSig')
     errorImport = pyqtSignal(str,name='importErrorSignal')
     def __init__(self, parent=None):
         
@@ -55,7 +56,7 @@ class importDlg(QDialog,Ui_Dialog):
         self.textBrowser_descr.setText(self.descr_dict[str(self.comboBox.currentText())]) 
         
         self.comboBox.currentIndexChanged[str].connect(self.setDescription)
-        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_cancel.clicked.connect(self.closeTab)
         self.pushButton.clicked.connect(self.getFiles)
         self.pushButton_load.clicked.connect(self.loadData)
         
@@ -131,6 +132,11 @@ class importDlg(QDialog,Ui_Dialog):
             line = fh.readline()
         fh.close()
 
+    def closeTab(self):
+        self.close()
+        self.closeSig.emit('close_import_data')
+        super(importDlg, self).close()
+        
 def main():
     import sys
     

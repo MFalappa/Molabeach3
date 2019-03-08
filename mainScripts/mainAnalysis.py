@@ -447,9 +447,25 @@ class MainWindow(QMainWindow):
             
         
     def importExternalData(self):
+        
+        if type(self.centralWidget()) is QTabWidget:
+            tabWidget = self.centralWidget()
+            for idx in range(tabWidget.count()):
+                if type(tabWidget.widget(idx)) == importDlg:
+                    return
+        else:
+            tabWidget = QTabWidget() 
+        
         dlg = importDlg(parent=self)
         dlg.errorImport.connect(self.listWidgetRight.addItem)
-        dlg.show()
+        tabWidget.addTab(dlg,'Import data')
+        self.setCentralWidget(tabWidget)
+        func = lambda : self.removeTab(importDlg)
+        dlg.closeSig.connect(func)
+        
+#        dlg = importDlg(parent=self)
+#        dlg.errorImport.connect(self.listWidgetRight.addItem)
+#        dlg.show()
     
     def on_context_menu(self, point):
         self.listWidgetLeftMenu.exec_(self.listWidgetLeftMenu.mapToGlobal(point))  

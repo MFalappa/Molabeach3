@@ -70,7 +70,7 @@ class inputDialog(QDialog):
                  NewDataLineEdit=None,DatasetNum=1, ActivityList=None,
                  folderSave = False,RadioButton=None, Range=None,TimeRange=None, PhaseSel=None,parent=None):
         super(inputDialog,self).__init__(parent)
-        print('init started')
+#        print('init started')
         self.ComboBox=OrderedDict()
         self.HourSpinBox=OrderedDict()
         self.MinuteSpinbox=OrderedDict()
