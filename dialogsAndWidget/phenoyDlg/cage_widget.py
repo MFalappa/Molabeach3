@@ -131,9 +131,9 @@ class cage_widget(QWidget):
        self.path2save = Dir
        self.prog_info.labelDir.setText(self.path2save)
        
-    def setBacteryLevel(self,level):
-        self.bacterylevel = level
-        self.prog_info.bacterylevel_label.setText(self.bacterylevel)
+    def setBatteryLevel(self,level):
+        self.batterylevel = level
+        self.prog_info.bacterylevel_label.setText(self.batterylevel)
 
 def main():
     app = QApplication(sys.argv)

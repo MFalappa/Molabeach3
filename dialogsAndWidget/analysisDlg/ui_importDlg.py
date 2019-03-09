@@ -96,6 +96,6 @@ class Ui_Dialog(object):
         self.pushButton.setText(_translate("Dialog", "Select..."))
         self.label.setText(_translate("Dialog", "Choose importing function:"))
         self.label_2.setText(_translate("Dialog", "Importing function description:"))
-        self.pushButton_cancel.setText(_translate("Dialog", "Cancel"))
+        self.pushButton_cancel.setText(_translate("Dialog", "Close"))
         self.pushButton_load.setText(_translate("Dialog", "Load..."))
 

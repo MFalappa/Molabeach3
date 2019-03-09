@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'sleepGUI2.ui'
+# Form implementation generated from reading ui file 'integrativeGUI2.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -12,7 +12,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(598, 459)
-        Dialog.setStyleSheet("background-color: rgb(254, 192, 122);")
+        Dialog.setStyleSheet("background-color:rgb(23, 186, 255)")
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout(Dialog)
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
         self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
@@ -26,7 +26,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         font.setWeight(75)
         self.label_3.setFont(font)
-        self.label_3.setStyleSheet("background-color: rgb(174, 220, 255);")
+        self.label_3.setStyleSheet("background-color: rgb(254, 177, 78)")
         self.label_3.setObjectName("label_3")
         self.horizontalLayout_4.addWidget(self.label_3)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
@@ -50,7 +50,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         font.setWeight(75)
         self.label.setFont(font)
-        self.label.setStyleSheet("background-color: rgb(174, 220, 255);")
+        self.label.setStyleSheet("background-color: rgb(254, 177, 78)")
         self.label.setObjectName("label")
         self.horizontalLayout_3.addWidget(self.label)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -58,7 +58,8 @@ class Ui_Dialog(object):
         self.verticalLayout_3.addLayout(self.horizontalLayout_3)
         self.comboBox = QtWidgets.QComboBox(Dialog)
         self.comboBox.setAutoFillBackground(False)
-        self.comboBox.setStyleSheet("selection-color: rgb(44, 179, 255);")
+        self.comboBox.setStyleSheet("selection-color: rgb(254, 177, 78)\n"
+" ")
         self.comboBox.setObjectName("comboBox")
         self.verticalLayout_3.addWidget(self.comboBox)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
@@ -68,7 +69,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         font.setWeight(75)
         self.label_2.setFont(font)
-        self.label_2.setStyleSheet("background-color: rgb(174, 220, 255);")
+        self.label_2.setStyleSheet("background-color: rgb(254, 177, 78)")
         self.label_2.setObjectName("label_2")
         self.horizontalLayout_2.addWidget(self.label_2)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -85,7 +86,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         font.setWeight(75)
         self.label_4.setFont(font)
-        self.label_4.setStyleSheet("background-color: rgb(174, 220, 255);")
+        self.label_4.setStyleSheet("background-color: rgb(254, 177, 78)")
         self.label_4.setObjectName("label_4")
         self.horizontalLayout_6.addWidget(self.label_4)
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -132,7 +133,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.label_3.setText(_translate("Dialog", "Sleep data to analyze:"))
+        self.label_3.setText(_translate("Dialog", "Behaviour data to analyze:"))
         self.label.setText(_translate("Dialog", "Choose analysis function:"))
         self.label_2.setText(_translate("Dialog", "Analysis function description:"))
         self.label_4.setText(_translate("Dialog", "Analysis options:"))
