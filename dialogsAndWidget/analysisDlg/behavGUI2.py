@@ -31,9 +31,8 @@ from ui_behav_gui import Ui_Dialog
 
 class behavDlg(QDialog,Ui_Dialog):
     closeSig = pyqtSignal(str,name='chooseAnalysiSig')
-    errorChoose = pyqtSignal(str,name='analysisErrorSignal')
+    startAnalysisSignal = pyqtSignal(dict, name='beahviorAnalysis')
     def __init__(self,data,analysisDict,parent=None):
-#    def __init__(self,parent=None):
         super(behavDlg, self).__init__(parent)
         self.analysisDict = analysisDict
         
@@ -71,13 +70,16 @@ class behavDlg(QDialog,Ui_Dialog):
     def checkfile(self):
         print('qui ci va la tabella')
         self.pushButton_run.setEnabled(True)
-    
+
     def runAnalysis(self):
-        print('qui faccio partire le analisi')
-        print('se ho capito bene guarda cosa c è nella tabella')
-        print('guarda l analisi selezionata e i parametri (es sleep, rem wake.)')
-        print('e manda tutto a phenopy che lancia effettivamente l analisi')
-                     
+        selectedAnalysis = self.comboBox.currentText()
+        for typeOfAnalysis in list(self.analysisDict.keys()):
+            if selectedAnalysis in list(self.analysisDict[typeOfAnalysis].keys()):
+                acceptedTypes = self.analysisDict[typeOfAnalysis][selectedAnalysis]
+                break
+        dictSelection = {'anType': typeOfAnalysis, 'dataType': acceptedTypes, 'analysisName': selectedAnalysis}
+        self.startAnalysisSignal.emit(dictSelection)
+
     def showDescription(self,funName):
         self.textBrowser_descr.setText(self.descr_dict[funName])
         
