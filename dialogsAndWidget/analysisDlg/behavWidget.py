@@ -101,11 +101,13 @@ class behavDlg(QDialog):
 
     
     def checkfile(self):
-        print('qui ci va la tabella')
+        print('qui ci va la tabella??')
         self.pushButton_run.setEnabled(True)
 
     def runAnalysis(self):
-        selectedAnalysis = self.comboBox.currentText()
+        showed_name = self.comboBox.currentText()
+        selectedAnalysis = self.show_dict[showed_name]
+        
         for typeOfAnalysis in list(self.analysisDict.keys()):
             if selectedAnalysis in list(self.analysisDict[typeOfAnalysis].keys()):
                 acceptedTypes = self.analysisDict[typeOfAnalysis][selectedAnalysis]
