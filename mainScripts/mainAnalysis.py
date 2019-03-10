@@ -77,9 +77,9 @@ from AnalysisGroup_Std  import analysisGroup_thread
 from analysis_data_type_class import refreshTypeList
 
 #from spikeGUI import spk_gui
-from sleepGUI2 import sleepDlg
-from behavGUI2 import behavDlg
-from integrativeGUI2 import integrativeDlg
+from sleepWidget import sleepDlg
+from behavWidget import behavDlg
+from integrativeWidget import integrativeDlg
 from dragAndDropModes import dNdModeList
 
 __version__ = "2.0.0"
@@ -176,6 +176,7 @@ class MainWindow(QMainWindow):
         logDockWidgetRight.setAllowedAreas(Qt.RightDockWidgetArea)
         logDockWidgetRight.setMaximumWidth(300)
         self.listWidgetRight = QListWidget()
+        
         logDockWidgetRight.setWidget(self.listWidgetRight)
         self.addDockWidget(Qt.RightDockWidgetArea, logDockWidgetRight)
         
@@ -183,7 +184,8 @@ class MainWindow(QMainWindow):
         logDockWidgetLeft.setObjectName("LoadedDockWidgetLeft")
         logDockWidgetLeft.setAllowedAreas(Qt.LeftDockWidgetArea)                                      
         logDockWidgetLeft.setMaximumWidth(300)
-        self.listWidgetLeft = QListWidget()
+        
+        self.listWidgetLeft = dNdModeList(acceptDrag=True,acceptDrop=False)
         
         logDockWidgetLeft.setWidget(self.listWidgetLeft)
         self.addDockWidget(Qt.LeftDockWidgetArea, logDockWidgetLeft)
@@ -781,7 +783,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(tabWidget)
         func = lambda : self.removeTab(sleepDlg)
         dlg.closeSig.connect(func)
-#        dlg.startAnalysisSignal.connect(self.startAnalysis)
+        dlg.runAnalysisSig.connect(self.startAnalysis)
     
         
     def startBehaviourAnalysis(self):
@@ -802,7 +804,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(tabWidget)
         func = lambda : self.removeTab(behavDlg)
         dlg.closeSig.connect(func)
-        dlg.startAnalysisSignal.connect(self.startAnalysis)
+        dlg.runAnalysisSig.connect(self.startAnalysis)
     
     def startIntegrativeAnalysis(self):
         if type(self.centralWidget()) is QTabWidget:
@@ -822,7 +824,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(tabWidget)
         func = lambda : self.removeTab(integrativeDlg)
         dlg.closeSig.connect(func)
-        dlg.startAnalysisSignal.connect(self.startAnalysis)
+        dlg.runAnalysisSig.connect(self.startAnalysis)
         
         
     def removeTab(self,tabName):

@@ -19,25 +19,25 @@ libraries_fld = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../.."))
 sys.path.append(libraries_fld)
 
 
-from PyQt5.QtWidgets import (QDialog,QFileDialog,QApplication,QListWidgetItem)
+from PyQt5.QtWidgets import (QDialog,QLabel,QComboBox,QTextBrowser,QPushButton,
+                             QHBoxLayout,QVBoxLayout,QTableWidget,QSpacerItem,
+                             QSizePolicy,QApplication)
+
 from PyQt5.QtCore import (pyqtSignal,Qt)
-from PyQt5.QtGui import QIcon
 
 from Modify_Dataset_GUI import DatasetContainer_GUI
-from ui_behav_gui import Ui_Dialog
 #from importDataset import *
 #from importLauncher import launchLoadingFun
 
 
-class behavDlg(QDialog,Ui_Dialog):
-    closeSig = pyqtSignal(str,name='chooseAnalysiSig')
-    startAnalysisSignal = pyqtSignal(dict, name='beahviorAnalysis')
+class behavDlg(QDialog):
+    closeSig = pyqtSignal(str,name='closeSig')
+    runAnalysisSig = pyqtSignal(dict, name='beahvior')
     def __init__(self,data,analysisDict,parent=None):
         super(behavDlg, self).__init__(parent)
         self.analysisDict = analysisDict
-        
-        
         self.setAttribute(Qt.WA_DeleteOnClose)
+        
         if parent:
             try:
                 self.parent = parent
@@ -48,7 +48,45 @@ class behavDlg(QDialog,Ui_Dialog):
         else:
             self.parent = parent
             self.data_container = DatasetContainer_GUI()
-        self.setupUi(self)
+            
+        label = QLabel('<b>Behaviour data to analyze:</b>')
+        self.tableWidget = QTableWidget()
+
+        label1 = QLabel('<b>Choose analysis function:</b>')
+        self.comboBox = QComboBox()
+        
+        label2 = QLabel('<b>Analysis description:</b>')
+        self.textBrowser_descr = QTextBrowser()
+        
+        spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.pushButton_cancel = QPushButton("Close")
+        self.pushButton_run = QPushButton("Run")
+
+        vLayout_l = QVBoxLayout()
+        vLayout_l.addWidget(label)
+        vLayout_l.addWidget(self.tableWidget)
+        
+        vLayout = QVBoxLayout()
+        vLayout.addWidget(label1)
+        vLayout.addWidget(self.comboBox)
+        vLayout.addWidget(label2)
+        vLayout.addWidget(self.textBrowser_descr)
+        
+        hLayout_b = QHBoxLayout()
+        hLayout_b.addSpacerItem(spacerItem)
+        hLayout_b.addWidget(self.pushButton_cancel)
+        hLayout_b.addWidget(self.pushButton_run)
+        
+        vLayout_r = QVBoxLayout()
+        vLayout_r.addLayout(vLayout)
+        vLayout_r.addLayout(hLayout_b)
+        
+        hLayout = QHBoxLayout()
+        hLayout.addLayout(vLayout_l)
+        hLayout.addLayout(vLayout_r)
+        
+        self.setLayout(hLayout)
+        
         self.descr_dict = {}
         self.path_dict = {}
         self.populateCombo()
@@ -58,15 +96,8 @@ class behavDlg(QDialog,Ui_Dialog):
         self.pushButton_run.setEnabled(False)
         self.pushButton_run.clicked.connect(self.runAnalysis)
         self.pushButton_cancel.clicked.connect(self.closeTab)
-        
-        self.checkBox_save_excel.clicked.connect(self.closeTab)
-        self.checkBox_show_results.clicked.connect(self.closeTab)
-#        self.checkBox.clicked.connect(self.closeTab) sono le opzioni che dovebbero comparire 
-        #alla selezione dell'analisi specifica
 
-        
-
-       
+    
     def checkfile(self):
         print('qui ci va la tabella')
         self.pushButton_run.setEnabled(True)
@@ -78,7 +109,7 @@ class behavDlg(QDialog,Ui_Dialog):
                 acceptedTypes = self.analysisDict[typeOfAnalysis][selectedAnalysis]
                 break
         dictSelection = {'anType': typeOfAnalysis, 'dataType': acceptedTypes, 'analysisName': selectedAnalysis}
-        self.startAnalysisSignal.emit(dictSelection)
+        self.runAnalysisSig.emit(dictSelection)
 
     def showDescription(self,funName):
         self.textBrowser_descr.setText(self.descr_dict[funName])
@@ -89,7 +120,6 @@ class behavDlg(QDialog,Ui_Dialog):
 
         while line:
             if line.startswith(('def ','def\t')):
-                print('here sholde be placed the check for the analysis..if behav continue')
                 funName = (line[3:].replace(' ','')).replace('\t','')
                 funName = funName.split('(')[0]
                 if funName == 'main' or funName == 'create_laucher':
@@ -113,9 +143,9 @@ class behavDlg(QDialog,Ui_Dialog):
 
     def closeTab(self):
         self.close()
-        self.closeSig.emit('chooseAnalysiSig')
+        self.closeSig.emit('closeSig')
         super(behavDlg, self).close()
-        
+
 def main():
     import sys
     
