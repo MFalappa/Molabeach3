@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (QDialog,QLabel,QComboBox,QTextBrowser,QPushButton,
 from PyQt5.QtCore import (pyqtSignal,Qt)
 
 from Modify_Dataset_GUI import DatasetContainer_GUI
+from changeLabelshow import info_label
 #from importDataset import *
 #from importLauncher import launchLoadingFun
 
@@ -37,6 +38,7 @@ class sleepDlg(QDialog):
         super(sleepDlg, self).__init__(parent)
         self.analysisDict = analysisDict
         self.setAttribute(Qt.WA_DeleteOnClose)
+        
         if parent:
             try:
                 self.parent = parent
@@ -108,36 +110,33 @@ class sleepDlg(QDialog):
                 acceptedTypes = self.analysisDict[typeOfAnalysis][selectedAnalysis]
                 break
         dictSelection = {'anType': typeOfAnalysis, 'dataType': acceptedTypes, 'analysisName': selectedAnalysis}
-        self.startAnalysisSignal.emit(dictSelection)
+        self.runAnalysisSig.emit(dictSelection)
 
     def showDescription(self,funName):
         self.textBrowser_descr.setText(self.descr_dict[funName])
         
     def populateCombo(self):
-        fh = open(os.path.join(libraries_fld,'Analyzing_GUI.py'))
+        fh = open(os.path.join(libraries_fld,'analysis_functions.py'))
         line = fh.readline()
 
         while line:
             if line.startswith(('def ','def\t')):
                 funName = (line[3:].replace(' ','')).replace('\t','')
                 funName = funName.split('(')[0]
+                
                 if funName == 'main' or funName == 'create_laucher':
                     line = fh.readline()
                     continue
-                self.comboBox.addItem(funName)
+                                
+                label, description, type_func = info_label(funName)
+                if type_func == 'Sleep':
+                    self.comboBox.addItem(label)
+                    self.descr_dict[label] = description
+                
                 line = fh.readline()
-                if '\"\"\"' in line:
-                    descr_str = line.split('\"\"\"')[1]
-                    line = fh.readline()
-                    while not '\"\"\"' in line:
-                        descr_str += line
-                        line = fh.readline()
-                    descr_str += line.split('\"\"\"')[0]
-                    descr_str = descr_str.replace('\n',' ')
-                    self.descr_dict[funName] = descr_str
-                else:
-                    self.descr_dict[funName] = ''
-            line = fh.readline()
+            else:
+                line = fh.readline()
+
         fh.close()
 
     def closeTab(self):

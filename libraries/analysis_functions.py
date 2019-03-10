@@ -970,3 +970,131 @@ def delta_rebound(*myInput):
     info['Norm Factor'] = {}
     info['Norm Factor']['Types']  = ['%s Norm Factor'%band]
     return DataDict,dictPlot,info
+
+def AITComputation_GUI(Y,DarkStart,TimeStamps,DarkDuration=12,TimeUnitToMinute=60,TimeInterval=3600):
+    """
+    Function Target:    This function is computing the mean and std error of
+                        the actual inter trial (AIT) per daily hour. First elements
+                        of the OrdMean etc. are from the Dark Phase, then there's
+                        the light phase
+    Input:
+        -Y=nx2 Dataset
+        -DarkStart=int, starting hour of the dark phase
+        -DarkDuration=int, numer of hour of dark phase
+    
+    Output:
+        -OrdMedian/Mean/Std=vector, first DarKDuration elements are Median/mean/
+        std error of AIT
+        -Hour_Dark/Light =vector, dark/light hour
+    """
+    Light_Start = (DarkStart + DarkDuration) % 24
+    AIT_OnSet,AIT_OffSet,HourStart_AIT,AIT_Dur=F_AIT_GUI(Y,TimeStamps,TimeInterval=TimeInterval,Light_Start=Light_Start)
+    Hour_Dark,Hour_Light = MultipleHour_Light_and_Dark(12,DarkDuration,TimeInterval)
+    Mean = np.zeros(Hour_Dark.shape[0]+Hour_Light.shape[0])
+    Median = np.zeros(Hour_Dark.shape[0]+Hour_Light.shape[0])
+    STD = np.zeros(Hour_Dark.shape[0]+Hour_Light.shape[0])
+    perc25 = np.zeros(Hour_Dark.shape[0]+Hour_Light.shape[0])
+    perc75 = np.zeros(Hour_Dark.shape[0]+Hour_Light.shape[0])
+    idx = 0
+    for h in np.hstack((Hour_Dark,Hour_Light)):
+        ih = (HourStart_AIT%(Hour_Dark.shape[0]+Hour_Light.shape[0])) == h
+        Mean[idx] = np.nanmean(AIT_Dur[ih]/TimeUnitToMinute)
+        Median[idx] = np.nanmedian(AIT_Dur[ih]/TimeUnitToMinute)
+        STD[idx] = np.nanstd(AIT_Dur[ih]/TimeUnitToMinute)
+        perc25[idx] = np.nanpercentile(AIT_Dur[ih]/TimeUnitToMinute,25)
+        perc75[idx] = np.nanpercentile(AIT_Dur[ih]/TimeUnitToMinute,75)
+        idx += 1
+    return(Mean,Median,STD,perc25,perc75,Hour_Dark,Hour_Light,HourStart_AIT)
+    
+def F_PeakProbes_GUI(Y,TimeStamps,ProbesOn,ProbesOff,tend,l_r, TMAX=np.inf,
+                     trial_num=-1,trial_ind=None):
+    """
+    Function targets:   computing a raster plot matrix and a vector with the
+                        peaks distribution
+
+    Input:              - Y = the dataset, nx2 matrix with time stamps and action
+                        codes
+                        -ProbesOn = a vector containing the indexes of probe trials
+                        start (center light on in a probe trial)
+                        -ProbesOff = a vector containing the indexes of probe trials
+                        end (End ITI in a probe trial)
+                        -tend = scalar containing a time limit of a trial
+                        -l_r = string containing 'r' or 'l' in case we're
+                        analysing a right or a left trial
+
+    Output:             -Raster = matrix n'xtend*100 containing raster plot
+                        -Peaks = vector containig the peak distribution
+    """
+    
+    if l_r=='l':
+        
+        On=TimeStamps['Left NP In']
+        Off=TimeStamps['Left NP Out']
+        
+    elif l_r=='r':
+        
+        On=TimeStamps['Right NP In']
+        Off=TimeStamps['Right NP Out']
+
+    
+#   We consider tend*100 time points for each probe trial and we set
+#   Raster(i,j)= 1 if in the i trial at the time tj the mouse is in the hopper,
+#   Raster(i,j)=0 otherwise.
+    tend=int(tend)
+    if not trial_ind is None:
+        Raster=np.zeros((trial_num,tend*100), dtype = int)
+    else:
+        Raster=np.zeros((len(ProbesOn),tend*100), dtype = int)
+    Times=np.arange(tend*100,dtype=float)/100
+    for i in range(len(ProbesOn)):
+        print(ProbesOn[i],ProbesOff[i])
+        temporarydata = Y[:][ProbesOn[i]:ProbesOff[i]]
+        RespOn = np.where(temporarydata['Action']==On)[0]
+        RespOff = np.where(temporarydata['Action']==Off)[0]
+        TimeOn = temporarydata['Time'][list(RespOn)]-temporarydata['Time'][1]
+        TimeOff = temporarydata['Time'][RespOff]-temporarydata['Time'][1]
+        if len(TimeOff)<len(TimeOn):
+#            TimeOn=TimeOn[:-1]
+            TimeOff = np.hstack((TimeOff,[tend]))
+        if len(TimeOff) > len(TimeOn):
+            if TimeOff[0] < TimeOn[0]:
+                TimeOff = TimeOff[1:]
+            else:
+                TimeOff = TimeOff[:-1]
+        Ind = np.where(TimeOff<=TMAX)[0]           
+        TimeOn = TimeOn[Ind]
+        TimeOff=TimeOff[Ind]
+        
+        for ind in range(len(TimeOn)):
+            time_0=TimeOn[ind]
+            time_1=TimeOff[ind]
+            Tmp=Times[np.where(Times<=time_1)[0]]
+            Raster_ind=np.where(Tmp>=time_0)[0]
+            if not trial_ind is None:
+                Raster[trial_ind[i]][Raster_ind] = 1
+            else:
+                Raster[i][Raster_ind]=1
+                
+#   We sum the colum of the matrix raster.
+
+    Peaks=np.sum(Raster,axis=0)
+    return(Raster,Peaks)
+    
+def Raster_plot():
+    return 2
+
+def Error_rate():
+    return 3
+
+def Attentional_analysis():
+    return 5
+def sleep_fragmentation():
+    return 6
+def emg_normalized():
+    return 7
+        
+def leep_cycles():
+    return 8
+        
+        
+    

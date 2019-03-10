@@ -34,12 +34,9 @@ from changeLabelshow import info_label
 class behavDlg(QDialog):
     closeSig = pyqtSignal(str,name='closeSig')
     runAnalysisSig = pyqtSignal(dict, name='beahvior')
-#    def __init__(self,data,analysisDict,parent=None):
-        
-        
-    def __init__(self,parent=None):
+    def __init__(self,data,analysisDict,parent=None):        
         super(behavDlg, self).__init__(parent)
-#        self.analysisDict = analysisDict
+        self.analysisDict = analysisDict
         self.setAttribute(Qt.WA_DeleteOnClose)
         
         if parent:
@@ -92,6 +89,7 @@ class behavDlg(QDialog):
         self.setLayout(hLayout)
         
         self.descr_dict = {}
+        self.show_dict = {} 
         self.path_dict = {}
         self.populateCombo()
         self.textBrowser_descr.setText(self.descr_dict[str(self.comboBox.currentText())]) 
@@ -132,26 +130,32 @@ class behavDlg(QDialog):
                     continue
                                 
                 label, description, type_func = info_label(funName)
-                print(funName)
                 if type_func == 'Behaviour':
-                    print('sono qui')
                     self.comboBox.addItem(label)
                     self.descr_dict[label] = description
+                    self.show_dict[label] = funName
                 
                 line = fh.readline()
             else:
                 line = fh.readline()
-                
-                
-                    
-            
-            
+
         fh.close()
 
     def closeTab(self):
         self.close()
         self.closeSig.emit('closeSig')
         super(behavDlg, self).close()
+        
+        
+#            Row = self.analysisList.currentRow()
+#        if Row !=-1:
+#            self.selectedAnalysis = self.analysisList.item(Row).text()
+#            for dtype in self.dict_type.keys():
+#                if self.dict_type[dtype].has_key(self.selectedAnalysis):
+#                    break
+#            self.selectedDataTypes = self.dict_type[dtype][self.selectedAnalysis]
+#            self.selectedType = dtype
+#        QDialog.accept(self)
 
 def main():
     import sys

@@ -51,6 +51,7 @@ class importDlg(QDialog,Ui_Dialog):
             self.data_container = DatasetContainer_GUI()
         self.setupUi(self)
         self.descr_dict = {}
+        self.show_dict = {}
         self.path_dict = {}
         self.populateCombo()
         self.textBrowser_descr.setText(self.descr_dict[str(self.comboBox.currentText())]) 
@@ -86,7 +87,8 @@ class importDlg(QDialog,Ui_Dialog):
         for item in items:
             path = self.path_dict[item.text()]
             try:
-                imported = launchLoadingFun(path,self.comboBox.currentText())
+                showed_name = self.comboBox.currentText()
+                imported = launchLoadingFun(path,self.show_dict[showed_name])
             except IndexError as e:
                 print(e)
                 self.errorImport.emit('Import of %s failed. %s'%(item.text(),e))
@@ -116,7 +118,7 @@ class importDlg(QDialog,Ui_Dialog):
                 if funName == 'main' or funName == 'create_laucher':
                     line = fh.readline()
                     continue
-                self.comboBox.addItem(funName)
+#                self.comboBox.addItem(funName)
                 line = fh.readline()
                 if '\"\"\"' in line:
                     descr_str = line.split('\"\"\"')[1]
@@ -126,9 +128,13 @@ class importDlg(QDialog,Ui_Dialog):
                         line = fh.readline()
                     descr_str += line.split('\"\"\"')[0]
                     descr_str = descr_str.replace('\n',' ')
-                    self.descr_dict[funName] = descr_str
-                else:
-                    self.descr_dict[funName] = ''
+                    self.descr_dict[descr_str.split('==')[1]] = descr_str.split('==')[0]
+                    
+                    self.show_dict[descr_str.split('==')[1]] = funName
+                    self.comboBox.addItem(descr_str.split('==')[1])
+#                else:
+#                    self.descr_dict[funName] = ''
+                
             line = fh.readline()
         fh.close()
 
