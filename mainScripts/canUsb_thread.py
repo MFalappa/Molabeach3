@@ -197,12 +197,12 @@ class canUsb_thread(QThread):
         self.timer.timeout.connect(self.add_new_address)
         self.timer.start(1)
 
+ID: 650, Length: 8, Data: 0x004c76166e002229, Timestamp: 3124962997
+Received  Log 7738990	38
  
 def parsing_can_log(message):
     print('===============================')
-    print('message is: ', message)
-    print('Log', 55, '%d\t%d\n'%(int(message.dataAsHexStr()[4:12],16),
-                                              message.data[6]))
+
     if message.data[0] is 76 and message.data[1] is 1:
         Id = message.id - 640
         return 'Log', Id, '%d\t%d\n'%(int(message.dataAsHexStr()[4:12],16),
@@ -216,6 +216,7 @@ def parsing_can_log(message):
     elif message.data[0] is 96:
         Id = message.id - 1408
         return Id, None
+    
     elif message.data[0] == 67 and message.data[1] is 1 and\
         message.data[3] is 65:
         Id = message.id - 1408
@@ -248,21 +249,15 @@ def parsing_can_log(message):
 if __name__ == "__main__":
     # Carriage return command for CanUSB
     CR = b'\r'
-    
     # Open command for CanUSB
     OPEN = b'O\r'
-    
     # Close command for CanUSB
     CLOSE = b'C\r'
-    
     canbaud = b'S6'
 
     for val in list_ports.comports():
         port = val[0]
         descr = val[1]
-#        print(descr)
-#        print(port)
-#        print('==')
         
         if 'CANUSB' in descr:
             print(descr)
@@ -270,26 +265,21 @@ if __name__ == "__main__":
             
     ser = serial.Serial(port_can, baudrate=500000,timeout=1)
     
-  
     res = ser.write(CLOSE) # res == 2 tutto ok
     print(res)
     print(ser.inWaiting())
 
     baudres=ser.write(canbaud+CR)
-#    ser.write(b'700')
     res = ser.write(OPEN)
 #    ser.write(bytearray(b't60D20100\r')) # switch to operational
     print(ser.inWaiting())
     print(ser.read_until(CR))
-    
-                        
-#                print(msg)
-#                if self.first:
-#                    self.canUsb.write(b'60D10100')
-#                    sleep(5)
-#                    self.canUsb.write(b't60D82301120505010100\r')
-#                    
-#                    self.first = False
+              
+#    if self.first:
+#        self.canUsb.write(b'60D10100')
+#        sleep(5)
+#        self.canUsb.write(b't60D82301120505010100\r')
+#        self.first = False
 
 
     

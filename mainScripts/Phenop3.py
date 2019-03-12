@@ -441,7 +441,7 @@ class Msg_Server(QMainWindow):
 #            self.connect(self.timerSaveDict[IDList[ind]],SIGNAL('timeout()'),
 #                         lambda Id = IDList[ind] : self.saveLog(Id))
             self.timerSaveDict[IDList[ind]].start(120000+ind*8000)
-            self.fileNames[IDList[ind]] = str(IDList[ind])+'.tmpcsv'
+            self.fileNames[IDList[ind]] = str(IDList[ind])+'.txt'
 
             tmp = os.path.join(self.dict_cage_widget[IDList[ind]].path2save,self.fileNames[IDList[ind]])
             f = open(tmp,'a')
@@ -695,7 +695,7 @@ class Msg_Server(QMainWindow):
                 self.arduinoGui = timerGui(15,self.arduino,baud=9600,parent=self)
                 self.arduinoGui.show()
             except:
-                print( 'Did not found an arduino conected')
+                print( 'Did not found an arduino connected')
                 QMessageBox.warning(self, 'Serial connection error', 'Could not find Arduino connected', buttons = QMessageBox.Ok, defaultButton = QMessageBox.NoButton)
                 return ValueError('Unable to connect to adapter')
         
