@@ -25,13 +25,14 @@ class uploadProgram_gui(QDialog):
         self.isLast = isLast
         layout= QVBoxLayout()
         layout.addWidget(self.Label)
+        
         self.canReader = parent.Reader
         self.parent = parent
         self.canReader.received.disconnect()
         self.canReader.received.connect(self.recieveMsg)
         self.commandList = commandList
         self.reply = None
-        
+
         # Progress bar        
         self.progress = QProgressBar()
         self.progress.setGeometry(200, 80, 850, 20)
@@ -44,12 +45,11 @@ class uploadProgram_gui(QDialog):
         
 
     def exec_(self):
-        #▒ insert progress bar
         QTimer.singleShot(50,lambda msg = self.commandList[0] : self.uploadProg(msg))
         super(uploadProgram_gui, self).exec_()
         
     def recieveMsg(self,msg):
-        print('Recieved msg: %s'%msg.dataAsHexStr())
+#        print('Recieved msg: %s'%msg.dataAsHexStr())
         if msg.data[3] == self.reply:
             try:
                 self.commandList.pop(0)
@@ -74,7 +74,9 @@ class uploadProgram_gui(QDialog):
                 
                 
     def uploadProg(self,msg):
-        print('Uploading msg: %s'%msg.dataAsHexStr())
+#        print('Uploading msg: %s'%msg.dataAsHexStr())
         self.reply = msg.data[3]
-        self.parent.serialPort.write(msg)
-    
+#        print('self.reply',self.reply)
+#        self.parent.serialPort.write(msg.to_byte)
+#        self.canReader.writeSerial(binascii.hexlify(msg))
+        self.canReader.writeSerial(msg.to_byte())

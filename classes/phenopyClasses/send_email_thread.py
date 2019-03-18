@@ -26,6 +26,7 @@ class send_email_thread(QThread):
         super(send_email_thread, self).__init__(parent)
         self.Id = None
         self.num_blocks = None
+    
     def initialize(self,Id, num_blocks, pdict, psw):
         self.num_blocks = num_blocks
         self.Id = Id

@@ -144,8 +144,8 @@ def hexString_to_int(hex_string_list):
     int_list = []
     for string in hex_string_list:
         int_list += [ int(string[2*5:2*5+2],16)]
-        if len(int_list) <5:
-            print(string)
+#        if len(int_list) <5:
+#            print(string)
     return int_list
     
 def create_program(int_list):
@@ -153,7 +153,7 @@ def create_program(int_list):
     prog_str = ''
     k = 0
     while k < len(int_list):
-        print(k)
+#        print(k)
         func_name = dict_function[int_list[k]]
         param_num = dict_input[int_list[k]]
         param_str = ''
