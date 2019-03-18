@@ -570,7 +570,8 @@ class Msg_Server(QMainWindow):
         if self.MODE == 0:
             self.Reader.writeSerial(msg.to_byte())
         else:
-            self.serialPort.write(msg)
+           
+            self.serialPort.write( binascii.hexlify(msg))
         return 
 
         
@@ -678,10 +679,11 @@ class Msg_Server(QMainWindow):
         settings.setValue('SaveDirectory',self.saveFolderPath)
         if len(list(self.pdict.keys())):
             np.save(os.path.join(os.curdir,'pdict.npy'),self.pdict)
-#        if self.MODE:
-#            self.Reader.terminate()
-#            if self.serialPort:
-#                self.serialPort.close()
+        if self.MODE:
+            self.Reader.terminate()
+            if self.serialPort:
+                self.serialPort.close()
+        
         print('close event')
         super(Msg_Server,self).close()
         
@@ -711,7 +713,6 @@ def main():
             
         if 'XBee' in descr:
             port_xbee = port
-            print(port_xbee)
             
         if 'ARDUINO' in descr.upper():
             port_arduino = port

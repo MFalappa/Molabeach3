@@ -16,6 +16,7 @@ from Modify_Dataset_GUI import OrderedDict
 import binascii
 from numpy import binary_repr
 from serial.tools import list_ports
+from ctypes import (c_uint,c_ubyte,Structure)
 
 # message flags
 CANMSG_EXTENDED      = 128
@@ -30,7 +31,8 @@ canbaud = b'S6'
 
 setupBytes = canbaud + CR
 
-from ctypes import (c_uint,c_ubyte,Structure)
+
+
 class CANMsg(Structure):
     _fields_ = [("id", c_uint),
                 ("timestamp", c_uint),
