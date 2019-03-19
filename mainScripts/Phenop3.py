@@ -476,8 +476,8 @@ class Msg_Server(QMainWindow):
     def recieveMsg(self,message):
         try:
             Type, Id, log = self.parsing_log(message)
-            if not Type in ['Keep Alive']:
-                print('Received', Type,log,message)
+#            if not Type in ['Keep Alive']:
+#                print('Received', Type,log,message)
         except (TypeError, ValueError) as e:
             print('===')
             print(e)
