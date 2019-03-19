@@ -21,21 +21,16 @@ import datetime
     
 
 def XbeeMsg_from_Bytearray(byte_msg):
-#    start = binascii.hexlify(byte_msg[0:1])
-#    length = binascii.hexlify(byte_msg[1:3])
-#    API_ID_Mes = binascii.hexlify(byte_msg[3:4])
-#    Count_Mes = binascii.hexlify(byte_msg[4:5])
+
     source_address = byte_msg[5:13]
-#    options = binascii.hexlify(byte_msg[13:14])
     rf_data = binascii.hexlify(byte_msg[14:28])
-#    cksum = binascii.hexlify(byte_msg[28:29])
-#    print rf_data,cksum
+
     msg_list = [int(rf_data[:4],16), int(rf_data[4:8],16)]
     for i in range(8,20,2):
         if int(rf_data[i:i+2],16) is 255:
             break
         msg_list += [int(rf_data[i:i+2],16)]
-#    print msg_list
+
     return XBeeMsg(msg_list,source_address)
     
 #Matteo message======================================

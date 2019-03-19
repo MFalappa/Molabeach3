@@ -287,6 +287,7 @@ class Msg_Server(QMainWindow):
             self.Reader = recievingXBeeThread(self.serialPort)
             self.Reader.received.connect(self.recieveMsg)
             self.Reader.start()
+            self.serialPort.open()
             self.parsing_log = parsing_XBee_log
             self.forwardToGUI = self.forwardToGUIXbee
             
@@ -374,6 +375,11 @@ class Msg_Server(QMainWindow):
         
         if len(list(self.pdict.keys()))==0:
             self.upload_Program_ation.setEnable(False)
+            
+        if self.MODE:
+            self.read_Program_ation.setEnabled(False)
+            self.upload_Program_ation.setEnabled(False)
+            # unable to read programms by wify
         
 # sistemare quando hai sistemato anche la lettura da canusb
 #        if not self.MODE:
@@ -470,10 +476,11 @@ class Msg_Server(QMainWindow):
     def recieveMsg(self,message):
         try:
             Type, Id, log = self.parsing_log(message)
-#            print('Received ', Type,log,message)
+            if not Type in ['Keep Alive']:
+                print('Received', Type,log,message)
         except (TypeError, ValueError) as e:
+            print('===')
             print(e)
-            print('Matteo')
             return
 
         if not Type in ['Info','Log','Timer','Changed_address']:
@@ -570,8 +577,8 @@ class Msg_Server(QMainWindow):
         if self.MODE == 0:
             self.Reader.writeSerial(msg.to_byte())
         else:
-           
-            self.serialPort.write( binascii.hexlify(msg))
+#            print('tradotto è:', binascii.hexlify(msg))
+            self.serialPort.write(msg)
         return 
 
         
@@ -630,7 +637,11 @@ class Msg_Server(QMainWindow):
                 msg = self.stack_list.pop(0)[0]
                 self.write_if_stack()
                 self.stack_counter = 0
-                string = 'Cannot send a message\n' + msg
+                if self.MODE:
+                    text = str(binascii.b2a_qp(msg))
+                    string = 'Cannot send a message\n' + text[4:]
+                else:
+                    string = 'Cannot send a message\n' + msg
                 dialog = QMessageBox(QMessageBox.Warning,'Cannot send a message',string,
                                 QMessageBox.Ok,parent=self)
                 dialog.show()
@@ -707,7 +718,7 @@ def main():
     for val in list_ports.comports():
         port = val[0]
         descr = val[1]
-        
+
         if 'CANUSB' in descr:
             port_can = port
             

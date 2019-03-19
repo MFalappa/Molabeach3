@@ -41,19 +41,21 @@ class XBeeMsg(object):
                 raise ValueError
             index_0 = '0'*(4-len(index_0)) + index_0
             index_1 = '0'*(4-len(index_1)) + index_1
-            self.xbeeForm['rf_data'] = binascii.unhexlify(index_0) + binascii.unhexlify(index_1)
+            self.xbeeForm['rf_data'] = (binascii.unhexlify(index_0).decode('utf8') + 
+                                        binascii.unhexlify(index_1).decode('utf8'))
             for i in msg[2:]:
                 if i is 0:
-                   self.xbeeForm['rf_data'] += b'\x00'
+                   self.xbeeForm['rf_data'] += '\x00'
                 else:
                     try:
-                        self.xbeeForm['rf_data'] += binascii.unhexlify(base_repr(i,16,3))
-                    except TypeError:
-                        print('rivdere')
-                        self.xbeeForm['rf_data'] += binascii.unhexlify(base_repr(i,16,2))
-                
-            self.xbeeForm['rf_data'] += (14-len(self.xbeeForm['rf_data']))* b'\xff'
-            self.xbeeForm['rf_data'] = bytearray(self.xbeeForm['rf_data'])
+                        self.xbeeForm['rf_data'] += binascii.unhexlify(base_repr(i,16,1)).decode('utf8')
+                    except:
+                        self.xbeeForm['rf_data'] += binascii.unhexlify(base_repr(i,16)).decode('utf8')
+             
+            
+            self.xbeeForm['rf_data'] = bytearray(self.xbeeForm['rf_data'], 'utf8')
+            string_end = (14-len(self.xbeeForm['rf_data']))* binascii.unhexlify(base_repr(255,16))
+            self.xbeeForm['rf_data'] += string_end
             self.xbeeForm['options'] = bytearray(b'\x00')
     
     def has_key(self,key):
@@ -80,7 +82,7 @@ class XBeeMsg(object):
         API_ID_Mes = bytearray(b'\x00')
         Count_Mes = bytearray(b'\x01')
         useful = bytearray()
-        print(self.xbeeForm)
+#        print(self.xbeeForm)
         useful = (API_ID_Mes + Count_Mes + self.xbeeForm['source_addr'] 
                     + self.xbeeForm['options'] + self.xbeeForm['rf_data'])
         chks = self.calcCheckSum(useful)
@@ -174,33 +176,38 @@ class ZigBee_thread(QThread):
             pass
 
     
-def parsing_XBee_log(message,pc_id='0001'):
+def parsing_XBee_log(message,pc_id=b'0001'):
     try:
         PAYLOAD = binascii.hexlify(message['rf_data'])
         
         if PAYLOAD[:4] == pc_id:
-#            print 'ANSWER'
             is_answ = True
         else:
-#            print('QUESTION')
             is_answ = False
-#        print 'PARSING PAYLOAD',PAYLOAD
+
         Id = int(PAYLOAD[4:8], 16)
-        if PAYLOAD[8:12] == '034c': # logfiles
+        
+        if PAYLOAD[8:12] == b'034c': # logfiles
             action = int(PAYLOAD[20:24], 16)
             if action > 15:
                 time = int(PAYLOAD[12:20], 16)
             else:
                 time = int(PAYLOAD[18:20], 16)
             return 'Log', Id, '%d\t%d'%(time,action)
-        elif PAYLOAD[8:10] == '01':
+        
+        if PAYLOAD[8:12] == b'0201': # stand alone mode
+            return 'Stand Alone Mode', Id, 'Action'
+        
+        elif PAYLOAD[8:10] == b'01':
             return 'Info', Id, 'Device Actuated'
-        elif PAYLOAD[8:10] == '05':
+        
+        elif PAYLOAD[8:10] == b'05':
             if is_answ:
                 return 'Info', Id, 'Bactery Level %d'%int(PAYLOAD[10:14],16)
             else:
                 return 'Info', Id, 'Request get Bactery Level'
-        elif PAYLOAD[8:10] == '06':
+        
+        elif PAYLOAD[8:10] == b'06':
             if is_answ:
                 day = int(PAYLOAD[12:14], 16)
                 month = int(PAYLOAD[14:16], 16)
@@ -213,101 +220,129 @@ def parsing_XBee_log(message,pc_id='0001'):
                                                          hour,minute,second)
             else:
                 return 'Info', Id, 'Request get Date and Time'
-        elif PAYLOAD[8:10] == '07':
+        
+        elif PAYLOAD[8:10] == b'07':
             if is_answ:
                 return 'Info', Id, 'RGB message'
             else:
                 return 'Info', Id, 'Request RGB message'
-        elif PAYLOAD[8:10] == '08':
+        
+        elif PAYLOAD[8:10] == b'08':
             return 'Info', Id, 'Sound message'
-        elif PAYLOAD[8:10] == '09':
+        
+        elif PAYLOAD[8:10] == b'09':
             if is_answ:
                 return 'Info', Id, 'Release pellet'
             else:
                 return 'Info', Id, 'Request release pellet'
             
-        elif PAYLOAD[8:10] == '0b':
+        elif PAYLOAD[8:10] == b'0b':
             if is_answ:
                 return 'Info', Id, 'Subject number set'
             else:
                 return 'Info', Id, 'Request set subject number'
-        elif PAYLOAD[8:10] == '0c':
+        
+        elif PAYLOAD[8:10] == b'0c':
             if is_answ:
                 return 'Info', Id, 'Experiment id set'
             else:
                 return 'Info',Id, 'Request exp id set'
-        elif PAYLOAD[8:10] == '0d':
+        
+        elif PAYLOAD[8:10] == b'0d':
             if is_answ:
                 return 'Info', Id, 'Phase set'
             else:
                 return 'Info',Id, 'Request phase set'
-        elif PAYLOAD[8:10] == '0e':
+        
+        elif PAYLOAD[8:10] == b'0e':
             if is_answ:
                 return 'Info', Id, 'Box id set'
             else:
                 return 'Info', Id, 'Request box id set'
-        elif PAYLOAD[8:10] == '0f':
+        
+        elif PAYLOAD[8:10] == b'0f':
             if is_answ:
                 trial_num = int(PAYLOAD[10:14],16)
                 return 'Info', Id, 'Trial number %d'%trial_num
             else:
                 return 'Info', Id, 'Request get trial number'
-        elif PAYLOAD[8:10] == '12':
+        
+        elif PAYLOAD[8:10] == b'12':
             if is_answ:
                 print('trial time payload',PAYLOAD)
                 return 'Info', Id, 'Trial time %d'%int(PAYLOAD[12:20], 16)
             else:
                 return 'Info', Id, 'Request get real Time'
-        elif PAYLOAD[8:10] == '14':
+        
+        elif PAYLOAD[8:10] == b'14':
             if is_answ:
                 return 'Info', Id, 'Ext EEPROM address %d'%(int(PAYLOAD[10:14],16))
             else:
                 return 'Info', Id, 'Request get ext EEPROM'
-        elif PAYLOAD[8:10] == '15':
+        
+        elif PAYLOAD[8:10] == b'15':
             if is_answ:
                 return 'Info', Id, 'Trial max number set'
             else:
                 return 'Info', Id, 'Request set trial max number'
-        elif PAYLOAD[8:10] == '16':
+        
+        elif PAYLOAD[8:10] == b'16':
             if is_answ:
                 trial_max = int(PAYLOAD[10:18],16)
                 return 'Info', Id, 'Trial Max Number %d'%trial_max
             else:
                 return 'Info', Id, 'Request get max trial number'
-        elif PAYLOAD[8:10] == '17':#check if true
+        
+        elif PAYLOAD[8:10] == b'17':#check if true
             if is_answ:
                 return 'Info', Id, 'Set trial timeout'%trial_max
             else:
                 return 'Info', Id, 'Request set trial timeout'
-        elif PAYLOAD[8:10] == '18':#check if true
+        
+        elif PAYLOAD[8:10] == b'18':#check if true
             if is_answ:
                 trial_max = int(PAYLOAD[10:18],16)
                 return 'Info', Id, 'Trial Timeout %d\n'%trial_max
             else:
                 return 'Info', Id, 'Request get trial timeout'
-        elif PAYLOAD[8:10] == '1b':
+        
+        elif PAYLOAD[8:10] == b'1b':
             if is_answ:
                 return 'Info', Id, 'Mean Distribution set'
             else:
                 return 'Info', Id, 'Request set mean distribution'
-        elif PAYLOAD[8:10] == '1c':
+        
+        elif PAYLOAD[8:10] == b'1c':
             if is_answ:
                 return 'Info', Id, 'Mean Distribution %d'%int(PAYLOAD[10:14],16)
             else:
                 return 'Info', Id, 'Request get mean distribution'
-        elif PAYLOAD[8:10] == '20':#check if true
+        
+        elif PAYLOAD[8:10] == b'20':#check if true
             if is_answ:
                 return 'Info', Id, 'Probablity Array Index %d Value %d, %d, %d\n'%int(PAYLOAD[10:18],16)
             else:
                 return 'Info', Id, 'Request get probability array'
-        elif PAYLOAD[8:10] == '24':
+        
+        elif PAYLOAD[8:10] == b'24':
             if is_answ:
                 return 'Info', Id, 'Program Size %d\n'%int(PAYLOAD[14:18],16)
             else:
                 return 'Info', Id, 'Request get program size'
+        
+        elif PAYLOAD[8:10] == b'04':
+            if is_answ:
+                return 'Keep Alive', Id, None
+            else:
+                return 'Keep Alive', Id, None
+        
+        elif PAYLOAD[8:10] == b'1d':
+            return 'Stop Stand Alone', Id, 'Stop Stand Alone'
+            
+            
         else:
+            print('**************')
+            print(PAYLOAD[8:10])
             raise AttributeError
     except:
-        raise ValueError
-        
-    return 127,'parsing to be implemented\n'
+        return 'Status', None, None
