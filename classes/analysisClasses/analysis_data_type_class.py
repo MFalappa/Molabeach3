@@ -426,6 +426,7 @@ def getTypes(pathToImport):
         if line is None:
             continue
         string = getFuncInputString(line,'Dataset_GUI')
+#        print(string)
         list_input = chopInput(string)
         boolean,input_var = getTypeInfo(list_input,3)
         if not boolean:

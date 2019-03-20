@@ -129,7 +129,7 @@ class recievingXBeeThread(QThread):
         
     def connectXBee(self):
         self._xBee = XBee(self.serialPort, callback = self.emitSignal)
-        print('Connected')
+#        print('Connected')
         
     def terminate(self):
         if self.isRunning() == True:
@@ -138,7 +138,7 @@ class recievingXBeeThread(QThread):
             self.wait() 
             print('all disconnected')
         super(recievingXBeeThread,self).terminate()
-        print('thread reciever terminated ')
+#        print('thread reciever terminated ')
         
 
 class ZigBee_thread(QThread):

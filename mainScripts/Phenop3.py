@@ -61,53 +61,47 @@ class find_device_or_analysis(QDialog):
         self.canusb = canusb
         self.xbee = xbee
         self.arduino = arduino
-        self.MODE = None
-        
-        layout = QHBoxLayout()
+        self.MODE = None       
+        self.sampleRate = sampleRate
         
         CloseButton = QPushButton('Continue', parent = self)
         StartButton_CAN = QPushButton('Start Search CAN', parent = self)
         StartButton_Xbee = QPushButton('Start Search XBEE', parent = self)
-        
-#        first_layout = QVBoxLayout()
-#        first_layout.addWidget(StartButton_CAN)
-#        first_layout.addWidget(StartButton_Xbee)
-        
         self.stopFind_Button = QPushButton('Stop Search', parent=self)
+        self.stopFind_Button.setEnabled(False)
         clearButton = QPushButton('Clear', parent=self)
-        self.sampleRate = sampleRate
         label = QLabel('<b>Detected Devices:</b>')
         self.textBrowser = QTextBrowser()
-        vlayout = QVBoxLayout()
-        
-        vlayout2 =  QVBoxLayout()
         button_analysis = QPushButton('Analysis')
         button_lightCtrl = QPushButton('Light controller')
-        vlayout2.addWidget(button_analysis)
-        vlayout2.addWidget(button_lightCtrl)
-        
-        vlayout2.addWidget(StartButton_CAN)
-        vlayout2.addWidget(StartButton_Xbee)
-        
-        vlayout2.addWidget(clearButton)
-        vlayout2.addWidget(self.stopFind_Button)
-        vlayout2.addWidget(CloseButton)
-        
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        vlayout2.addSpacerItem(spacerItem)
-        vlayout.addWidget(label)        
-    
-        hlayout =  QHBoxLayout()
-        hlayout.addWidget(self.textBrowser)
-        hlayout.addLayout(vlayout2)
-        vlayout.addLayout(hlayout)
+      
+        global_layout = QVBoxLayout()
+        global_layout.addWidget(label)
         
-#        layout.addLayout(first_layout)
-#        layout.addWidget(self.stopFind_Button)
-#        layout.addWidget(clearButton)
-#        layout.addWidget(CloseButton)
-        vlayout.addLayout(layout)
-        self.setLayout(vlayout)
+        hlayout_button = QHBoxLayout()
+        hlayout_button.addWidget(StartButton_CAN)
+        hlayout_button.addWidget(StartButton_Xbee)
+        hlayout_button.addWidget(self.stopFind_Button)
+        
+        vlayout_right = QVBoxLayout()
+        vlayout_right.addWidget(button_analysis)
+        vlayout_right.addWidget(button_lightCtrl)
+        vlayout_right.addSpacerItem(spacerItem)
+        vlayout_right.addWidget(clearButton)
+        vlayout_right.addWidget(CloseButton)
+        
+        vlayout_left = QVBoxLayout()
+        vlayout_left.addWidget(self.textBrowser)
+        vlayout_left.addLayout(hlayout_button)
+        
+        hlayout = QHBoxLayout()
+        hlayout.addLayout(vlayout_left)
+        hlayout.addLayout(vlayout_right)
+        
+        global_layout.addLayout(hlayout)
+        self.setLayout(global_layout)
+        
         self.device_num = 0
         
         if not self.canusb:
@@ -139,6 +133,7 @@ class find_device_or_analysis(QDialog):
 #==============================================================================
 
     def startThread_can(self):
+        self.stopFind_Button.setEnabled(True)
         self.MODE = 0 
         self.serialPort = self.canusb
         self.thread = canUsb_thread(self.canusb,parent=self)
@@ -152,6 +147,7 @@ class find_device_or_analysis(QDialog):
         
             
     def startThread_xbee(self):
+        self.stopFind_Button.setEnabled(True)
         self.MODE = 1
         self.serialPort = serial.Serial(self.xbee, baudrate=19200,timeout=1)
         self.thread = ZigBee_thread(self.serialPort,parent=self)
@@ -240,11 +236,11 @@ class Msg_Server(QMainWindow):
         self.__password = ''
         self.send_email_thread = send_email_thread(parent = self)
         self.saveFolderPath = os.path.curdir
-        self.logString = {}         # LISTA DI LOG COI CODICI AZIONE
-        self.infoString = {}        # LISTA DI LOG CON LE INFO
-        self.timerSaveDict = {}     # DIZIONARIO DI TIMERS SHIFTATI PER IL SALVATAGGIO
-        self.fileNames = {}         # NOMI DEI FILE DA SALVARE
-        self.block_num = {}         # NUMERO ABORT TRIAL X CAGE
+        self.logString = {}         # log list of code-action
+        self.infoString = {}        # log list with info
+        self.timerSaveDict = {}     # dictionary of shifted timers for saving
+        self.fileNames = {}         # save name
+        self.block_num = {}         # abort release pellet for cage
         self.Phenopy3 = None
         
         #   Creo oggetti per stack di messaggi da inviare
@@ -381,7 +377,7 @@ class Msg_Server(QMainWindow):
             self.upload_Program_ation.setEnabled(False)
             # unable to read programms by wify
         
-# sistemare quando hai sistemato anche la lettura da canusb
+# é necessario?????
 #        if not self.MODE:
 #            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  ## Importazione di una delle due librerie in corso d'opera
         
@@ -577,11 +573,8 @@ class Msg_Server(QMainWindow):
         if self.MODE == 0:
             self.Reader.writeSerial(msg.to_byte())
         else:
-#            print('tradotto è:', binascii.hexlify(msg))
             self.serialPort.write(msg)
-        return 
-
-        
+        return
      
     def saveLog(self,Id):
         self.timerSaveDict[Id].stop()
@@ -651,12 +644,7 @@ class Msg_Server(QMainWindow):
         if not self.stack_list:
             return
         cka = checkAnsw(self.stack_list[0], self.MODE)
-#        if self.MODE and msg.has_key('rf_data'):
-#            print('rf_data check answ: ', msg['rf_data'],self.stack_list[0][1],cka.check(msg))
-#        elif self.MODE:
-#            print('check answ: ', msg, self.stack_list[0][1],cka.check(msg))
-#        else:
-#            print('check answ: ', msg.dataAsHexStr(),self.stack_list[0][1],cka.check(msg))
+
         if cka.check(msg):
             self.stack_list.pop(0)
             self.stack_counter = 0
@@ -695,7 +683,7 @@ class Msg_Server(QMainWindow):
             if self.serialPort:
                 self.serialPort.close()
         
-        print('close event')
+#        print('close event')
         super(Msg_Server,self).close()
         
     def startLightController(self):

@@ -561,6 +561,10 @@ class MainWindow(QMainWindow):
                 
                 elif self.Dataset[dts].Types == ['nex_file']:
                     print('decidere con edo, pensavo ad un modulo ad hoc per la detection')    
+                
+                elif self.Dataset[dts].Types == ['EDF']:
+                    self.sleepAction.setEnabled(True)
+                    
             self.editSelectIntervalAction.setEnabled(True)
         else:
             self.behaviourAction.setEnabled(False)
@@ -568,6 +572,11 @@ class MainWindow(QMainWindow):
             self.integrativenAction.setEnabled(False)
             self.editSelectIntervalAction.setEnabled(False)
             self.spikeAction.setEnabled(False)
+        
+        if self.sleepAction.isEnabled() and self.behaviourAction.isEnabled():
+            self.integrativenAction.setEnabled(True)
+        else:
+            self.integrativenAction.setEnabled(False)
 
 
     def createAction(self, text, slot=None, shortcut=None, icon=None,

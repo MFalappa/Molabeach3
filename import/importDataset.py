@@ -26,7 +26,7 @@ import numpy as np
 import h5py
 from Modify_Dataset_GUI import (DetectDelimiter_GUI,Rescale_Time_GUI,Time_Details_GUI,
                                 Terminate_Dataset_GUI,Dataset_GUI,EEG_Data_Struct)
-
+import pyedflib
 import pandas as pd
 import nexfile
 from input_Dlg_std import *
@@ -352,7 +352,34 @@ Apparatus:
    
     ds = Dataset_GUI(Dataset, os.path.basename(path), Path=path, Types=Types, Scaled=Scaled,TimeStamps=timestamps)
     return ds
+
+
+def load_EDF_data(path):
+    """
+This porcedure allow to import file in the European Data Format (EDF).This function
+import EEG, EMG, TEMPERATURE and motor ACTIVITY from DSI recordings==EDF data
+    """
+    timestamps = None
+
+    scale = 1
+    Scaled = (True,scale)
+    Types =['EFT']
+    f = pyedflib.EdfReader(path)
+    START = f.getStartdatetime()
+    EEG = f.readSignal(0)
+    EMG = f.readSignal(2)
+    TEMPERATURE = f.readSignal(5)
+    ACTIVITY = f.readSignal(4)
+    Dataset = {}
+    Dataset['date'] = START
+    Dataset['eeg'] = EEG
+    Dataset['emg'] = EMG
+    Dataset['temperature'] = TEMPERATURE
+    Dataset['activity'] = ACTIVITY
+    f._close()
     
+    ds = Dataset_GUI(Dataset, os.path.basename(path), Path=path, Types=Types, Scaled=Scaled,TimeStamps=timestamps)
+    return ds
 
 create_laucher()
 
