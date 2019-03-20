@@ -23,7 +23,7 @@ image_dir = os.path.join(file_dir,'images')
 from serial.tools import list_ports
 from subprocess32 import Popen
 from xbee_thread import (recievingXBeeThread,ZigBee_thread,parsing_XBee_log)
-from canUsb_thread import (recievingCanUsbThread,canUsb_thread,parsing_can_log)
+from canUsb_thread import (recievingCanUsbThread,canUsb_thread,parsing_can_log,CANMsg)
 
 from sys import executable
 
@@ -48,7 +48,7 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication,QPushButton,QLabel,
                              QDialog,QHBoxLayout,QVBoxLayout,QTextBrowser,
                              QSpacerItem,QSizePolicy,QDockWidget,QListWidget,
                              QAction,QMessageBox,QScrollArea)
-from PyQt5.QtCore import (pyqtSignal,pyqtSlot,QTimer,QSettings,Qt)
+from PyQt5.QtCore import (pyqtSignal,QTimer,QSettings,Qt)
 from PyQt5.QtGui import QIcon
 
 
@@ -61,45 +61,47 @@ class find_device_or_analysis(QDialog):
         self.canusb = canusb
         self.xbee = xbee
         self.arduino = arduino
-        self.MODE = None
-        
-        layout = QHBoxLayout()
+        self.MODE = None       
+        self.sampleRate = sampleRate
         
         CloseButton = QPushButton('Continue', parent = self)
         StartButton_CAN = QPushButton('Start Search CAN', parent = self)
         StartButton_Xbee = QPushButton('Start Search XBEE', parent = self)
-        
-        first_layout = QVBoxLayout()
-        first_layout.addWidget(StartButton_CAN)
-        first_layout.addWidget(StartButton_Xbee)
-        
         self.stopFind_Button = QPushButton('Stop Search', parent=self)
+        self.stopFind_Button.setEnabled(False)
         clearButton = QPushButton('Clear', parent=self)
-        self.sampleRate = sampleRate
         label = QLabel('<b>Detected Devices:</b>')
         self.textBrowser = QTextBrowser()
-        vlayout = QVBoxLayout()
-        
-        vlayout2 =  QVBoxLayout()
         button_analysis = QPushButton('Analysis')
         button_lightCtrl = QPushButton('Light controller')
-        vlayout2.addWidget(button_analysis)
-        vlayout2.addWidget(button_lightCtrl)
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        vlayout2.addSpacerItem(spacerItem)
-        vlayout.addWidget(label)        
-    
-        hlayout =  QHBoxLayout()
-        hlayout.addWidget(self.textBrowser)
-        hlayout.addLayout(vlayout2)
-        vlayout.addLayout(hlayout)
+      
+        global_layout = QVBoxLayout()
+        global_layout.addWidget(label)
         
-        layout.addLayout(first_layout)
-        layout.addWidget(self.stopFind_Button)
-        layout.addWidget(clearButton)
-        layout.addWidget(CloseButton)
-        vlayout.addLayout(layout)
-        self.setLayout(vlayout)
+        hlayout_button = QHBoxLayout()
+        hlayout_button.addWidget(StartButton_CAN)
+        hlayout_button.addWidget(StartButton_Xbee)
+        hlayout_button.addWidget(self.stopFind_Button)
+        
+        vlayout_right = QVBoxLayout()
+        vlayout_right.addWidget(button_analysis)
+        vlayout_right.addWidget(button_lightCtrl)
+        vlayout_right.addSpacerItem(spacerItem)
+        vlayout_right.addWidget(clearButton)
+        vlayout_right.addWidget(CloseButton)
+        
+        vlayout_left = QVBoxLayout()
+        vlayout_left.addWidget(self.textBrowser)
+        vlayout_left.addLayout(hlayout_button)
+        
+        hlayout = QHBoxLayout()
+        hlayout.addLayout(vlayout_left)
+        hlayout.addLayout(vlayout_right)
+        
+        global_layout.addLayout(hlayout)
+        self.setLayout(global_layout)
+        
         self.device_num = 0
         
         if not self.canusb:
@@ -129,8 +131,9 @@ class find_device_or_analysis(QDialog):
 #       To connect: first Phenopy search if canusb or xbee are available
 #       then you can choose which mode activate
 #==============================================================================
-    @pyqtSlot()
+
     def startThread_can(self):
+        self.stopFind_Button.setEnabled(True)
         self.MODE = 0 
         self.serialPort = self.canusb
         self.thread = canUsb_thread(self.canusb,parent=self)
@@ -142,9 +145,9 @@ class find_device_or_analysis(QDialog):
             self.thread.start()
             self.source_address = self.address_dict
         
-
-    @pyqtSlot()             
+            
     def startThread_xbee(self):
+        self.stopFind_Button.setEnabled(True)
         self.MODE = 1
         self.serialPort = serial.Serial(self.xbee, baudrate=19200,timeout=1)
         self.thread = ZigBee_thread(self.serialPort,parent=self)
@@ -156,11 +159,9 @@ class find_device_or_analysis(QDialog):
             self.thread.start()
             self.source_address = self.address_dict
 
-    @pyqtSlot()
     def startAnalysis(self):
         self.parent.launch_online_analysis()
      
-    @pyqtSlot()
     def closeMainWindow(self):
         if self.MODE == 0:
             if self.thread.isRunning():
@@ -198,12 +199,10 @@ class find_device_or_analysis(QDialog):
             self.address_dict.update(msg)
         
     
-    @pyqtSlot()
     def stopThread(self):
         self.thread.terminate()
         
 
-    @pyqtSlot()
     def clearList(self):
         self.device_num = 0
         self.address_dict.clear()
@@ -212,7 +211,6 @@ class find_device_or_analysis(QDialog):
             self.thread.terminate()
         self.thread.address_dict.clear()
      
-    @pyqtSlot()
     def closeEvent(self,b):
         if self.thread.isRunning():
             self.thread.terminate()
@@ -221,7 +219,7 @@ class find_device_or_analysis(QDialog):
 
 class Msg_Server(QMainWindow):
     
-    forwardToGUICAN = pyqtSignal(str,str, name='sendGUImessage')
+    forwardToGUICAN = pyqtSignal(CANMsg,str, name='sendGUImessage')
     forwardToGUIXbee = pyqtSignal(dict,str, name='sendGUImessage')    
     
     def __init__(self, programDict, port_can, port_xbee, port_arduino,parent=None):
@@ -238,11 +236,11 @@ class Msg_Server(QMainWindow):
         self.__password = ''
         self.send_email_thread = send_email_thread(parent = self)
         self.saveFolderPath = os.path.curdir
-        self.logString = {}         # LISTA DI LOG COI CODICI AZIONE
-        self.infoString = {}        # LISTA DI LOG CON LE INFO
-        self.timerSaveDict = {}     # DIZIONARIO DI TIMERS SHIFTATI PER IL SALVATAGGIO
-        self.fileNames = {}         # NOMI DEI FILE DA SALVARE
-        self.block_num = {}         # NUMERO ABORT TRIAL X CAGE
+        self.logString = {}         # log list of code-action
+        self.infoString = {}        # log list with info
+        self.timerSaveDict = {}     # dictionary of shifted timers for saving
+        self.fileNames = {}         # save name
+        self.block_num = {}         # abort release pellet for cage
         self.Phenopy3 = None
         
         #   Creo oggetti per stack di messaggi da inviare
@@ -275,7 +273,7 @@ class Msg_Server(QMainWindow):
         
         if self.MODE == 0:
             self.Reader = recievingCanUsbThread(self.serialPort)
-            self.Reader.recieved.connect(self.recieveMsg)
+            self.Reader.received.connect(self.recieveMsg)
             self.Reader.start()
             self.parsing_log = parsing_can_log
             self.Reader.startReading()
@@ -285,9 +283,13 @@ class Msg_Server(QMainWindow):
             self.Reader = recievingXBeeThread(self.serialPort)
             self.Reader.received.connect(self.recieveMsg)
             self.Reader.start()
+            self.serialPort.open()
             self.parsing_log = parsing_XBee_log
             self.forwardToGUI = self.forwardToGUIXbee
             
+        for key in self.source_address.keys():
+                self.block_num[key] = 0
+                
         self.IDList = list(self.source_address.keys())
         
         settings = QSettings()
@@ -369,8 +371,13 @@ class Msg_Server(QMainWindow):
         
         if len(list(self.pdict.keys()))==0:
             self.upload_Program_ation.setEnable(False)
+            
+        if self.MODE:
+            self.read_Program_ation.setEnabled(False)
+            self.upload_Program_ation.setEnabled(False)
+            # unable to read programms by wify
         
-# sistemare quando hai sistemato anche la lettura da canusb
+# é necessario?????
 #        if not self.MODE:
 #            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  ## Importazione di una delle due librerie in corso d'opera
         
@@ -441,7 +448,7 @@ class Msg_Server(QMainWindow):
 #            self.connect(self.timerSaveDict[IDList[ind]],SIGNAL('timeout()'),
 #                         lambda Id = IDList[ind] : self.saveLog(Id))
             self.timerSaveDict[IDList[ind]].start(120000+ind*8000)
-            self.fileNames[IDList[ind]] = str(IDList[ind])+'.tmpcsv'
+            self.fileNames[IDList[ind]] = str(IDList[ind])+'.txt'
 
             tmp = os.path.join(self.dict_cage_widget[IDList[ind]].path2save,self.fileNames[IDList[ind]])
             f = open(tmp,'a')
@@ -456,9 +463,6 @@ class Msg_Server(QMainWindow):
         
     
     def StopServer(self,msg_list,IDList):
-        if self.MODE == 0:
-            print('ci devo lavorare')
-        elif self.MODE == 1:
             for Id in IDList:
                 self.saveLog(Id)
             self.finalizing = True
@@ -468,10 +472,13 @@ class Msg_Server(QMainWindow):
     def recieveMsg(self,message):
         try:
             Type, Id, log = self.parsing_log(message)
-            print('Received ', Type, log,message)
+#            if not Type in ['Keep Alive']:
+#                print('Received', Type,log,message)
         except (TypeError, ValueError) as e:
+            print('===')
             print(e)
             return
+
         if not Type in ['Info','Log','Timer','Changed_address']:
             return
             
@@ -513,11 +520,10 @@ class Msg_Server(QMainWindow):
                 self.block_num[Id] += 1
                 if self.send_email_thread.isRunning():
                     self.send_email_thread.wait()
-                self.send_email_thread.initialize(Id, self.block_num[Id],
-                                                  self.pdict,self.__password) ##### AGGIUNGI EMAIL TYPE
+                self.send_email_thread.initialize(Id, self.block_num[Id],self.pdict,self.__password) ##### AGGIUNGI EMAIL TYPE
                 self.send_email_thread.start()
             if action == 50: # battery level
-                self.update_battery(Id,log)
+                self.update_battery(Id,str(log.rstrip('\n').split('\t')[0]))
 
             self.logString[Id] += log
             if self.finalizing:
@@ -564,20 +570,11 @@ class Msg_Server(QMainWindow):
         dialog.show()
    
     def sendMessage(self,msg): 
-#        try:
-#            print('Write message:',binascii.hexlify(msg))
-#        except: 
-#            print('Write message:',msg)
-#        
-        print('scrivo questo: ',msg.to_byte())
         if self.MODE == 0:
             self.Reader.writeSerial(msg.to_byte())
         else:
             self.serialPort.write(msg)
-        
-        return 
-
-        
+        return
      
     def saveLog(self,Id):
         self.timerSaveDict[Id].stop()
@@ -633,7 +630,11 @@ class Msg_Server(QMainWindow):
                 msg = self.stack_list.pop(0)[0]
                 self.write_if_stack()
                 self.stack_counter = 0
-                string = 'Cannot send a message\n' + msg
+                if self.MODE:
+                    text = str(binascii.b2a_qp(msg))
+                    string = 'Cannot send a message\n' + text[4:]
+                else:
+                    string = 'Cannot send a message\n' + msg
                 dialog = QMessageBox(QMessageBox.Warning,'Cannot send a message',string,
                                 QMessageBox.Ok,parent=self)
                 dialog.show()
@@ -643,12 +644,7 @@ class Msg_Server(QMainWindow):
         if not self.stack_list:
             return
         cka = checkAnsw(self.stack_list[0], self.MODE)
-#        if self.MODE and msg.has_key('rf_data'):
-#            print('rf_data check answ: ', msg['rf_data'],self.stack_list[0][1],cka.check(msg))
-#        elif self.MODE:
-#            print('check answ: ', msg, self.stack_list[0][1],cka.check(msg))
-#        else:
-#            print('check answ: ', msg.dataAsHexStr(),self.stack_list[0][1],cka.check(msg))
+
         if cka.check(msg):
             self.stack_list.pop(0)
             self.stack_counter = 0
@@ -682,11 +678,12 @@ class Msg_Server(QMainWindow):
         settings.setValue('SaveDirectory',self.saveFolderPath)
         if len(list(self.pdict.keys())):
             np.save(os.path.join(os.curdir,'pdict.npy'),self.pdict)
-#        if self.MODE:
-#            self.Reader.terminate()
-#            if self.serialPort:
-#                self.serialPort.close()
-        print('close event')
+        if self.MODE:
+            self.Reader.terminate()
+            if self.serialPort:
+                self.serialPort.close()
+        
+#        print('close event')
         super(Msg_Server,self).close()
         
     def startLightController(self):
@@ -695,7 +692,7 @@ class Msg_Server(QMainWindow):
                 self.arduinoGui = timerGui(15,self.arduino,baud=9600,parent=self)
                 self.arduinoGui.show()
             except:
-                print( 'Did not found an arduino conected')
+                print( 'Did not found an arduino connected')
                 QMessageBox.warning(self, 'Serial connection error', 'Could not find Arduino connected', buttons = QMessageBox.Ok, defaultButton = QMessageBox.NoButton)
                 return ValueError('Unable to connect to adapter')
         
@@ -709,13 +706,12 @@ def main():
     for val in list_ports.comports():
         port = val[0]
         descr = val[1]
-        
+
         if 'CANUSB' in descr:
             port_can = port
             
         if 'XBee' in descr:
             port_xbee = port
-            print(port_xbee)
             
         if 'ARDUINO' in descr.upper():
             port_arduino = port

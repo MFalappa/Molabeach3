@@ -31,7 +31,8 @@ class dNdModeList(QListWidget):
     dragged = pyqtSignal(int)
 
     def __init__(self, acceptDrop, acceptDrag, dropAction=Qt.CopyAction, parent=None):
-        super(dNdModeDlg, self).__init__(parent)
+        super(dNdModeList, self).__init__(parent)
+#        super(dNdModeDlg, self).__init__(parent)
         self.setAcceptDrops(acceptDrop)
         self.setDragEnabled(acceptDrag)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)

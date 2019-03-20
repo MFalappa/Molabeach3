@@ -26,16 +26,16 @@ import numpy as np
 import h5py
 from Modify_Dataset_GUI import (DetectDelimiter_GUI,Rescale_Time_GUI,Time_Details_GUI,
                                 Terminate_Dataset_GUI,Dataset_GUI,EEG_Data_Struct)
-
+import pyedflib
 import pandas as pd
 import nexfile
 from input_Dlg_std import *
 
 def loadTimeActionData_TSE(path):
     """
-Procedura per aprire file a due colonne, "tempo" e "azione" con
-delimiter a scelta tra ['\t',';',','], con tempi in millisec. Time Stamps
-per sistema TSE
+This porcedure allow to import file with two columns with time - code action data.
+Possible delimiter are ['\t',';',','], with time in millisec.Time Stamps for
+TSE system==TSE data
     """
     timestamps = np.load(os.path.join(repo_dir,'TSE.npy')).all()
     delimiter = DetectDelimiter_GUI(path)
@@ -66,9 +66,11 @@ per sistema TSE
     
 def load_TSE_edited_data(path):
     """
-This procedure allows to open files with two columns (time, action) with selected delimiter
-['\t',';',','], with time in milliseconds. This function works ONLY for obsolete data edited from TSE.
-In these file there is a footer (in the new version it has been deleted)
+This porcedure allow to import file with two columns with time - code action data.
+Possible delimiter are ['\t',';',','], with time in millisec.Time Stamps for
+TSE system.
+This function works ONLY for obsolete data edited from TSE.
+In these file there is a footer (in the new version it has been deleted)==TSE data edited 
     """
     timestamps = np.load(os.path.join(repo_dir,'TSE.npy')).all()
     delimiter = DetectDelimiter_GUI(path)
@@ -100,9 +102,9 @@ In these file there is a footer (in the new version it has been deleted)
 
 def loadTimeActionData_AM_microsystems(path):
     """
-Procedura per aprire file a due colonne, "tempo" e "azione" con
-delimiter a scelta tra ['\\t',';',','], con tempi in millisec. Timestamps
-and code per sistema am-microsystems
+This porcedure allow to import file with two columns with time - code action data.
+Possible delimiter are ['\t',';',','], with time in millisec.Time Stamps for
+am-microsystems==AM microsystems data 
     """
     timestamps = np.load(os.path.join(repo_dir,'AM-Microsystems.npy')).all()
     delimiter = DetectDelimiter_GUI(path)
@@ -136,8 +138,7 @@ and code per sistema am-microsystems
 def load_sleep_sign_export_text(path):
     """
 This function imports dataset from sleep sign exported as text that can contain the
-following columns: Epoch, stage, Time + power spectrum
-or the following: Epoch, Stage, Time, Delta + power from Theta, Gamma,...
+following columns:Times, Epoch, Stage and power spectrum or Delta,Theta,Gamma,...==Sleep data
     """
     delimiter = DetectDelimiter_GUI(path)
     num_header = 0
@@ -167,7 +168,7 @@ or the following: Epoch, Stage, Time, Delta + power from Theta, Gamma,...
 def load_excel(path):
     """
 This function can import generic excel datasheet that can be parsed by 
-Pandas library
+Pandas library==Load excel without parsing
     """
     excel = pd.ExcelFile(path)
     Types = ['Unparsed Excel File']
@@ -176,7 +177,7 @@ Pandas library
 
 def load_and_parse_excel(path):
     """
-This function load and parse excel files via Pandas library
+This function load and parse excel files via Pandas library==Load excel with parsing
     """
     excel = pd.ExcelFile(path)
     Types = ['Parsed Excel']
@@ -188,7 +189,8 @@ This function load and parse excel files via Pandas library
     
 def load_Spike_Data(path):
     """
-This function can import a MatLab file with struct contains raw data and/or spike data extract from neural recording system
+This function can import a MatLab file with struct contains raw data and/or spike 
+data extract from neural recording system==Spike data
     """
     data = h5py.File(path,'r')
     Types = ['single unit struct']
@@ -197,7 +199,8 @@ This function can import a MatLab file with struct contains raw data and/or spik
 
 def importNex_Nex(path):
     """
-Import NeuroNexus ".nex" files  using the "nexfile.py" script from http//neuroexplorer.com/downloadspage
+Import NeuroNexus ".nex" files  using the "nexfile.py" script 
+from http//neuroexplorer.com/downloadspage==Nex files
     """
     reader = nexfile.Reader(useNumpy=True)
     fileData = reader.ReadNexFile(path)
@@ -228,13 +231,12 @@ def create_laucher():
 def loadTimeActionData_MED_SW(path):
     """
 This method import data recorded from MED system configurated as follows:
-
 the relative code were choosen arbitrary by the user programming MED software.
-    Apparatus:
-        #1 central hopper
-        #2 left lever
-        #3 right lever
-        #4 .....
+Apparatus:
+#1 central hopper,
+#2 left lever,
+#3 right lever,
+#4 .....==MED associates
     """
     timestamps = np.load(os.path.join(repo_dir,'MED_SW.npy')).all()
     scale = 1
@@ -350,7 +352,34 @@ the relative code were choosen arbitrary by the user programming MED software.
    
     ds = Dataset_GUI(Dataset, os.path.basename(path), Path=path, Types=Types, Scaled=Scaled,TimeStamps=timestamps)
     return ds
+
+
+def load_EDF_data(path):
+    """
+This porcedure allow to import file in the European Data Format (EDF).This function
+import EEG, EMG, TEMPERATURE and motor ACTIVITY from DSI recordings==EDF data
+    """
+    timestamps = None
+
+    scale = 1
+    Scaled = (True,scale)
+    Types =['EFT']
+    f = pyedflib.EdfReader(path)
+    START = f.getStartdatetime()
+    EEG = f.readSignal(0)
+    EMG = f.readSignal(2)
+    TEMPERATURE = f.readSignal(5)
+    ACTIVITY = f.readSignal(4)
+    Dataset = {}
+    Dataset['date'] = START
+    Dataset['eeg'] = EEG
+    Dataset['emg'] = EMG
+    Dataset['temperature'] = TEMPERATURE
+    Dataset['activity'] = ACTIVITY
+    f._close()
     
+    ds = Dataset_GUI(Dataset, os.path.basename(path), Path=path, Types=Types, Scaled=Scaled,TimeStamps=timestamps)
+    return ds
 
 create_laucher()
 

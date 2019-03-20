@@ -36,7 +36,7 @@ class sleepDlg(QDialog,Ui_Dialog):
     def __init__(self,data,analysisDict,parent=None):
 #    def __init__(self,parent=None):
         super(sleepDlg, self).__init__(parent)
-#        self.setupUi(self)
+        self.setupUi(self)
         self.analysisDict = analysisDict
         
         
@@ -51,12 +51,9 @@ class sleepDlg(QDialog,Ui_Dialog):
         else:
             self.parent = parent
             self.data_container = DatasetContainer_GUI()
-        self.setupUi(self)
-        self.descr_dict = {}
-        self.path_dict = {}
-        self.populateCombo()
-        self.textBrowser_descr.setText(self.descr_dict[str(self.comboBox.currentText())]) 
-        self.comboBox.currentIndexChanged[str].connect(self.showDescription)
+        
+        
+
         
         self.pushButton_run.setEnabled(False)
         self.pushButton_run.clicked.connect(self.runAnalysis)

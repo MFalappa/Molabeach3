@@ -20,7 +20,7 @@ sys.path.append(classes_dir)
 sys.path.append(phenopy_dir)
 import datetime
 
-from xbee_thread import (parsing_XBee_log)
+from xbee_thread import (XBeeMsg,parsing_XBee_log)
 from canUsb_thread import (CANMsg,parsing_can_log)
 
 import binascii
@@ -140,6 +140,25 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
             self.radioButton_poke_th_center.setEnabled(False)
             self.radioButton_poke_th_right.setEnabled(False)
             self.tab_custom.setDisabled(True)
+            self.radioButton_set_dateTime.setDisabled(True)
+            
+            self.radioButton_noise_frequency.clicked.connect(self.disable_get_wifi)
+            self.radioButton_exp_id.clicked.connect(self.disable_get_wifi)
+            self.radioButton_phase.clicked.connect(self.disable_get_wifi)
+            self.radioButton_box_id.clicked.connect(self.disable_get_wifi)
+            self.radioButton_subject.clicked.connect(self.disable_get_wifi)
+            
+            self.checkBox_get.setChecked(False)
+            self.checkBox_set.setChecked(True)
+            self.radioButton_max_trial_num.clicked.connect(self.able_get_wifi)
+            self.radioButton_trial_timeout.clicked.connect(self.able_get_wifi)
+            self.radioButton_mean_distr.clicked.connect(self.able_get_wifi)
+            
+            self.radioButton_fw.setEnabled(False)
+            self.radioButton_ic2_status.setEnabled(False)
+            self.radioButton_prog_size.setEnabled(False)
+            self.radioButton_readTrialTime.setEnabled(False)
+            
                      
         # CONNECT BUTTON TO SET RANGE
         f = lambda: self.set_range2('mood','freq')
@@ -173,11 +192,11 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
         self.radioButton_release_pellet.setChecked(True)
         self.radioButton_read_time.setChecked(True)
         
-        self.pushButton_send_datetime
-        self.pushButton_send_actuate
-        self.pushButton_send_other_gs
-        self.pushButton_send_other_g
-        self.pushButton_send_custom
+#        self.pushButton_send_datetime
+#        self.pushButton_send_actuate
+#        self.pushButton_send_other_gs
+#        self.pushButton_send_other_g
+#        self.pushButton_send_custom
         
         # SOURCE ADDRESS DICTIONARY
         self.sa_dictionary = {}
@@ -235,6 +254,12 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
         self.checkBox_center.setDisabled(False)
         self.checkBox_left.setDisabled(False)
         self.checkBox_right.setDisabled(False)
+        
+    def disable_get_wifi(self):
+        self.checkBox_get.setDisabled(True)
+        
+    def able_get_wifi(self):
+        self.checkBox_get.setDisabled(False)
             
     
     def createandsend(self,groupsend):
@@ -362,7 +387,8 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
             for message in message_list:
                 PAYLOAD = binascii.hexlify(message)[28:-2]
 #                print 'gui payload',PAYLOAD
-                if PAYLOAD[8:10] in ['05','06','0f','12','14','16','18','1a','1c','20','24']:
+                if PAYLOAD[8:10] in [b'05',b'06',b'0f',b'12',b'14',b'16',
+                                     b'18',b'1a',b'1c',b'20',b'24']:
                     st = 'rR'
                 else:
                     st = 'rW'
@@ -459,6 +485,9 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
     def update_table_xbee(self,message,read_write):
         if type(message) is bytearray:
             message = XbeeMsg_from_Bytearray(message)
+        else:
+            message = XBeeMsg(message,None)
+            
         if  message.has_key('rf_data'):
             try:
                 msg_type,box,txt = parsing_XBee_log(message)
@@ -468,7 +497,7 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
             self.tableWidget.insertRow(self.tableWidget.rowCount())       
             self.tableWidget.setItem(self.tableWidget.rowCount()-1,0,QTableWidgetItem('%d'%box))
             self.tableWidget.setItem(self.tableWidget.rowCount()-1,1,QTableWidgetItem(read_write))
-            self.tableWidget.setItem(self.tableWidget.rowCount()-1,2,QTableWidgetItem(binascii.hexlify(message['rf_data'])))
+            self.tableWidget.setItem(self.tableWidget.rowCount()-1,2,QTableWidgetItem(binascii.hexlify(message['rf_data']).decode('utf8')))
             self.tableWidget.setItem(self.tableWidget.rowCount()-1,3,QTableWidgetItem(txt))
             self.tableWidget.resizeColumnsToContents()
             self.tableWidget.scrollToBottom()

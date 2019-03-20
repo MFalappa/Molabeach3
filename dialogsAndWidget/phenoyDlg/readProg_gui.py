@@ -33,7 +33,6 @@ class readProgram(QDialog):
         self.row_dict = row_dict
         self.transl_dict = transl_dict
         
-        self.canusb = parent.parent.serialPort
         self.canReader = parent.parent.Reader
         self.parent = parent
         self.canReader.received.disconnect()
@@ -68,11 +67,11 @@ class readProgram(QDialog):
         
     
     def initialization(self,msg):
-        self.canusb.write(msg)
+        self.canReader.writeSerial(msg.to_byte())
         print('Initialized')
         
     def recieveMsg(self,msg):
-#        print('Recieved msg: %s'%msg.dataAsHexStr())
+#        print('Recieved msg matteo: %s'%msg.dataAsHexStr())
         if msg.data[3] == self.reply and self.reply==37:
             self.ProgLen = 16**2 * msg.data[5] + msg.data[4]
             self.progress.setMaximum(self.ProgLen - 1)
@@ -87,10 +86,11 @@ class readProgram(QDialog):
     def startReading(self):
         msg = read_Size_Log_and_Prog(self.Id)
         self.reply = 37
-        self.canusb.write(msg)
+        self.canReader.writeSerial(msg.to_byte())
         
     def readProg(self):
         if self.Index==self.ProgLen:
+#            print('index',self.Index)
             int_list = hexString_to_int(self.ListOfMsg_str)
             program_transl = create_program(int_list)
             self.canReader.received.disconnect()
@@ -103,7 +103,7 @@ class readProgram(QDialog):
         else:    
             msg = read_External_EEPROM(self.Id,self.Index)
             self.reply = msg.data[3]
-            self.canusb.write(msg)
+            self.canReader.writeSerial(msg.to_byte())
             self.Index +=1
             
 if __name__=='__main__':  
