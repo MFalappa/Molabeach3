@@ -2,3 +2,4 @@
 *.phz
 *.xml
 .*
+.DS_Store
