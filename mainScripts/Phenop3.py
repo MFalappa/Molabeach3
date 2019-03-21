@@ -426,8 +426,6 @@ class Msg_Server(QMainWindow):
         return newList
     
     def start_box(self):
-        if not self.MODE:
-            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE)) 
         newList = self.get_not_recording_box()
         dlg = start_box_dlg(newList, parent=self,source_address=self.source_address, MODE=self.MODE)
         dlg.show()

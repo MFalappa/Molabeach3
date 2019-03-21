@@ -74,9 +74,8 @@ class uploadProgram_gui(QDialog):
                 
                 
     def uploadProg(self,msg):
-        print('1Uploading msg: %s'%msg.to_byte())
-        print('2Uploading msg: %s'%msg.dataAsHexStr())
-        
+#        print('Uploading msg: %s'%msg.to_byte())
+#        print('Uploading msg: %s'%msg.dataAsHexStr())
         self.reply = msg.data[3]
 #        print('self.reply',self.reply)
 #        self.parent.serialPort.write(msg.to_byte)
