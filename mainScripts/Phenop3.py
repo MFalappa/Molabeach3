@@ -43,7 +43,7 @@ from stop_box_dlg import stop_box_dlg
 from change_dir_prog import change_dir_prog
 from checkAnsw import getAnsw,checkAnsw
 from Modify_Dataset_GUI import OrderedDict
-
+from messageLib import Switch_to_Operational_State_Msg
 from PyQt5.QtWidgets import (QMainWindow, QApplication,QPushButton,QLabel,
                              QDialog,QHBoxLayout,QVBoxLayout,QTextBrowser,
                              QSpacerItem,QSizePolicy,QDockWidget,QListWidget,
@@ -377,9 +377,10 @@ class Msg_Server(QMainWindow):
             self.upload_Program_ation.setEnabled(False)
             # unable to read programms by wify
         
-# é necessario?????
+
 #        if not self.MODE:
-#            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  ## Importazione di una delle due librerie in corso d'opera
+#            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  
+            ## Importazione di una delle due librerie in corso d'opera
         
     
     
@@ -425,6 +426,8 @@ class Msg_Server(QMainWindow):
         return newList
     
     def start_box(self):
+        if not self.MODE:
+            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE)) 
         newList = self.get_not_recording_box()
         dlg = start_box_dlg(newList, parent=self,source_address=self.source_address, MODE=self.MODE)
         dlg.show()

@@ -472,7 +472,7 @@ class msg_sender_gui(QMainWindow, Ui_MainWindow, QObject):
             fa il parsing del messaggio e completa la tabella di lettura
             proporrei di filtrare i keep alive che vengono emessi ogni 10s
         """
-        if message.data[0] in [35,64,96,67,128]:
+        if message.data[0] in [35,64,96,67,128,0,76]:
             self.tableWidget.insertRow(self.tableWidget.rowCount())  
             msg_type,box,txt = parsing_can_log(message) 
             self.tableWidget.setItem(self.tableWidget.rowCount()-1,0,QTableWidgetItem('%d'%box))

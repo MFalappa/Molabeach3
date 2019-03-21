@@ -284,6 +284,7 @@ def parsing_can_log(message,pc_id='0001'):
           
           
     elif message.data[0] is 96: # and message.data[1] is 2:
+        print(message)
         Id = message.id - 1408
         
         if message.data[1] is 1:
@@ -446,12 +447,14 @@ def parsing_can_log(message,pc_id='0001'):
             elif message.data[3] is 83: # mean distribution
                 return 'Info', Id, 'Request get Mean distributoin'
             
-    elif message.data[0] is 5:
+    elif message.data[0] is 127:
         Id = message.id - 1792
-        return 'Keep alive', Id, None
+        return 'Keep Alive', Id, None
         
     else:
-        return 'unknown',message.id,'Matteo ti sei dimenticato qualcosa <3'
+        print(message)
+        Id = message.id - 1792
+        return 'Unknown message',message.id,'Check the message'
   
 
     
