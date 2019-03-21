@@ -84,7 +84,7 @@ class pellet_widget(QWidget, ui_pellet_widget.Ui_pellet_widget):
             if action == self.pellet_rel_msg:
                 self.pellet_num += 1
                 self.label_pelletnum.setText('%d'%self.pellet_num)
-            elif action == 48:
+            elif action == 48 and not self.lateral:
                 self.abort_num += 1
                 self.abort_label.setText('<font color=\'red\'>%d</font>'%self.abort_num)
         except KeyError:

@@ -473,6 +473,7 @@ class Msg_Server(QMainWindow):
         try:
             Type, Id, log = self.parsing_log(message)
 #            if not Type in ['Keep Alive']:
+#                print('******')
 #                print('Received', Type,log,message)
         except (TypeError, ValueError) as e:
             print('===')
@@ -573,6 +574,7 @@ class Msg_Server(QMainWindow):
         if self.MODE == 0:
             self.Reader.writeSerial(msg.to_byte())
         else:
+            print('sto inviando questo',msg)
             self.serialPort.write(msg)
         return
      
