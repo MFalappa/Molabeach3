@@ -449,10 +449,14 @@ def parsing_can_log(message,pc_id='0001'):
             
     elif message.data[0] is 5:
         Id = message.id - 1792
-        return 'Keep alive', Id, None
+        return 'Keep alive', Id, 'Operational mode'
+    
+    elif message.data[0] is 127:
+        Id = message.id - 1792
+        return 'Keep alive', Id, 'Pre-operational mode'
         
     else:
-        return 'unknown',message.id,'Matteo ti sei dimenticato qualcosa <3'
+        return 'Unknown message',message.id,'bk'
   
 
     

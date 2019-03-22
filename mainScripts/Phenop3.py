@@ -377,7 +377,7 @@ class Msg_Server(QMainWindow):
             self.upload_Program_ation.setEnabled(False)
             # unable to read programms by wify
         
-# é necessario?????
+
         if not self.MODE:
             self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  ## Importazione di una delle due librerie in corso d'opera
         
