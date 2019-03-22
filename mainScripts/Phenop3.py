@@ -33,7 +33,7 @@ from email_addr import email_addr_add
 from arduinoGui import timerGui
 from cage_widget import cage_widget
 from multiple_cage_widget import multi_cageWidget
-
+from messageLib import Switch_to_Operational_State_Msg
 from microsystemGUI3 import msg_sender_gui
 from credential_dlg import autentication_dlg
 from load_program_dlg import load_program_dlg
@@ -43,7 +43,7 @@ from stop_box_dlg import stop_box_dlg
 from change_dir_prog import change_dir_prog
 from checkAnsw import getAnsw,checkAnsw
 from Modify_Dataset_GUI import OrderedDict
-from messageLib import Switch_to_Operational_State_Msg
+
 from PyQt5.QtWidgets import (QMainWindow, QApplication,QPushButton,QLabel,
                              QDialog,QHBoxLayout,QVBoxLayout,QTextBrowser,
                              QSpacerItem,QSizePolicy,QDockWidget,QListWidget,
@@ -377,10 +377,9 @@ class Msg_Server(QMainWindow):
             self.upload_Program_ation.setEnabled(False)
             # unable to read programms by wify
         
-
-#        if not self.MODE:
-#            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  
-            ## Importazione di una delle due librerie in corso d'opera
+# é necessario?????
+        if not self.MODE:
+            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  ## Importazione di una delle due librerie in corso d'opera
         
     
     

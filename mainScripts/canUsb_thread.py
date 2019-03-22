@@ -62,8 +62,12 @@ class CANMsg(Structure):
     
     def to_byte(self):
         x = b't'
-        x = (x + bytes(hex(self.id)[2:],'utf-8') + 
-             bytes(hex(self.len)[2:],'utf-8')+
+        to_send = bytes(hex(self.id)[2:],'utf-8')
+        
+        if to_send== b'0':
+            to_send = b'000'
+            
+        x = (x + to_send + bytes(hex(self.len)[2:],'utf-8')+
              binascii.hexlify(self.data))
         x = x + b'\r'
                           
@@ -99,22 +103,19 @@ class recievingCanUsbThread(QThread):
         self.received.emit(msg) 
         
     def run(self):
-        self.setPriority(QThread.HighestPriority)
-        QTimer.singleShot(20,self.connectCanUsb)
-        self.exec_()
-        
-    def connectCanUsb(self):
         self.canUsb = serial.Serial(self.serialPort, baudrate=500000,timeout=0)
         self.canUsb.write(OPEN)
         self.canUsb.write(CLOSE)
         self.canUsb.write(canbaud+CR)
         self.canUsb.write(OPEN)
         
+        self.setPriority(QThread.HighestPriority)
         self.timer = QTimer()
         self.timer.timeout.connect(self.readSerial)
         self.timer.start(1)
         self.exec_()
-        
+
+                
     def readSerial(self):
         self.timer.stop()
         byte = self.canUsb.read() 
@@ -284,7 +285,6 @@ def parsing_can_log(message,pc_id='0001'):
           
           
     elif message.data[0] is 96: # and message.data[1] is 2:
-        print(message)
         Id = message.id - 1408
         
         if message.data[1] is 1:
@@ -447,14 +447,12 @@ def parsing_can_log(message,pc_id='0001'):
             elif message.data[3] is 83: # mean distribution
                 return 'Info', Id, 'Request get Mean distributoin'
             
-    elif message.data[0] is 127:
+    elif message.data[0] is 5:
         Id = message.id - 1792
-        return 'Keep Alive', Id, None
+        return 'Keep alive', Id, None
         
     else:
-        print(message)
-        Id = message.id - 1792
-        return 'Unknown message',message.id,'Check the message'
+        return 'unknown',message.id,'Matteo ti sei dimenticato qualcosa <3'
   
 
     

@@ -49,7 +49,7 @@ class uploadProgram_gui(QDialog):
         super(uploadProgram_gui, self).exec_()
         
     def recieveMsg(self,msg):
-        print('Recieved msg: %s'%msg.dataAsHexStr())
+#        print('Recieved msg: %s'%msg.dataAsHexStr())
         if msg.data[3] == self.reply:
             try:
                 self.commandList.pop(0)
@@ -74,7 +74,6 @@ class uploadProgram_gui(QDialog):
                 
                 
     def uploadProg(self,msg):
-#        print('Uploading msg: %s'%msg.to_byte())
 #        print('Uploading msg: %s'%msg.dataAsHexStr())
         self.reply = msg.data[3]
 #        print('self.reply',self.reply)

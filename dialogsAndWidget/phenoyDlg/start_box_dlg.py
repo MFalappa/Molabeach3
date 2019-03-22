@@ -43,7 +43,7 @@ class start_box_dlg(Ui_Dialog,QDialog):
         self.IDList = IDList
         self.mode = MODE
         self.sa_dictionary = source_address
-        self.start_signal.connect(self.test)
+#        self.start_signal.connect(self.test)
         
         # CREATE A CHECKER BOX LIST
         self.dictChecker = {}
@@ -97,10 +97,10 @@ class start_box_dlg(Ui_Dialog,QDialog):
             msg_list += [Start_Stop_Trial_Msg(box,True,Stand_Alone=True,source_address=self.sa_dictionary[box], MODE=self.mode)]
         self.start_signal.emit(msg_list,idList)
  
-    def test(self,l,d):
-        print(l)
-        print(d)
-        
+    
+#    def test(self,l,d):
+#        print(l)
+#        print(d)
 def main():
     import sys
     app = QApplication(sys.argv)
