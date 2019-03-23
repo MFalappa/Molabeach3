@@ -84,7 +84,8 @@ class cage_widget(QWidget):
                 self.isRec = True
                 self.prog_info.labelStatus.setText('Recording')
                 self.prog_info.labelRec.setPixmap(self.prog_info.iconRec)
-            elif self.isRec and action == 29:
+            elif self.isRec and PAYLOAD[8:10] == b'id': #29
+                print('cambio icona in off',msg)
                 self.isRec = False
                 self.prog_info.labelStatus.setText('Pause')
                 self.prog_info.labelRec.setPixmap(self.prog_info.iconPause)

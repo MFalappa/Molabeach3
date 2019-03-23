@@ -35,7 +35,7 @@ import numpy as np
 
 def TSE__Merge_Dataset(phenopy, selType='TSE'): 
     """
-        Merge two dataset of the TSE type
+Merge two dataset of the TSE type==Merge TSE dataset
     """
     DatasetContainer = phenopy.Dataset
     dialog = MergeDlg( SelectedType = selType,DataContainer=DatasetContainer)
@@ -66,11 +66,14 @@ def TSE__Merge_Dataset(phenopy, selType='TSE'):
             phenopy.lock.unlock()
     
 def AM_Microsystems__Merge_Dataset(phenopy):
+    """
+Merge two dataset of the AM-Microsystems type==Merge AM-Microsystems dataset
+    """
     TSE__Merge_Dataset(phenopy, selType='AM-Microsystems')
           
 def EEG_Binned_Frequencies__Merge_Dataset(phenopy, selType='EEG Binned Frequencies'): 
     """
-        Merge two dataset of the sleepSign FFT export type.
+Merge two dataset of the sleepSign FFT export type==Merge EEG binned frequencies dataset
     """
     DatasetContainer = phenopy.Dataset
     dialog = MergeDlg(SelectedType = selType,DataContainer=DatasetContainer)
@@ -108,13 +111,13 @@ def EEG_Binned_Frequencies__Merge_Dataset(phenopy, selType='EEG Binned Frequenci
 
 def EEG_Full_Power_Spectrum__Merge_Dataset(phenopy):
     """
-        Merge dataset of the sleepSign export type
+Merge dataset of the sleepSign export type==Merge sleepSign export dataset
     """
     EEG_Binned_Frequencies__Merge_Dataset(phenopy,selType='EEG Full Power Spectrum')
     
 def TSE_Cut_Dataset(phenopy, selType='TSE'):
     """
-        Cut dataset of TSE type keeping only a range of experimental days
+Cut dataset of TSE type keeping only a range of experimental days==Cut TSE dataset
     """
     dataContainer = phenopy.Dataset
     Groupdialog = CreateGroupsDlg(1,list(dataContainer.keys()),DataContainer=dataContainer,
@@ -182,14 +185,13 @@ def TSE_Cut_Dataset(phenopy, selType='TSE'):
 
 def AM_Microsystems__Cut_Dataset(phenopy):
     """
-        Cut dataset of AM-Microsystems type keeping only a range of 
-        experimental days
+Cut dataset of AM-Microsystems type keeping only a range of experimental days==Cut AM-Microsystems==Cut AM-Microsystems dataset
     """
     TSE_Cut_Dataset(phenopy, selType='AM-Microsystems')
 
 def EEG_Binned_Frequencies__Cut_Dataset(phenopy,selType='EEG Binned Frequencies'):
     """
-        Cut sleepSign dataset of the form EEG Binned Frequencies
+Cut sleepSign dataset of the form EEG Binned Frequencies==Cut EEG binned frequencies dataset
     """
     print(selType)
     dataContainer = phenopy.Dataset
@@ -277,13 +279,13 @@ def EEG_Binned_Frequencies__Cut_Dataset(phenopy,selType='EEG Binned Frequencies'
     
 def EEG_Full_Power_Spectrum__Cut_Dataset(phenopy):
     """
-        Cut sleepSign dataset of the form EEG Binned Frequencies
+Cut sleepSign export dataset of the form EEG Binned Frequencies==Cut sleepSign dataset
     """
     EEG_Binned_Frequencies__Cut_Dataset(phenopy,selType='EEG Full Power Spectrum')
 
 def TSE__Select_Interval(phenopy, selType='TSE'):
     """
-        Select a subset of hours from TSE data across the whole experiment
+Select a subset of hours from TSE data across the whole experiment==Select interval TSE dataset
     """
     dataContainer = phenopy.Dataset
     Groupdialog = CreateGroupsDlg(1,list(dataContainer.keys()),DataContainer=dataContainer,
@@ -346,7 +348,7 @@ def TSE__Select_Interval(phenopy, selType='TSE'):
             phenopy.lock.unlock()
 def AM_Microsystems__Select_Interval(phenopy):
     """
-        Select a subset of hours from AM-Microsystems data across the whole experiment
+Select a subset of hours from AM-Microsystems data across the whole experiment==Select interval AM-Microsystems dataset 
     """
     TSE__Select_Interval(phenopy, selType='TSE')
         

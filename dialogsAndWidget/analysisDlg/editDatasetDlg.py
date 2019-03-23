@@ -49,6 +49,7 @@ class editDlg(QDialog,Ui_DialogEdit):
             self.data_container = DatasetContainer_GUI()
         
         self.descr_dict = {}
+        self.show_dict = {}
         self.path_dict = {}
         self.populateCombo()
         self.textBrowser_descr.setText(self.descr_dict[str(self.comboBox.currentText())]) 
@@ -61,8 +62,8 @@ class editDlg(QDialog,Ui_DialogEdit):
 
     
     def editFunction(self):
-        funName = self.comboBox.currentText()
-        launchEditFun(self.parent, funName)
+        showed_name = self.comboBox.currentText()
+        launchEditFun(self.parent, self.show_dict[showed_name])
         
     def setDescription(self,funName):
         self.textBrowser_descr.setText(self.descr_dict[funName])
@@ -78,7 +79,7 @@ class editDlg(QDialog,Ui_DialogEdit):
                 if funName == 'main' or funName == 'create_laucher':
                     line = fh.readline()
                     continue
-                self.comboBox.addItem(funName)
+#                self.comboBox.addItem(funName)
                 line = fh.readline()
                 if '\"\"\"' in line:
                     descr_str = line.split('\"\"\"')[1]
@@ -88,9 +89,14 @@ class editDlg(QDialog,Ui_DialogEdit):
                         line = fh.readline()
                     descr_str += line.split('\"\"\"')[0]
                     descr_str = descr_str.replace('\n',' ')
-                    self.descr_dict[funName] = descr_str
-                else:
-                    self.descr_dict[funName] = ''
+                    self.descr_dict[descr_str.split('==')[1]] = descr_str.split('==')[0]
+                    
+                    self.show_dict[descr_str.split('==')[1]] = funName
+                    self.comboBox.addItem(descr_str.split('==')[1])
+                    
+                    
+#                else:
+#                    self.descr_dict[funName] = ''
             line = fh.readline()
         fh.close()
 

@@ -1050,6 +1050,7 @@ def Start_Stop_Trial_Msg_Xbee(Id,Start_or_Stop,Stand_Alone=False,
         Msg = XBeeMsg([Id, 1, 2, int(Stand_Alone)], source_address)
     else:
         Msg = XBeeMsg([Id, 1, 29], source_address)
+
     return Msg.byteArrayToSend()
 
 def Read_RealTime_Msg_Xbee(Id, source_address=None):

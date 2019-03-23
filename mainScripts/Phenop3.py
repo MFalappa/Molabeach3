@@ -33,7 +33,7 @@ from email_addr import email_addr_add
 from arduinoGui import timerGui
 from cage_widget import cage_widget
 from multiple_cage_widget import multi_cageWidget
-
+from messageLib import Switch_to_Operational_State_Msg
 from microsystemGUI3 import msg_sender_gui
 from credential_dlg import autentication_dlg
 from load_program_dlg import load_program_dlg
@@ -377,9 +377,9 @@ class Msg_Server(QMainWindow):
             self.upload_Program_ation.setEnabled(False)
             # unable to read programms by wify
         
-# é necessario?????
-#        if not self.MODE:
-#            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  ## Importazione di una delle due librerie in corso d'opera
+
+        if not self.MODE:
+            self.sendMessage(Switch_to_Operational_State_Msg(MODE=self.MODE))  ## Importazione di una delle due librerie in corso d'opera
         
     
     
@@ -473,6 +473,7 @@ class Msg_Server(QMainWindow):
         try:
             Type, Id, log = self.parsing_log(message)
 #            if not Type in ['Keep Alive']:
+#                print('******')
 #                print('Received', Type,log,message)
         except (TypeError, ValueError) as e:
             print('===')
@@ -573,6 +574,7 @@ class Msg_Server(QMainWindow):
         if self.MODE == 0:
             self.Reader.writeSerial(msg.to_byte())
         else:
+            print('sto inviando questo',msg)
             self.serialPort.write(msg)
         return
      

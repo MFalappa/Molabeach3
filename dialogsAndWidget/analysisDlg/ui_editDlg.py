@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_DialogEdit(object):
     def setupUi(self, DialogEdit):
         DialogEdit.setObjectName("DialogEdit")
-        DialogEdit.resize(706, 412)
+        DialogEdit.resize(351, 292)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(DialogEdit)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()

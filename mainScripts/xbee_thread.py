@@ -136,7 +136,7 @@ class recievingXBeeThread(QThread):
             self._xBee.halt()
             self.exit()
             self.wait() 
-            print('all disconnected')
+#            print('all disconnected')
         super(recievingXBeeThread,self).terminate()
 #        print('thread reciever terminated ')
         
