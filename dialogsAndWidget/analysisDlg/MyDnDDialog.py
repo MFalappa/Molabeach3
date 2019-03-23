@@ -31,12 +31,12 @@ from PyQt5.QtGui import (QCursor,QDrag, QIcon)
 class MyDnDListWidget(QListWidget):
     dropped = pyqtSignal(int)
     dragged = pyqtSignal(int)
-    def __init__(self, parent=None):
+    def __init__(self,listID = 'input_list', parent=None):
         super(MyDnDListWidget, self).__init__(parent)
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        
+        self.listID = listID
 
 
     def dragEnterEvent(self, event):
@@ -64,6 +64,7 @@ class MyDnDListWidget(QListWidget):
                 text = stream.readQString()
                 icon = QIcon()
                 stream >> icon
+                dropID = stream.readQString()
                 item = QListWidgetItem(text)
                 item.setIcon(icon)
                 items=self.findItems(text,Qt.MatchExactly)
@@ -96,6 +97,7 @@ class MyDnDListWidget(QListWidget):
             icon = item.icon()
             stream.writeQString(item.text())
             stream << icon
+            stream.writeQString(self.listID)
         mimeData = QMimeData()
         mimeData.setData("application/x-icon-and-text", data)
         drag = QDrag(self)
