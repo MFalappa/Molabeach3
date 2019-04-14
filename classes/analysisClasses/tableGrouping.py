@@ -22,9 +22,11 @@ class TableWidget(QTableWidget):
         # use this to mark which col use for dropping
         self.dragAndDropCol = dragAndDropCol
         self.lastDrop = []
+        # self.dragged.connect(self.dropEvent)
 
     def dragEnterEvent(self, event):
-        if event.mimeData().hasFormat("application/x-icon-and-text"):
+        if event.mimeData().hasFormat("application/x-icon-and-text")\
+                or event.mimeData().hasFormat("%s/x-icon-and-text"%self.tableID):
             event.accept()
         else:
             event.ignore()
@@ -34,77 +36,100 @@ class TableWidget(QTableWidget):
         data = QtCore.QByteArray()
         stream = QtCore.QDataStream(data, QtCore.QIODevice.WriteOnly)
         stream.writeInt(len(list_items))
-        if len(list_items) != 1:
-            raise IndexError
-        item = list_items[0]
+        # if len(list_items) != 1:
+        #     raise IndexError
+        for item in list_items:
 
-        rowDrag = item.row()
-        for col in range(self.columnCount()):
-            itemCol = self.item(rowDrag,col)
-            icon = itemCol.icon()
-            stream.writeQString(itemCol.text())
-            stream << icon
+            rowDrag = item.row()
+            stream.writeInt(rowDrag)
+            # stream.writeQString(itemCol.text())
+            # stream << icon
         mimeData = QtCore.QMimeData()
         mimeData.setData("%s/x-icon-and-text"%self.tableID, data)
         drag = QtGui.QDrag(self)
         drag.setMimeData(mimeData)
-        pixmap = icon.pixmap(24, 24)
+        pixmap = item.icon().pixmap(24, 24)
         drag.setHotSpot(QtCore.QPoint(12, 12))
         drag.setPixmap(pixmap)
-        # if drag.exec_(QtCore.Qt.CopyAction) == QtCore.Qt.MoveAction:
-        #     for item in list_items:
-        #         self.takeItem(self.row(item),self.column(item))
-        #     self.dragged.emit(list_items)
+        drag.exec_(QtCore.Qt.CopyAction) #== QtCore.Qt.CopyAction:
+        # for item in list_items:
+        #     self.takeItem(self.row(item),self.column(item))
+        self.dragged.emit(len(list_items))
 
     def dragMoveEvent(self, event):
-        if event.mimeData().hasFormat("application/x-icon-and-text"):
+        # print('drag move')
+        if event.mimeData().hasFormat("application/x-icon-and-text")\
+                or event.mimeData().hasFormat("%s/x-icon-and-text"%self.tableID):
             event.setDropAction(QtCore.Qt.MoveAction)
             event.accept()
+
+
         else:
             event.ignore()
 
     def dropEvent(self, event):
-
+        print('drop enter')
         if event.mimeData().hasFormat("%s/x-icon-and-text"%self.tableID):
             lstDrop = []
             data = event.mimeData().data("%s/x-icon-and-text"%self.tableID)
             stream = QtCore.QDataStream(data, QtCore.QIODevice.ReadOnly)
+            # quanti elementi ho selezionatp
             num_drag = stream.readInt()
             # mouse prosition
             qpoint = self.mapFromGlobal(QtGui.QCursor.pos())
             # take the corresponding item
             itemIndex = self.indexAt(qpoint)
             drop_row = itemIndex.row()
-            dictInfo = {}
+            # creare num_drag colonne nuove
+            print(self.rowCount())
+            self.setRowCount(self.rowCount()+num_drag)
+            dictMove = {}
+            for kk in range(num_drag):
+                row = stream.readInt()
+                dictMove[row] = {}
+                for col in range(self.columnCount()):
+                    item = self.item(row,col)
+                    dictMove[row][col] = {
+                        'text':item.text(),
+                        'icon':item.icon()
+                    }
+                    self.takeItem(row,col)
+            dictShift = {}
+            for row in range(drop_row-1,self.rowCount()):
 
-            for col in self.columnCount():
-                text = stream.readQString()
-                icon = QtGui.QIcon()
-                stream >> icon
-                dictInfo[col] = {'text':text,'icon':icon}
+                item = self.item(row, 0)
+                if not item is None:
+                    dictShift[row] = {}
+                    for col in range(self.columnCount()):
+                        dictShift[row][col] = {
+                            'text':item.text(),
+                            'icon':item.icon()
+                        }
+                        self.takeItem(row, col)
 
-            items = self.findItems(dictInfo[self.dragAndDropCol]['text'], QtCore.Qt.MatchExactly)
-            matchInCol = False
+            ii = drop_row - 1
+            for row in dictMove.keys():
+                for col in dictMove[row].keys():
+                    text = dictMove[row][col]['text']
+                    icon = dictMove[row][col]['icon']
+                    item = QTableWidgetItem(text)
+                    item.setIcon(icon)
+                    self.setItem(ii,col,item)
+                ii += 1
 
-            for item in items:
-                if item.column() == self.dragAndDropCol:
-                    matchInCol = True
-                    break
-            # if item present switch the dropped with the old item
-            if matchInCol:
-                # crea un altro dizionatio con testo e icona della riga che va sostituita
-                # e switcha tutti gli elementi
-                # change content of the matched item and set the content of the current
-                itemMv = self.item(itemIndex.row()-1,itemIndex.column())
-                # print('match',items[0].row())
-                # print(text,icon)
-                print(itemMv.text(),itemIndex.row())
+            for row in dictShift.keys():
+                for col in dictShift[row].keys():
+                    text = dictShift[row][col]['text']
+                    icon = dictShift[row][col]['icon']
+                    item = QTableWidgetItem(text)
+                    item.setIcon(icon)
+                    self.setItem(ii,col,item)
+                ii += 1
 
-                item.setText(itemMv.text())
-                item.setIcon(itemMv.icon())
+            self.setRowCount(ii)
+            print('took all items')
 
-                itemMv.setText(text)
-                itemMv.setIcon(icon)
+
         elif event.mimeData().hasFormat("application/x-icon-and-text"):
             ####
             item = QTableWidgetItem(text)
