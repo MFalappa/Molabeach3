@@ -1,7 +1,7 @@
 import sys
 from PyQt5 import QtGui
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QPushButton,QTableWidget,QWidget,QApplication,QVBoxLayout,QTableWidgetItem
+from PyQt5.QtWidgets import QListWidget,QListWidgetItem,QPushButton,QTableWidget,QWidget,QApplication,QVBoxLayout,QTableWidgetItem,QInputDialog
 
 
 
@@ -68,6 +68,18 @@ class TableWidget(QTableWidget):
             event.ignore()
 
     def dropEvent(self, event):
+        ##
+        ## Modifica il comportamento di drop
+        # 1. controlla l'indice che corrisponde al puntatore del mouse quando sposti in su
+        # e quando sposti in giu' una casella
+        # 2. crea un dizionario unico che ricopia gli stessi elementi della tabella fino alla riga
+        # del drop schippando l'elemento/elementi selezionati
+        # 3. aggiungi gli elementi selezionati nel dizionario
+        # 4. aggiungi gli elementi successivi
+        # 5. canccella la tabella (self.clearTable)
+        # 6. ricompila in base al dizionario
+        # fix bug di cancellazione
+
         print('drop enter')
         if event.mimeData().hasFormat("%s/x-icon-and-text"%self.tableID):
             lstDrop = []
@@ -89,10 +101,18 @@ class TableWidget(QTableWidget):
                 dictMove[row] = {}
                 for col in range(self.columnCount()):
                     item = self.item(row,col)
-                    dictMove[row][col] = {
-                        'text':item.text(),
-                        'icon':item.icon()
-                    }
+                    if item is None:
+                        dictMove[row][col] = {
+                            'text': None,
+                            'icon': None
+                        }
+
+                    else:
+                        dictMove[row][col] = {
+                            'text': item.text(),
+                            'icon': item.icon()
+                        }
+
                     self.takeItem(row,col)
             dictShift = {}
             for row in range(drop_row-1,self.rowCount()):
@@ -101,10 +121,18 @@ class TableWidget(QTableWidget):
                 if not item is None:
                     dictShift[row] = {}
                     for col in range(self.columnCount()):
-                        dictShift[row][col] = {
-                            'text':item.text(),
-                            'icon':item.icon()
-                        }
+                        item = self.item(row,col)
+                        if item is None:
+                            dictShift[row][col] = {
+                                'text': None,
+                                'icon': None
+                            }
+
+                        else:
+                            dictShift[row][col] = {
+                                'text': item.text(),
+                                'icon': item.icon()
+                            }
                         self.takeItem(row, col)
 
             ii = drop_row - 1
@@ -112,6 +140,8 @@ class TableWidget(QTableWidget):
                 for col in dictMove[row].keys():
                     text = dictMove[row][col]['text']
                     icon = dictMove[row][col]['icon']
+                    if text is None:
+                        continue
                     item = QTableWidgetItem(text)
                     item.setIcon(icon)
                     self.setItem(ii,col,item)
@@ -121,24 +151,53 @@ class TableWidget(QTableWidget):
                 for col in dictShift[row].keys():
                     text = dictShift[row][col]['text']
                     icon = dictShift[row][col]['icon']
+                    if text is None:
+                        continue
                     item = QTableWidgetItem(text)
                     item.setIcon(icon)
                     self.setItem(ii,col,item)
                 ii += 1
 
-            self.setRowCount(ii)
+            for row in range(self.rowCount()):
+                delRow = True
+                for col in range(self.columnCount()):
+                    if not self.item(row,col) is None:
+                        delRow = False
+                        break
+                if delRow:
+                    self.removeRow(row)
             print('took all items')
 
 
         elif event.mimeData().hasFormat("application/x-icon-and-text"):
-            ####
-            item = QTableWidgetItem(text)
-            item.setIcon(icon)
-            drop_row = self.rowCount() + 1
-            self.setItem(drop_row,drop_col, item)
-            # event.setDropAction(QtCore.Qt.CopyAction)
-            event.accept()
-            self.dropped.emit(drop_row)
+            data = event.mimeData().data("application/x-icon-and-text" )
+            stream = QtCore.QDataStream(data, QtCore.QIODevice.ReadOnly)
+            # quanti elementi ho selezionatp
+            num_drag = stream.readInt()
+            oldRowNum = self.rowCount()
+
+            self.setRowCount(oldRowNum+num_drag)
+            group, okPressed  = QInputDialog.getText(self,'Insert Group Name','Group name:')
+
+            for row in range(oldRowNum,oldRowNum+num_drag):
+
+                item = QTableWidgetItem(group)
+                self.setItem(row,0,item)
+                dataName = stream.readQString()
+                dataIcon = QtGui.QIcon()
+                stream >> dataIcon
+
+                item = QTableWidgetItem(dataName)
+                item.setIcon(dataIcon)
+                self.setItem(row,1,item)
+
+            # item = QTableWidgetItem(text)
+            # item.setIcon(icon)
+            # drop_row = self.rowCount() + 1
+            # self.setItem(drop_row,drop_col, item)
+            # # event.setDropAction(QtCore.Qt.CopyAction)
+            # event.accept()
+            # self.dropped.emit(drop_row)
         else:
             event.ignore()
 
@@ -164,12 +223,29 @@ class Window(QWidget):
     def __init__(self, rows, columns):
         QWidget.__init__(self)
         self.table = TableWidget(rows, columns,2,'input_table', self)
+        dndListWidget = MyDnDListWidget()
         for column in range(columns):
             for row in range(rows):
                 item = QTableWidgetItem('Text%d' % row)
                 self.table.setItem(row, column, item)
         layout = QVBoxLayout(self)
+
+        path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        #        path = '/Users/Matte/Python_script/Phenopy3/'
+        i = 0
+        for image in sorted(os.listdir(os.path.join(path, "images"))):
+            if image.endswith(".png") or image.endswith(".ico"):
+                item = QListWidgetItem(image.split(".")[0].capitalize())
+                if i in [0, 2, 3]:
+                    item.setIcon(QtGui.QIcon(os.path.join(path,
+                                                    "images/{0}".format(image))))
+                i += 1
+                dndListWidget.addItem(item)
+
+
         layout.addWidget(self.table)
+        layout.addWidget(dndListWidget)
+
         self.table.setMouseTracking(True)
         self.table.itemEntered.connect(self.handleItemEntered)
         self.table.itemExited.connect(self.handleItemExited)
@@ -182,7 +258,9 @@ class Window(QWidget):
 
 if __name__ == '__main__':
 
-    import sys
+    import sys,os
+    sys.path.append('/Users/edoardo/Work/Code/phenopy/dialogsAndWidget/analysisDlg')
+    from MyDnDDialog import MyDnDListWidget
     app = QApplication(sys.argv)
     window = Window(6, 3)
     window.setGeometry(500, 300, 350, 250)
