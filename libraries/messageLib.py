@@ -974,7 +974,7 @@ def program_TTL(Id,row,pin,duration):
     if pin < 1 or pin >= 15:
         raise ValueError('Pin must be an INT between 1 and 15')
     print('duration',duration) 
-    if duration < 1 or duration > 250:
+    if duration < 0 or duration > 250:
         raise ValueError('Duration must be in the range of [1,250]')
     elif duration != 1 and duration % 10 != 0:
         raise ValueError('Duration must be a multiple of 10')
