@@ -48,7 +48,7 @@ from datainfodlg import datainfodlg
 from protocol_save_files import load_npz,save_data_container
 from AnalysisSingle_Std import analysisSingle_thread
 #from SearchDlg import SearchDlg
-from input_Dlg_std import inputDialog
+from Input_Dlg_std import inputDialog
 from CreateGroupsDlg import CreateGroupsDlg   
 from copy import copy
 

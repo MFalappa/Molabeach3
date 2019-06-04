@@ -29,7 +29,7 @@ from Modify_Dataset_GUI import (DetectDelimiter_GUI,Rescale_Time_GUI,Time_Detail
 import pyedflib
 import pandas as pd
 import nexfile
-from input_Dlg_std import *
+from Input_Dlg_std import *
 
 def loadTimeActionData_TSE(path):
     """
