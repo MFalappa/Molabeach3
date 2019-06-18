@@ -28,7 +28,7 @@ from Modify_Dataset_GUI import (Dataset_GUI,Merge_N_Dataset_GUI,vectAddDays,
 from MergeDlg import MergeDlg
 from PyQt5.QtWidgets import QApplication,QMainWindow
 from CreateGroupsDlg import CreateGroupsDlg
-from input_Dlg_std import inputDialog
+from Input_Dlg_std import inputDialog
 import datetime as DT
 import numpy as np
 

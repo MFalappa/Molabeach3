@@ -30,7 +30,7 @@ from PyQt5.QtGui import (QCursor,QDrag, QIcon)
 
 class MyDnDListWidget(QListWidget):
     dropped = pyqtSignal(int)
-    dragged = pyqtSignal(int)
+    dragged = pyqtSignal(list)
     def __init__(self,listID = 'input_list', parent=None):
         super(MyDnDListWidget, self).__init__(parent)
         self.setAcceptDrops(True)
@@ -117,7 +117,6 @@ class Form(QDialog):
 
         dndListWidget = MyDnDListWidget()
         path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-#        path = '/Users/Matte/Python_script/Phenopy3/'
         i=0
         for image in sorted(os.listdir(os.path.join(path, "images"))):
             if image.endswith(".png") or image.endswith(".ico"):

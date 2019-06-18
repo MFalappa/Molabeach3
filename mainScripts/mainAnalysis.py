@@ -41,14 +41,14 @@ from PyQt5.QtWidgets import (QAction, QApplication, QDockWidget, QFileDialog,
 from PyQt5.QtGui import (QIcon,QImage,QKeySequence,QPixmap)
 
 from get_folder_and_format_dlg_export import get_export_info_dlg
-from Class_Analisi import (Analysis_Single_GUI, Analysis_Group_GUI)
 from Wizard_New_Analysis import new_Analysis_Wizard
 from pairDataDlg import pairDataDlg
 from datainfodlg import datainfodlg 
 from protocol_save_files import load_npz,save_data_container
 from AnalysisSingle_Std import analysisSingle_thread
-#from SearchDlg import SearchDlg
-from input_Dlg_std import inputDialog
+
+
+from Input_Dlg_std import inputDialog
 from CreateGroupsDlg import CreateGroupsDlg   
 from copy import copy
 
@@ -64,8 +64,10 @@ import matplotlib.pylab as plt
 
 from importDatasetDlg import importDlg
 
+#from Class_Analisi import (Analysis_Single_GUI, Analysis_Group_GUI)
+#from SearchDlg import SearchDlg
+#from select_group_num_dlg import select_group_num
 
-from select_group_num_dlg import select_group_num
 from export_files import select_export
 from editDatasetDlg import editDlg
 from Analyzing_GUI import Extracting_Data_GUI
@@ -863,8 +865,11 @@ class MainWindow(QMainWindow):
             must be done, for that reason the module for editing and saving
             will be unabled.
 
-            NEW FEATURES, only need to pass a dictionary with the info regarding the selected abnalysis to the dialog.
+            NEW FEATURES, only need to pass a dictionary with the info regarding the selected analysis to the dialog.
         """
+        
+
+        
         # self.AnalysisAndLabels contiene
         # key1: Single,Group or Integrative
         # key2: nome funzione analisi
@@ -879,65 +884,71 @@ class MainWindow(QMainWindow):
         anType = analysisDict['anType']
         dataType = analysisDict['dataType']
         analysisName = analysisDict['analysisName']
-
-        if anType == 'Integrative':
-            # Data select and pairing
-            type_list = []
-            for tl in list(dataType.values()):
-                type_list += tl
-            paired_matrix = self.integrativeSpecificProcessing(analysisName)
-            data_list = list(paired_matrix[paired_matrix.dtype.names[1]])
-            if paired_matrix is None:
-                return
-        else:
-            type_list = dataType
-            paired_matrix = None
-            try:
-                self.lock.lockForRead()
-                data_list = self.subSetDataPerType(type_list)
-            finally:
-                self.lock.unlock()
+        groupName = analysisDict['analysisName']
         
-        if anType in ['Group', 'Integrative']:
-            dialog = select_group_num(parent=self)
-            if not dialog.exec_():
-                return
-            num_group = dialog.spinBox.value()
-            analysisCreator = Analysis_Group_GUI
-            analysisThread = self.analysisGroupThread
-            
-        else:
-            num_group = 1
-            analysisCreator = Analysis_Single_GUI
-            analysisThread = self.analysisSingleThread
-            
-        dialog = CreateGroupsDlg(num_group, data_list,
-                                 DataContainer=self.Dataset,
-                                 parent=self)
-        if not dialog.exec_():
-            return
-       
-        # da qui in poi da scrivere i select groups in caso di gruppo/integrative
-        # numero gruppi = 1 in caso di single 
-        # pairing in caso di integrative
-        # continuo con gli input come al solito
-        selectedDataDict = dialog.returnSelectedNames()
+        print('anType ',anType)
+        print('dataType ',dataType)
+        print('analysisName ',analysisName)
+        print('groupName ',groupName)
+#
+#        if anType == 'Integrative':
+#            # Data select and pairing
+#            type_list = []
+#            for tl in list(dataType.values()):
+#                type_list += tl
+#            paired_matrix = self.integrativeSpecificProcessing(analysisName)
+#            data_list = list(paired_matrix[paired_matrix.dtype.names[1]])
+#            if paired_matrix is None:
+#                return
+#        else:
+#            type_list = dataType
+#            paired_matrix = None
+#            try:
+#                self.lock.lockForRead()
+#                data_list = self.subSetDataPerType(type_list)
+#            finally:
+#                self.lock.unlock()
+#        
+#        if anType in ['Group', 'Integrative']:
+#            dialog = select_group_num(parent=self)
+#            if not dialog.exec_():
+#                return
+#            num_group = dialog.spinBox.value()
+#            analysisCreator = Analysis_Group_GUI
+#            analysisThread = self.analysisGroupThread
+#            
+#        else:
+#            num_group = 1
+#            analysisCreator = Analysis_Single_GUI
+#            analysisThread = self.analysisSingleThread
+#            
+#        dialog = CreateGroupsDlg(num_group, data_list,
+#                                 DataContainer=self.Dataset,
+#                                 parent=self)
+#        if not dialog.exec_():
+#            return
+#       
+#        # da qui in poi da scrivere i select groups in caso di gruppo/integrative
+#        # numero gruppi = 1 in caso di single 
+#        # pairing in caso di integrative
+#        # continuo con gli input come al solito
+#        selectedDataDict = dialog.returnSelectedNames()
         
-        pairedGroups = self.groupDictPerPaired(paired_matrix,selectedDataDict)
-        createAnalysis = analysisCreator(analysisName)
-        inputCreator = createAnalysis.inputCreator
-        Input = self.inputDlgLauncher(inputCreator,selectedDataDict)
-        if Input == -1:
-            self.enableActionAfterAnalysis(anType)
-            return
-        self.disableActionDuringAnalysis(anType) 
-        
-        analysisThread.initialize(Input, analysisName,
-                                  selectedDataDict, self.TimeStamps,pairedGroups)
-
-#        analysisThread.start() # uncomment for parallel execution
-        analysisThread.run()
-        self.status.showMessage('%s analysis is running...'%analysisName)
+#        pairedGroups = self.groupDictPerPaired(paired_matrix,selectedDataDict)
+#        createAnalysis = analysisCreator(analysisName)
+#        inputCreator = createAnalysis.inputCreator
+#        Input = self.inputDlgLauncher(inputCreator,selectedDataDict)
+#        if Input == -1:
+#            self.enableActionAfterAnalysis(anType)
+#            return
+#        self.disableActionDuringAnalysis(anType) 
+#        
+#        analysisThread.initialize(Input, analysisName,
+#                                  selectedDataDict, self.TimeStamps,pairedGroups)
+#
+##        analysisThread.start() # uncomment for parallel execution
+#        analysisThread.run()
+#        self.status.showMessage('%s analysis is running...'%analysisName)
         
     def groupDictPerPaired(self,paired_matrix, selectedDataDict):
         if paired_matrix is None:

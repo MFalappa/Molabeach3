@@ -16,17 +16,21 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 import os,sys
 libraries_fld = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libraries')
+classes_fld = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes')
+
 sys.path.append(libraries_fld)
+sys.path.append(os.path.join(classes_fld,'analysisClasses'))
 
 
 from PyQt5.QtWidgets import (QDialog,QLabel,QComboBox,QTextBrowser,QPushButton,
-                             QHBoxLayout,QVBoxLayout,QTableWidget,QSpacerItem,
+                             QHBoxLayout,QVBoxLayout,QSpacerItem,
                              QSizePolicy,QApplication)
 
 from PyQt5.QtCore import (pyqtSignal,Qt)
 
 from Modify_Dataset_GUI import DatasetContainer_GUI
 from changeLabelshow import info_label
+from tableGrouping import TableWidget
 #from importDataset import *
 #from importLauncher import launchLoadingFun
 
@@ -34,6 +38,7 @@ from changeLabelshow import info_label
 class behavDlg(QDialog):
     closeSig = pyqtSignal(str,name='closeSig')
     runAnalysisSig = pyqtSignal(dict, name='beahvior')
+#    def __init__(self,parent=None):
     def __init__(self,data,analysisDict,parent=None):        
         super(behavDlg, self).__init__(parent)
         self.analysisDict = analysisDict
@@ -51,7 +56,8 @@ class behavDlg(QDialog):
             self.data_container = DatasetContainer_GUI()
             
         label = QLabel('<b>Behaviour data to analyze:</b>')
-        self.tableWidget = QTableWidget()
+        self.tableWidget = TableWidget(0, 0,'input_table', self)
+#        self.tableWidget = QTableWidget()
 
         label1 = QLabel('<b>Choose analysis function:</b>')
         self.comboBox = QComboBox()
@@ -98,11 +104,14 @@ class behavDlg(QDialog):
         self.pushButton_run.setEnabled(False)
         self.pushButton_run.clicked.connect(self.runAnalysis)
         self.pushButton_cancel.clicked.connect(self.closeTab)
+        self.tableWidget.element_in.connect(self.checkfile)
 
     
     def checkfile(self):
-        print('qui ci va la tabella??')
-        self.pushButton_run.setEnabled(True)
+        if bool(self.tableWidget.dict_elemenet):
+            self.pushButton_run.setEnabled(True)
+        else:
+            self.pushButton_run.setEnabled(False)
 
     def runAnalysis(self):
         showed_name = self.comboBox.currentText()
@@ -112,7 +121,11 @@ class behavDlg(QDialog):
             if selectedAnalysis in list(self.analysisDict[typeOfAnalysis].keys()):
                 acceptedTypes = self.analysisDict[typeOfAnalysis][selectedAnalysis]
                 break
-        dictSelection = {'anType': typeOfAnalysis, 'dataType': acceptedTypes, 'analysisName': selectedAnalysis}
+        dictSelection = {'anType': typeOfAnalysis, 
+                         'dataType': acceptedTypes, 
+                         'analysisName': selectedAnalysis, 
+                         'Groups' : self.tableWidget.dict_elemenet}
+        
         self.runAnalysisSig.emit(dictSelection)
 
     def showDescription(self,funName):
