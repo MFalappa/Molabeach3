@@ -32,6 +32,7 @@ from Analyzing_GUI import (F_Actogram_GUI,Fit_Sin_BestPeriod,HourDark_And_Light_
 
 
 class analysisSingle_thread(QThread):
+    threadFinished = pyqtSignal()
     def __init__(self, Datas, lock, parent = None):
         super(analysisSingle_thread, self).__init__(parent)
         self.lock = lock
@@ -60,6 +61,7 @@ class analysisSingle_thread(QThread):
     def run(self):
         self.outputData, self.inputForPlots, self.info =\
             self.analyze(self.analysisName)
+        self.threadFinished.emit()
         self.emit(pyqtSignal('threadFinished()'))
         
     def setInput(self, Input, DataList):

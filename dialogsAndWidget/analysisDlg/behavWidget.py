@@ -124,7 +124,8 @@ class behavDlg(QDialog):
         dictSelection = {'anType': typeOfAnalysis, 
                          'dataType': acceptedTypes, 
                          'analysisName': selectedAnalysis, 
-                         'Groups' : self.tableWidget.dict_elemenet}
+                         'Groups' : self.tableWidget.dict_elemenet,
+                         'Pairing' : None }
         
         self.runAnalysisSig.emit(dictSelection)
 

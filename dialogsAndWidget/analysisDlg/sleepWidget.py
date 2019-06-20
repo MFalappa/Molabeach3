@@ -20,13 +20,14 @@ sys.path.append(libraries_fld)
 
 
 from PyQt5.QtWidgets import (QDialog,QLabel,QComboBox,QTextBrowser,QPushButton,
-                             QHBoxLayout,QVBoxLayout,QTableWidget,QSpacerItem,
+                             QHBoxLayout,QVBoxLayout,QSpacerItem,
                              QSizePolicy,QApplication)
 
 from PyQt5.QtCore import (pyqtSignal,Qt)
 
 from Modify_Dataset_GUI import DatasetContainer_GUI
 from changeLabelshow import info_label
+from tableGrouping import TableWidget
 #from importDataset import *
 #from importLauncher import launchLoadingFun
 
@@ -51,7 +52,7 @@ class sleepDlg(QDialog):
             self.data_container = DatasetContainer_GUI()
             
         label = QLabel('<b>Sleep data to analyze:</b>')
-        self.tableWidget = QTableWidget()
+        self.tableWidget = TableWidget(0, 0,'input_table', self)
 
         label1 = QLabel('<b>Choose analysis function:</b>')
         self.comboBox = QComboBox()
@@ -97,11 +98,15 @@ class sleepDlg(QDialog):
         self.pushButton_run.setEnabled(False)
         self.pushButton_run.clicked.connect(self.runAnalysis)
         self.pushButton_cancel.clicked.connect(self.closeTab)
+        self.tableWidget.element_in.connect(self.checkfile)
 
     
     def checkfile(self):
-        print('qui ci va la tabella')
-        self.pushButton_run.setEnabled(True)
+        if bool(self.tableWidget.dict_elemenet):
+            self.pushButton_run.setEnabled(True)
+        else:
+            self.pushButton_run.setEnabled(False)
+       
 
     def runAnalysis(self):
         selectedAnalysis = self.comboBox.currentText()
@@ -109,7 +114,11 @@ class sleepDlg(QDialog):
             if selectedAnalysis in list(self.analysisDict[typeOfAnalysis].keys()):
                 acceptedTypes = self.analysisDict[typeOfAnalysis][selectedAnalysis]
                 break
-        dictSelection = {'anType': typeOfAnalysis, 'dataType': acceptedTypes, 'analysisName': selectedAnalysis}
+        dictSelection = {'anType': typeOfAnalysis, 
+                         'dataType': acceptedTypes, 
+                         'analysisName': selectedAnalysis,
+                         'Groups' : self.tableWidget.dict_elemenet,
+                         'Pairing' : None }
         self.runAnalysisSig.emit(dictSelection)
 
     def showDescription(self,funName):

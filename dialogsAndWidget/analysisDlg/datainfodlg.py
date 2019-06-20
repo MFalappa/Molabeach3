@@ -23,7 +23,7 @@ sys.path.append(lib_dir)
 from PyQt5.QtWidgets import (QDialog,QHBoxLayout,QLabel,QPushButton,QVBoxLayout,
                              QTextBrowser,QTextEdit,QListWidget,QSpacerItem,QSizePolicy,
                              QApplication)
-from PyQt5.QtCore import Qt,QReadWriteLock
+from PyQt5.QtCore import (Qt,QReadWriteLock,pyqtSignal)
 from PyQt5.QtGui import QFont
 
 from MyDnDDialog import MyDnDListWidget
@@ -37,6 +37,7 @@ MAC = 'qt_mac_set_native_menubar' in dir()
 
 
 class EditTypesDlg(QDialog):
+    updateTypes = pyqtSignal()
     def __init__(self,Dataset,AllTypes=[],lock=None,parent=None):
         super(EditTypesDlg,self).__init__(parent)
         self.__Dataset=Dataset
@@ -82,9 +83,11 @@ class EditTypesDlg(QDialog):
         closeButton.clicked.connect(self.close)
         self.applyButton.clicked.connect(self.Apply)
 
-        self.connect(self.listRestOfTypes,SIGNAL('dropped()'),lambda TorF=False: self.enableApply(TorF))
-        self.connect(self.listDataType,SIGNAL('dropped()'),lambda TorF=True: self.enableApply(TorF))
+#        self.connect(self.listRestOfTypes,SIGNAL('dropped()'),lambda TorF=False: self.enableApply(TorF))
+#        self.connect(self.listDataType,SIGNAL('dropped()'),lambda TorF=True: self.enableApply(TorF))
        
+        self.listRestOfTypes.dropped.connect(lambda TorF=False: self.enableApply(TorF))
+        self.listDataType.dropped.connect(lambda TorF=True: self.enableApply(TorF))
         
     def Apply(self):
         ItemList=[]
@@ -106,7 +109,8 @@ class EditTypesDlg(QDialog):
             self.__Dataset.Types = ItemList
         finally:
             self.lock.unlock()
-        self.emit(SIGNAL('updateTypes()'))
+        self.updateTypes.emit()
+#        self.emit(SIGNAL('updateTypes()'))
     
     def close(self):
         self.listDataType.clear()
@@ -238,8 +242,8 @@ def main():
     import numpy as np
     app = QApplication(sys.argv)
     lock = QReadWriteLock()
-    datas = np.load('/Users/Matte/Scuola/Dottorato/Projects/Pace/pitolisant/prova_binned.phz')
-    data_1 = datas['WT_5075_BL_cFFT.txt'].all()
+    datas = np.load('/Users/Matte/Desktop/test_data.phz')
+    data_1 = datas['5.tmpcsv'].all()
     
 #    data_1.Dataset = ['ciaspole']
     dlg = datainfodlg(data_1,TimeStamps=None,TypeList=['Ciao','Cacao'],lock=lock)

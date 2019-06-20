@@ -1210,7 +1210,7 @@ def plot_Standard_Input_Error_Rate_GUI(stdGroupMatrix, Dark_length,
         fig = {}
     else:
         fig = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-        plt.hold(True)
+#        plt.hold(True)
     colorList = []
     for group in GroupList:
         y_axis = stdGroupMatrix[stat_ind]\
@@ -1244,7 +1244,7 @@ def plot_Standard_Input_Error_Rate_GUI(stdGroupMatrix, Dark_length,
     plt.ylim(0, 1)
 
     fig1 = plt.figure()
-    plt.hold(True)
+#    plt.hold(True)
     x_axis = []
     y_axis = []
     ind = 0
@@ -1277,8 +1277,7 @@ def plot_Standard_Input_Error_Rate_GUI(stdGroupMatrix, Dark_length,
         plt.bar(x_axis , y_axis, 0.4,
                 align='center', color=colorList, ecolor='r')
         for kk in range(len(y_axis)):
-            plt.errorbar([x_axis[kk]] , [y_axis[kk]], yerr=[y_err[kk]],fmt=None,
-                align='center', ecolor=colorList[kk], elinewidth=1.5)
+            plt.errorbar([x_axis[kk]] , [y_axis[kk]], yerr=[y_err[kk]], ecolor=colorList[kk], elinewidth=1.5)
         plt.xticks(x_axis,ticks,fontsize='medium')
         Argmax = np.argmax(y_axis)
         y_max = max(1, y_axis[Argmax]+y_err[Argmax])

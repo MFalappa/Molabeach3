@@ -174,7 +174,7 @@ class inputDialog(QDialog):
             
             for indexCombo in range(len(comboBox)):
                 ComboLabel = QLabel(str(comboBox[indexCombo][0]))
-                print(indexCombo ,comboBox[indexCombo])
+#                print(indexCombo ,comboBox[indexCombo])
                 thisCombo = QComboBox()
                 thisCombo.addItems(comboBox[indexCombo][1])
                 thisCombo.setCurrentIndex(comboBox[indexCombo][3])
@@ -381,7 +381,7 @@ class inputDialog(QDialog):
 #                             lambda ToF=True,ToF2 = True:\
 #                             self.enableOk(BoolData=ToF,BoolSave=ToF2))
         elif folderSave:
-            print('folderSave Connect')
+#            print('folderSave Connect')
             self.LineEditFileSaveDir.textChanged[str].connect(lambda par=None,ToF=True, ToF2 = True:\
                      self.enableOk(par,BoolData=ToF,BoolSave=ToF2))
             
@@ -511,7 +511,7 @@ class inputDialog(QDialog):
                                        self.TimeRange_1[key].time().toPyTime())]
            
        if self.folderSave:
-           print('Adding SavingDetails to stdOutput')
+#           print('Adding SavingDetails to stdOutput')
            stdOutPut['SavingDetails'] = []
            if self.saveCheckBox.isChecked():
                Dir = str(self.LineEditFileSaveDir.text())
@@ -661,7 +661,7 @@ def main():
 #    t_last=form.HourSpinBox[2].value()*3600+form.MinuteSpinbox[2].value()*60
 #   
 #    print(form.ComboBox[0].selectedValue(),form.ComboBox[1].selectedValue())
-    stdOutPut = form.createStdOutput()
-    print(stdOutPut)
+#    stdOutPut = form.createStdOutput()
+#    print(stdOutPut)
 if __name__ == '__main__':
     main()

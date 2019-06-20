@@ -506,7 +506,8 @@ def F_Correct_Rate_GUI(Y,Start_exp,period,TimeStamps,*tend):
     else:
         tend=tend[0]
 
-    TrialOnSet=np.where(Y['Action']==TimeStamps['Center Light On'])[0]
+    TrialOnSet=np.where(Y['Action']==TimeStamps['ACT_START_TEST'])[0]
+#    TrialOnSet=np.where(Y['Action']==TimeStamps['Center Light On'])[0]
     TrialOffSet=np.where(Y['Action']==TimeStamps['End Intertrial Interval'])[0]
     StartITI=np.where(Y['Action']==TimeStamps['Start Intertrial Interval'])[0]
     
@@ -3195,7 +3196,7 @@ def stdMatrix_Group_Stat_Index_GUI(stdMatrix, Group_Dict):
                 in stdMatrix for every group at every time point
     """
     GroupList = list(Group_Dict.keys())
-    subject   = Group_Dict[GroupList[0]][0]
+    subject   = Group_Dict[GroupList[0]][0].encode()
     HourList  = stdMatrix['Time'][np.where(stdMatrix['Subject'] == subject)[0]]
     timeStrLen = len(HourList[0])
     groupNameLen = []
@@ -3214,7 +3215,7 @@ def stdMatrix_Group_Stat_Index_GUI(stdMatrix, Group_Dict):
         Matrix = np.zeros(Shape)
         row = 0
         for subject in Group_Dict[group]:
-            SubInd        = np.where(stdMatrix['Subject'] == subject)[0]
+            SubInd        = np.where(stdMatrix['Subject'] == subject.encode())[0]
             Matrix[row,:] = stdMatrix['Mean'][SubInd]
             row += 1
         stdGroupMatrix['Mean'][ind : ind + len(HourList)] =\

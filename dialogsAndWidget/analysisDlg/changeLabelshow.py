@@ -29,8 +29,8 @@ def info_label(function_name):
         type_func = 'Sleep'
         
     elif function_name == 'LDA':
-        label = 'Linear discriminant analysis'
-        description = 'Compute the switch time from short to long location'
+        label = 'LDA'
+        description = 'Compute the Linear discriminant analysis combining behaviour data and sleep data.\nIn order to run the analysis, create groups with the same name for each data type, the data will be matched according to the order'
         type_func = 'Integrative'
         
     elif function_name == 'delta_rebound':

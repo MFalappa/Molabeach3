@@ -146,7 +146,7 @@ def Power_Density(*myInput):
     DD['Power Density']['Power Density Wake'] = DataDict['Power Density Wake']
     DD['Power Density']['Power Density Rem'] = DataDict['Power Density Rem']
     DD['Power Density']['Power Density NRem'] = DataDict['Power Density NRem']
-    print('Completed analysis')
+#    print('Completed analysis')
 #    raw_input('press any key')
     return DD, dictPlot, datainfo
 def Group_Error_Rate(*myInput):
@@ -162,7 +162,7 @@ def Group_Error_Rate(*myInput):
     TimeInterval = Input[0]['Combo'][3]
     Dataset_Dict = {}
     TimeStamps_Dict = {}
-    print(DataGroup)
+#    print(DataGroup)
     for group in list(DataGroup.keys()):
         for dataName in DataGroup[group]:
             try:

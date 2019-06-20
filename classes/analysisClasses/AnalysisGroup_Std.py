@@ -42,7 +42,7 @@ class analysisGroup_thread(QThread):
         
     def initialize(self, Input, analysisName, GroupsDict,TimeStamps,pairedGroups,
                    Other = None):
-        print('start initialize Gr')
+#        print('start initialize Gr')
         self.Input = Input
         self.analysisName = analysisName
         self.TimeStamps = copy(TimeStamps)
@@ -57,7 +57,7 @@ class analysisGroup_thread(QThread):
                 break
         if flag:
             self.savingDetails = False
-        print('end initialize ',self.savingDetails)
+#        print('end initialize ',self.savingDetails)
     def run(self):
         self.outputData, self.inputForPlots, self.info =\
             self.analyze(self.analysisName)
@@ -69,7 +69,7 @@ class analysisGroup_thread(QThread):
 #        self.GroupsDict = GroupsDict
     
     def analyze(self, analysisName):
-        print('Gr analyze called',':',analysisName)
+#        print('Gr analyze called',':',analysisName)
         try:
             outputData, inputForPlot, info = \
                 function_Launcher_Gr(analysisName,self.Datas,

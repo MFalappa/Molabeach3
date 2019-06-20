@@ -20,12 +20,14 @@ sys.path.append(libraries_fld)
 
 
 from PyQt5.QtWidgets import (QDialog,QLabel,QComboBox,QTextBrowser,QPushButton,
-                             QHBoxLayout,QVBoxLayout,QTableWidget,QSpacerItem,
-                             QSizePolicy,QApplication)
+                             QHBoxLayout,QVBoxLayout,QSpacerItem,
+                             QSizePolicy,QApplication,QMessageBox,QInputDialog)
 
 from PyQt5.QtCore import (pyqtSignal,Qt)
 
 from Modify_Dataset_GUI import DatasetContainer_GUI
+from changeLabelshow import info_label
+from tableGrouping import TableWidget
 #from importDataset import *
 #from importLauncher import launchLoadingFun
 
@@ -49,8 +51,11 @@ class integrativeDlg(QDialog):
             self.parent = parent
             self.data_container = DatasetContainer_GUI()
             
-        label = QLabel('<b>Dataata to analyze:</b>')
-        self.tableWidget = QTableWidget()
+        label = QLabel('<b>Data to analyze (Type I):</b>')
+        self.tableWidget1 = TableWidget(0, 0,'input_table', self)
+        
+        label4 = QLabel('<b>Data to analyze (Type II):</b>')
+        self.tableWidget2 = TableWidget(0, 0,'input_table', self)
 
         label1 = QLabel('<b>Choose analysis function:</b>')
         self.comboBox = QComboBox()
@@ -64,7 +69,9 @@ class integrativeDlg(QDialog):
 
         vLayout_l = QVBoxLayout()
         vLayout_l.addWidget(label)
-        vLayout_l.addWidget(self.tableWidget)
+        vLayout_l.addWidget(self.tableWidget1)
+        vLayout_l.addWidget(label4)
+        vLayout_l.addWidget(self.tableWidget2)
         
         vLayout = QVBoxLayout()
         vLayout.addWidget(label1)
@@ -96,49 +103,103 @@ class integrativeDlg(QDialog):
         self.pushButton_run.setEnabled(False)
         self.pushButton_run.clicked.connect(self.runAnalysis)
         self.pushButton_cancel.clicked.connect(self.closeTab)
+        
+        self.tableWidget1.element_in.connect(self.checkfile)
+        self.tableWidget2.element_in.connect(self.checkfile)
 
     
     def checkfile(self):
-        print('qui ci va la tabella')
-        self.pushButton_run.setEnabled(True)
-
+        if bool(self.tableWidget1.dict_elemenet) and  bool(self.tableWidget2.dict_elemenet):
+            for gr in self.tableWidget1.dict_elemenet.keys():
+                if gr in self.tableWidget2.dict_elemenet:
+                    if len(self.tableWidget2.dict_elemenet[gr]) == len(self.tableWidget1.dict_elemenet[gr]):
+                         self.pushButton_run.setEnabled(True)
+                    else:
+                        self.pushButton_run.setEnabled(False)
+                        break
+                else:
+                    self.pushButton_run.setEnabled(False)
+                    break
+        else:
+            self.pushButton_run.setEnabled(False)
+            
+            
     def runAnalysis(self):
         selectedAnalysis = self.comboBox.currentText()
         for typeOfAnalysis in list(self.analysisDict.keys()):
             if selectedAnalysis in list(self.analysisDict[typeOfAnalysis].keys()):
                 acceptedTypes = self.analysisDict[typeOfAnalysis][selectedAnalysis]
                 break
-        dictSelection = {'anType': typeOfAnalysis, 'dataType': acceptedTypes, 'analysisName': selectedAnalysis}
-        self.runAnalysisSig.emit(dictSelection)
+            
+        pairing = {}
+
+        stringa = str()
+        for gr in self.tableWidget1.dict_elemenet.keys():
+            pairing[gr] = {}
+            pairing[gr]['Type I'] = self.tableWidget1.dict_elemenet[gr]
+            pairing[gr]['Type II'] = self.tableWidget2.dict_elemenet[gr]
+            
+        
+            stringa += "Gruop %s is paired:\n\n" %gr
+            for ll in range(len(self.tableWidget1.dict_elemenet[gr])):
+                stringa += '%s - %s\n' %(self.tableWidget1.dict_elemenet[gr][ll],
+                                                  self.tableWidget2.dict_elemenet[gr][ll])
+                
+            stringa += "\n\n=========\n"
+        
+        msgBox = QMessageBox(self)
+        msgBox.setText("These are your paired groups, would you like to accept them?")
+        msgBox.setInformativeText(stringa)
+        msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msgBox.setDefaultButton(QMessageBox.Yes)
+        ret = msgBox.exec_()
+        
+        if ret == QMessageBox.Yes:
+            options = ("Behavior","Sleep","Spikes")
+            type1, okPressed = QInputDialog.getItem(self, "Choose data type","Type I:", options, 0, False)
+            if okPressed and type1:
+                type2, okPressed = QInputDialog.getItem(self, "Choose data type","Type II:", options, 0, False)
+                if okPressed and type2:
+                    pairing = {}
+                    for gr in self.tableWidget1.dict_elemenet.keys():
+                        pairing[gr] = {}
+                        pairing[gr][type1] = self.tableWidget1.dict_elemenet[gr]
+                        pairing[gr][type2] = self.tableWidget2.dict_elemenet[gr]
+
+            dictSelection = {'anType': typeOfAnalysis, 
+                             'dataType': acceptedTypes, 
+                             'analysisName': selectedAnalysis,
+                             'Groups' : self.tableWidget1.dict_elemenet,
+                             'Pairing' : pairing}
+            
+            self.runAnalysisSig.emit(dictSelection)
+            
 
     def showDescription(self,funName):
         self.textBrowser_descr.setText(self.descr_dict[funName])
         
     def populateCombo(self):
-        fh = open(os.path.join(libraries_fld,'Analyzing_GUI.py'))
+        fh = open(os.path.join(libraries_fld,'analysis_functions.py'))
         line = fh.readline()
 
         while line:
             if line.startswith(('def ','def\t')):
                 funName = (line[3:].replace(' ','')).replace('\t','')
                 funName = funName.split('(')[0]
+                
                 if funName == 'main' or funName == 'create_laucher':
                     line = fh.readline()
                     continue
-                self.comboBox.addItem(funName)
+                                
+                label, description, type_func = info_label(funName)
+                if type_func == 'Integrative':
+                    self.comboBox.addItem(label)
+                    self.descr_dict[label] = description
+                
                 line = fh.readline()
-                if '\"\"\"' in line:
-                    descr_str = line.split('\"\"\"')[1]
-                    line = fh.readline()
-                    while not '\"\"\"' in line:
-                        descr_str += line
-                        line = fh.readline()
-                    descr_str += line.split('\"\"\"')[0]
-                    descr_str = descr_str.replace('\n',' ')
-                    self.descr_dict[funName] = descr_str
-                else:
-                    self.descr_dict[funName] = ''
-            line = fh.readline()
+            else:
+                line = fh.readline()
+                
         fh.close()
 
     def closeTab(self):
