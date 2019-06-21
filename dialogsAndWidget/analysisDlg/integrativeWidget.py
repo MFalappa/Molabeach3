@@ -21,13 +21,14 @@ sys.path.append(libraries_fld)
 
 from PyQt5.QtWidgets import (QDialog,QLabel,QComboBox,QTextBrowser,QPushButton,
                              QHBoxLayout,QVBoxLayout,QSpacerItem,
-                             QSizePolicy,QApplication,QMessageBox,QInputDialog)
+                             QSizePolicy,QApplication)
 
 from PyQt5.QtCore import (pyqtSignal,Qt)
 
 from Modify_Dataset_GUI import DatasetContainer_GUI
 from changeLabelshow import info_label
 from tableGrouping import TableWidget
+from integrativeLabelPairing import intLabelPairing_dlg
 #from importDataset import *
 #from importLauncher import launchLoadingFun
 
@@ -106,7 +107,6 @@ class integrativeDlg(QDialog):
         
         self.tableWidget1.element_in.connect(self.checkfile)
         self.tableWidget2.element_in.connect(self.checkfile)
-
     
     def checkfile(self):
         if bool(self.tableWidget1.dict_elemenet) and  bool(self.tableWidget2.dict_elemenet):
@@ -131,50 +131,20 @@ class integrativeDlg(QDialog):
                 acceptedTypes = self.analysisDict[typeOfAnalysis][selectedAnalysis]
                 break
             
-        pairing = {}
-
-        stringa = str()
-        for gr in self.tableWidget1.dict_elemenet.keys():
-            pairing[gr] = {}
-            pairing[gr]['Type I'] = self.tableWidget1.dict_elemenet[gr]
-            pairing[gr]['Type II'] = self.tableWidget2.dict_elemenet[gr]
             
-        
-            stringa += "Gruop %s is paired:\n\n" %gr
-            for ll in range(len(self.tableWidget1.dict_elemenet[gr])):
-                stringa += '%s - %s\n' %(self.tableWidget1.dict_elemenet[gr][ll],
-                                                  self.tableWidget2.dict_elemenet[gr][ll])
-                
-            stringa += "\n\n=========\n"
-        
-        msgBox = QMessageBox(self)
-        msgBox.setText("These are your paired groups, would you like to accept them?")
-        msgBox.setInformativeText(stringa)
-        msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        msgBox.setDefaultButton(QMessageBox.Yes)
-        ret = msgBox.exec_()
-        
-        if ret == QMessageBox.Yes:
-            options = ("Behavior","Sleep","Spikes")
-            type1, okPressed = QInputDialog.getItem(self, "Choose data type","Type I:", options, 0, False)
-            if okPressed and type1:
-                type2, okPressed = QInputDialog.getItem(self, "Choose data type","Type II:", options, 0, False)
-                if okPressed and type2:
-                    pairing = {}
-                    for gr in self.tableWidget1.dict_elemenet.keys():
-                        pairing[gr] = {}
-                        pairing[gr][type1] = self.tableWidget1.dict_elemenet[gr]
-                        pairing[gr][type2] = self.tableWidget2.dict_elemenet[gr]
+        dlg = intLabelPairing_dlg(self.tableWidget1.dict_elemenet,self.tableWidget2.dict_elemenet,parent=self)
+        dlg.exec_()
 
-            dictSelection = {'anType': typeOfAnalysis, 
+        if bool(dlg.pairedLabel):
+            dictSelection = {'anType': typeOfAnalysis,
                              'dataType': acceptedTypes, 
                              'analysisName': selectedAnalysis,
                              'Groups' : self.tableWidget1.dict_elemenet,
-                             'Pairing' : pairing}
+                             'Pairing' : dlg.pairedLabel}
             
             self.runAnalysisSig.emit(dictSelection)
             
-
+        
     def showDescription(self,funName):
         self.textBrowser_descr.setText(self.descr_dict[funName])
         
