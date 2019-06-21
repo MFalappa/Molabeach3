@@ -42,7 +42,7 @@ from PyQt5.QtGui import (QIcon,QImage,QKeySequence,QPixmap)
 
 from get_folder_and_format_dlg_export import get_export_info_dlg
 from Wizard_New_Analysis import new_Analysis_Wizard
-from pairDataDlg import pairDataDlg
+#from pairDataDlg import pairDataDlg
 from datainfodlg import datainfodlg 
 from protocol_save_files import load_npz,save_data_container
 from AnalysisSingle_Std import analysisSingle_thread

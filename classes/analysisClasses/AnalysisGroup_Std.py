@@ -27,9 +27,6 @@ from copy import copy
 from launcher_Gr import function_Launcher_Gr
 import traceback
 
-#from Analyzing_GUI import *
-#from Plotting_GUI import *
-
 class analysisGroup_thread(QThread):
     threadFinished = pyqtSignal()
     def __init__(self, Datas, lock, parent = None):
@@ -42,7 +39,7 @@ class analysisGroup_thread(QThread):
         
     def initialize(self, Input, analysisName, GroupsDict,TimeStamps,pairedGroups,
                    Other = None):
-#        print('start initialize Gr')
+
         self.Input = Input
         self.analysisName = analysisName
         self.TimeStamps = copy(TimeStamps)
@@ -57,19 +54,16 @@ class analysisGroup_thread(QThread):
                 break
         if flag:
             self.savingDetails = False
-#        print('end initialize ',self.savingDetails)
+
     def run(self):
         self.outputData, self.inputForPlots, self.info =\
             self.analyze(self.analysisName)
         self.threadFinished.emit()
-#        self.emit(pyqtSignal('threadFinished()'))
         
     def setInput(self, Input, DataList):
         self.Input = Input
-#        self.GroupsDict = GroupsDict
     
     def analyze(self, analysisName):
-#        print('Gr analyze called',':',analysisName)
         try:
             outputData, inputForPlot, info = \
                 function_Launcher_Gr(analysisName,self.Datas,

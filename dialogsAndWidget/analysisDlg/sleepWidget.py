@@ -16,7 +16,10 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 import os,sys
 libraries_fld = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libraries')
+classes_fld = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes')
+
 sys.path.append(libraries_fld)
+sys.path.append(os.path.join(classes_fld,'analysisClasses'))
 
 
 from PyQt5.QtWidgets import (QDialog,QLabel,QComboBox,QTextBrowser,QPushButton,
@@ -90,6 +93,7 @@ class sleepDlg(QDialog):
         self.setLayout(hLayout)
         
         self.descr_dict = {}
+        self.show_dict = {} 
         self.path_dict = {}
         self.populateCombo()
         self.textBrowser_descr.setText(self.descr_dict[str(self.comboBox.currentText())]) 
@@ -109,18 +113,21 @@ class sleepDlg(QDialog):
        
 
     def runAnalysis(self):
-        selectedAnalysis = self.comboBox.currentText()
+        showed_name = self.comboBox.currentText()
+        selectedAnalysis = self.show_dict[showed_name]
+        
         for typeOfAnalysis in list(self.analysisDict.keys()):
             if selectedAnalysis in list(self.analysisDict[typeOfAnalysis].keys()):
                 acceptedTypes = self.analysisDict[typeOfAnalysis][selectedAnalysis]
                 break
+            
         dictSelection = {'anType': typeOfAnalysis, 
                          'dataType': acceptedTypes, 
-                         'analysisName': selectedAnalysis,
+                         'analysisName': selectedAnalysis, 
                          'Groups' : self.tableWidget.dict_elemenet,
                          'Pairing' : None }
+        
         self.runAnalysisSig.emit(dictSelection)
-
     def showDescription(self,funName):
         self.textBrowser_descr.setText(self.descr_dict[funName])
         
@@ -141,13 +148,13 @@ class sleepDlg(QDialog):
                 if type_func == 'Sleep':
                     self.comboBox.addItem(label)
                     self.descr_dict[label] = description
+                    self.show_dict[label] = funName
                 
                 line = fh.readline()
             else:
                 line = fh.readline()
 
         fh.close()
-
     def closeTab(self):
         self.close()
         self.closeSig.emit('closeSig')
