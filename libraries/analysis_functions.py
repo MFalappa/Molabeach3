@@ -61,22 +61,34 @@ def Power_Density(*myInput):
             AllData[key] = copy(Datas.takeDataset(key))
         finally:
             lock.unlock()
+    
+    count_sub = 0        
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            count_sub += 1
    
     (Power_Wake, Power_Rem, Power_NRem, Fr,IndexArray_dict,IndexGroup) = \
                               powerDensity_function(AllData,DataGroup, freqLim_Hz)
+                              
+            
 
     first = True
     for key in list(DataGroup.keys()):
         for name in DataGroup[key]:
             if first:
-                wake = np.vstack((Fr,Power_Wake[IndexGroup[key][name],:]))
-                sbj = np.vstack(('Subject',name))
-                grs = np.vstack(('Groups',key))
-                first = False
-            else:
-                wake = np.vstack((wake,Power_Wake[IndexGroup[key][name],:]))
-                sbj = np.vstack((sbj,name))
-                grs = np.vstack((grs,key))
+                typesFr = np.array(np.round(Fr,decimals=2),dtype=np.str_)
+                types = np.hstack((['Group','Subject'],typesFr))
+                df_res = np.zeros((count_sub,),dtype={'names':types,
+                                  'formats':(np.str_,np.str_,)+(float,)*Fr.shape[0]})
+            Power_Wake[IndexGroup[key][name],:]
+#                wake = np.vstack((Fr,Power_Wake[IndexGroup[key][name],:]))
+#                sbj = np.vstack(('Subject',name))
+#                grs = np.vstack(('Groups',key))
+#                first = False
+#            else:
+#                wake = np.vstack((wake,Power_Wake[IndexGroup[key][name],:]))
+#                sbj = np.vstack((sbj,name))
+#                grs = np.vstack((grs,key))
                 
     DataDict['Power Density Wake'] = np.hstack((grs,sbj,wake))
     
