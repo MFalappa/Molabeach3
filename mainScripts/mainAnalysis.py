@@ -45,7 +45,7 @@ from Wizard_New_Analysis import new_Analysis_Wizard
 #from pairDataDlg import pairDataDlg
 from datainfodlg import datainfodlg 
 from protocol_save_files import load_npz,save_data_container
-from AnalysisSingle_Std import analysisSingle_thread
+
 
 from Input_Dlg_std import inputDialog
 from copy import copy
@@ -68,7 +68,9 @@ from editDatasetDlg import editDlg
 from Modify_Dataset_GUI import (OrderedDict,DatasetContainer_GUI,Dataset_GUI,
                                save_A_Data_GUI)
 
-from AnalysisGroup_Std  import analysisGroup_thread
+from AnalysisThread import analysis_thread
+#from AnalysisSingle_Std import analysisSingle_thread
+#from AnalysisGroup_Std  import analysisGroup_thread
 from analysis_data_type_class import refreshTypeList
 
 #from spikeGUI import spk_gui
@@ -372,15 +374,18 @@ class MainWindow(QMainWindow):
         
 #       Analisis single thread
         self.lock = QReadWriteLock()
-        self.analysisSingleThread = analysisSingle_thread(self.Dataset,
-                                                          self.lock,
-                                                          self)
-        self.analysisGroupThread = analysisGroup_thread(self.Dataset,
-                                                          self.lock)
+#        self.analysisSingleThread = analysisSingle_thread(self.Dataset,
+#                                                          self.lock,
+#                                                          self)
+#        self.analysisGroupThread = analysisGroup_thread(self.Dataset,
+#                                                          self.lock)
+        
+        self.analysisThread = analysis_thread(self.Dataset,self.lock)
 
         # questi segnali vanno sistemati
-        self.analysisSingleThread.threadFinished.connect(lambda Type = 'Single': self.completedAnalysis(Type))
-        self.analysisGroupThread.threadFinished.connect(lambda Type = 'Group': self.completedAnalysis(Type))
+#        self.analysisSingleThread.threadFinished.connect(lambda Type = 'Single': self.completedAnalysis(Type))
+#        self.analysisGroupThread.threadFinished.connect(lambda Type = 'Group': self.completedAnalysis(Type))
+        self.analysisThread.threadFinished.connect(lambda Type = 'General': self.completedAnalysis(Type))
         
 #       connecting Dockwidget items to some methods   
         self.listWidgetLeft.itemClicked.connect(self.UpdateCurrentDataset)
@@ -817,7 +822,7 @@ class MainWindow(QMainWindow):
         # we don't have a distinction
         dlg = integrativeDlg(self.Dataset,self.AnalysisAndLabels,parent=self)
 
-        tabWidget.addTab(dlg,'Behaviour Toolbox')
+        tabWidget.addTab(dlg,'Integrative Toolbox')
         self.setCentralWidget(tabWidget)
         func = lambda : self.removeTab(integrativeDlg)
         dlg.closeSig.connect(func)
@@ -859,14 +864,14 @@ class MainWindow(QMainWindow):
 #            type_list = dataType
 #            paired_matrix = None
 
-        
+        analysisThread = self.analysisThread
         if anType in ['Group', 'Integrative']:
             analysisCreator = Analysis_Group_GUI
-            analysisThread = self.analysisGroupThread
+#            analysisThread = self.analysisGroupThread
             
         else:
             analysisCreator = Analysis_Single_GUI
-            analysisThread = self.analysisSingleThread
+#            analysisThread = self.analysisSingleThread
         
 #        pairedGroups = self.groupDictPerPaired(paired_matrix,selectedDataDict)
         createAnalysis = analysisCreator(analysisName)
@@ -959,12 +964,14 @@ class MainWindow(QMainWindow):
     def completedAnalysis(self, Type):
         self.status.showMessage('')
         self.enableActionAfterAnalysis(Type)
+        
+        thread = self.analysisThread
        
         if Type == 'Single':
-            thread = self.analysisSingleThread
+#            thread = self.analysisSingleThread
             select_plotFun = select_Function_GUI
         else:
-            thread = self.analysisGroupThread
+#            thread = self.analysisGroupThread
             select_plotFun = select_Function_GUI_Gr
         try:
             Dir = thread.savingDetails[0]

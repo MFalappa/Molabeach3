@@ -38,33 +38,35 @@ def info_label(function_name):
         description = 'Compute the time course of the power of selected sleep-wake stage along 24 hours'
         type_func = 'Sleep'
     
-    elif function_name == 'F_Actogram_GUI':
-        label = 'Actogram'
-        description = 'Display circadian activity data.\n This analysis should be compute from TSE or Mycrosystem data or with data from running wheels'
+    #da qui vanno controllati i nomi
+    elif function_name == 'Actograms':
+        label = 'Actograms'
+        description = 'Display circadian activity data.\nThis analysis should be compute from TSE or Mycrosystem data or with data from running wheels'
         type_func = 'Behaviour'
         
-    elif function_name == 'AITComputation_GUI':
+    elif function_name == 'AIT':
         label = 'Acutal inter trial'
         description = 'Compute the mean and std error of the actual inter trial (AIT) per daily hour'
         type_func = 'Behaviour'
         
-    elif function_name == 'F_PeakProbes_GUI':
+    elif function_name == 'peak_procedure':
         label = 'Peak analysis'
         description = 'Compute the  analysis for the peak behavioural test'
         type_func = 'Behaviour'
         
-    elif function_name == 'Raster_plot':
+    elif function_name == 'raster_plot':
         label = 'Raster analysis'
         description = 'Compute the raster plot for the selected location by bose-poke activity'
         type_func = 'Behaviour'
         
-    elif function_name == 'Error_Rate':
+    elif function_name == 'error_rate':
         label = 'Single error rate'
         description = 'Compute the error rate for selected group.\nThis is a single subject analysis'
         type_func = 'Behaviour'
         
+    #da implementare
     elif function_name == 'Attentional_analysis':
-        label = 'Attentional_analysis'
+        label = 'Attentional analysis'
         description = 'Compute the analysis for the attentional test.\nTo be added to Phenopy'
         type_func = 'Behaviour'
         
@@ -76,7 +78,7 @@ def info_label(function_name):
     elif function_name == 'emg_normalized':
         label = 'EMG normalized'
         description = 'Compute the analysis of the EMG signal.\nTo be added to Phenopy'
-        type_func = 'Sleep'
+        type_func = 'Integrative'
         
     elif function_name == 'Sleep_cycles':
         label = 'Sleep cycles'

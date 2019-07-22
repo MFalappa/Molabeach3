@@ -147,7 +147,7 @@ class Analysis_Group_GUI(object):
             self.getInput(analysisName, group_list)
         
     def getInput(self,analysisName, group_list):
-        print('Gr List:',group_list)
+#        print('Gr List:',group_list)
         self.inputCreator.refresh()
         try:
             dictInput = inputDlgCreator(analysisName, group_list)

@@ -150,6 +150,7 @@ class integrativeDlg(QDialog):
         
     def populateCombo(self):
         fh = open(os.path.join(libraries_fld,'analysis_functions.py'))
+#        fh = open(os.path.join(libraries_fld,'custom_Analysis_Gr.py'))
         line = fh.readline()
 
         while line:
