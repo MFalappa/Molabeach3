@@ -320,7 +320,7 @@ class inputDialog(QDialog):
             HLayout.addWidget(browseButton)
             VLayout.addLayout(HLayout)
             self.extensionCombo = QComboBox()
-            self.extensionCombo.addItems(['.jpg','.png','.eps','.pgf',\
+            self.extensionCombo.addItems(['.png','.eps','.pgf',\
                                      '.ps','.svg','.svgz','.tif',\
                                      '.tiff'])
             extensionLabel = QLabel('Choose image extension')

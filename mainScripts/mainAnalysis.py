@@ -55,6 +55,7 @@ from plot_Launcher_Gr import select_Function_GUI_Gr
 
 import datetime as dt
 import numpy as np
+import pandas as pd
 
 #import matplotlib.pylab as plt
 
@@ -1011,11 +1012,15 @@ class MainWindow(QMainWindow):
                     print('Unable to save figure%s\n%s'\
                         %(analysis,figKey))
         for analysis in list(dataDict.keys()):
-            DirData = os.path.join(Dir,analysis)
-            if not os.path.exists(DirData):
-                os.mkdir(DirData)
+
+
+            if not os.path.exists(Dir):
+                os.mkdir(Dir)
+
+            writer = pd.ExcelWriter(os.path.join(Dir, analysis+ '.xlsx'))
+
             for dataKey in list(dataDict[analysis].keys()):
-                fileName = os.path.join(DirData,dataKey + '.csv')
+                dataDict[analysis][dataKey].to_excel(writer,sheet_name=dataKey)
 #==============================================================================
 #   MODIFICARE LA PROCEDURA DI SALVATAGGIO DATI c Generalizzare il piu' possibile!!!
 #==============================================================================
@@ -1024,19 +1029,13 @@ class MainWindow(QMainWindow):
                         fct = info[dataKey]['Factor']
                     else:
                         fct = None
-                    if not\
-                        save_A_Data_GUI(dataDict[analysis][dataKey],
-                                        info[dataKey]['Types'],
-                                        (True,1), fileName,
-                                        fct):
-                        raise IndexError
                 except IndexError:
-                    print('Unable to save data\n%s\n%s'\
-                            %(analysis,dataKey))
+                    print('Unable to save data:\n%s\n%s'%(analysis,dataKey))
                 self.AddDatasetToList(dataDict[analysis][dataKey],
                                       dataKey,info[dataKey]['Types'],
                                       fct)
-            
+            writer.save()
+            writer.close()
 #    def editSelectInterval(self):
 #        groupDialog=CreateGroupsDlg(1,list(self.Dataset.keys()),DataContainer=self.Dataset,
 #                                     Analysis=('Single','actogramPrint'),

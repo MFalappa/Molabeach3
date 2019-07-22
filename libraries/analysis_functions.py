@@ -17,7 +17,7 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import os,sys
 lib_fld = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'libraries')
 sys.path.append(lib_fld)
-
+import pandas as pd
 #import datetime
 import numpy as np
 from copy import copy
@@ -73,54 +73,42 @@ def Power_Density(*myInput):
             
 
     first = True
+    rc = 0
     for key in list(DataGroup.keys()):
         for name in DataGroup[key]:
             if first:
                 typesFr = np.array(np.round(Fr,decimals=2),dtype=np.str_)
                 types = np.hstack((['Group','Subject'],typesFr))
-                df_res = np.zeros((count_sub,),dtype={'names':types,
-                                  'formats':(np.str_,np.str_,)+(float,)*Fr.shape[0]})
-            Power_Wake[IndexGroup[key][name],:]
-#                wake = np.vstack((Fr,Power_Wake[IndexGroup[key][name],:]))
-#                sbj = np.vstack(('Subject',name))
-#                grs = np.vstack(('Groups',key))
-#                first = False
-#            else:
-#                wake = np.vstack((wake,Power_Wake[IndexGroup[key][name],:]))
-#                sbj = np.vstack((sbj,name))
-#                grs = np.vstack((grs,key))
-                
-    DataDict['Power Density Wake'] = np.hstack((grs,sbj,wake))
-    
-    first = True
-    for key in list(DataGroup.keys()):
-        for name in DataGroup[key]:
-            if first:
-                nrem = np.vstack((Fr,Power_NRem[IndexGroup[key][name],:]))
-                sbj = np.vstack(('Subject',name))
-                grs = np.vstack(('Groups',key))
+                df_wake = np.zeros((count_sub,),dtype={'names':types,
+                                  'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*Fr.shape[0]})
+                df_nrem = np.zeros((count_sub,), dtype={'names': types,
+                                                        'formats': ('U%d'%lenGroupName, 'U%d'%lenName,) + (float,) * Fr.shape[0]})
+                df_rem = np.zeros((count_sub,), dtype={'names': types,
+                                                        'formats': ('U%d'%lenGroupName, 'U%d'%lenName,) + (float,) * Fr.shape[0]})
                 first = False
-            else:
-                nrem = np.vstack((nrem,Power_NRem[IndexGroup[key][name],:]))
-                sbj = np.vstack((sbj,name))
-                grs = np.vstack((grs,key))
+            cc = 0
+            for col in typesFr:
+                df_wake[col][rc] = Power_Wake[IndexGroup[key][name],cc]
+                df_nrem[col][rc] = Power_NRem[IndexGroup[key][name], cc]
+                df_rem[col][rc] = Power_Rem[IndexGroup[key][name], cc]
+                cc += 1
+            df_wake['Subject'][rc] = name
+            df_wake['Group'][rc] = key
+
+            df_nrem['Subject'][rc] = name
+            df_nrem['Group'][rc] = key
+
+            df_rem['Subject'][rc] = name
+            df_rem['Group'][rc] = key
+            rc += 1
+
+
                 
-    DataDict['Power Density NRem'] = np.hstack((grs,sbj,nrem))
-    
-    first = True
-    for key in list(DataGroup.keys()):
-        for name in DataGroup[key]:
-            if first:
-                rem = np.vstack((Fr,Power_Rem[IndexGroup[key][name],:]))
-                sbj = np.vstack(('Subject',name))
-                grs = np.vstack(('Groups',key))
-                first = False
-            else:
-                rem = np.vstack((rem,Power_Rem[IndexGroup[key][name],:]))
-                sbj = np.vstack((sbj,name))
-                grs = np.vstack((grs,key))
-                
-    DataDict['Power Density Rem'] = np.hstack((grs,sbj,rem))
+    DataDict['Power Density Wake'] = pd.DataFrame(df_wake)
+
+    DataDict['Power Density NRem'] = pd.DataFrame(df_nrem)
+
+    DataDict['Power Density Rem'] = pd.DataFrame(df_rem)
 
     dictPlot['Fig:Power Density'] = {}
     dictPlot['Fig:Power Density']['Single Subject'] = (Fr,Power_Wake,\

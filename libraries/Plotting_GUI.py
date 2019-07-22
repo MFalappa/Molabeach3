@@ -47,7 +47,7 @@ def plotLDARes(X_norm, y, lda_res, gauss_light, gauss_dark,line_light,line_dark,
                title,xlabel,ylabel):
 
     fig = plt.figure()
-    plt.hold(1)
+    #plt.hold(1)
     plt.title(title, fontsize=20,)
     plt.fill_betweenx([-4,4],[-4,4],[4,-4],color='k',alpha=np.abs(Struct_mat[1,Index_for_color]))
     plt.fill_between([-4,4],[-4,4],[4,-4],color='k',alpha=np.abs(Struct_mat[0,Index_for_color]))
@@ -214,7 +214,7 @@ def Print_Actogram_GUI(Action_x_Interval,N_Day,interval,returnFig = False, *othe
     plt.ylim(1,ymax)
     #plt.xticks(np.arange(0,2*period+1,6),np.arange(Start_Hour,Start_Hour+2*period+1,6)%(period))
     plt.xticks(np.arange(0,2*period+1,1),np.arange(Start_Hour,Start_Hour+2*period+1,1)%(period))
-    plt.hold(1)
+    #plt.hold(1)
     
     plt.xlim((-0.5,2*period))
     
@@ -272,7 +272,7 @@ def F_Errorbar_Plt_LD_GUI(Mean_error,std_error,group_name,Hour_Dark,
 
     label_legend=group_name
     plt.figure(figsize=(5.5*3.13,3.5*3.13))
-    plt.hold(1)
+    #plt.hold(1)
     plt.xticks(x_axis,label_ticks)
     plt.xlabel('Circadian time interval')
     plt.ylabel(Ylabel)
@@ -284,7 +284,7 @@ def F_Errorbar_Plt_LD_GUI(Mean_error,std_error,group_name,Hour_Dark,
         plt.errorbar(x_axis,Mean_error[group],yerr=std_error[group])
 
     plt.legend(label_legend)
-    plt.hold(0)
+    #plt.hold(0)
     return()
 
 def LD_ErrorBar_plt_GUI(AllMeans,AllStdErrors,Label,Title=None,Ylim=None,
@@ -322,7 +322,7 @@ def LD_ErrorBar_plt_GUI(AllMeans,AllStdErrors,Label,Title=None,Ylim=None,
     """
     if figSize:
         plt.figure(figsize=figSize)
-    plt.hold(1)
+    #plt.hold(1)
     if AllStdErrors==None:
         if color:
             p1,=plt.plot(list(range(len(Label))),AllMeans,'%s'%color)
@@ -374,7 +374,7 @@ def LD_ErrorBar_plt_GUI(AllMeans,AllStdErrors,Label,Title=None,Ylim=None,
     if Xlabel:
        plt.xlabel(Xlabel) 
             
-    plt.hold(0)   
+    #plt.hold(0)   
     return p1
     
 def F_Error_Rate_plt_GUI(Correct_Rate):
@@ -396,7 +396,7 @@ def F_Error_Rate_plt_GUI(Correct_Rate):
     x=[-0.50,23.5]
     y=[Mean,Mean]
     plt.figure(figsize=(5.5*3.13,3.5*3.13))
-    plt.hold(1)
+    #plt.hold(1)
     plt.plot(x,y,'--r')
     plt.bar(xaxis,yaxis,align='center')
     plt.xlabel('Hour')
@@ -405,7 +405,7 @@ def F_Error_Rate_plt_GUI(Correct_Rate):
         
     plt.xticks(np.arange(0,24,1),np.arange(0,24,1))
     plt.axis([-0.5,23.5,0,1])
-    plt.hold(0)
+    #plt.hold(0)
     return()
 
 def F_Error_Rate_New_plt_GUI(Correct_Rate,Ticks,color='b',meanColor='r',LenDark=12,
@@ -423,7 +423,7 @@ def F_Error_Rate_New_plt_GUI(Correct_Rate,Ticks,color='b',meanColor='r',LenDark=
     x=[-0.5,len(Correct_Rate)-0.5]
     y=[Mean,Mean]
     fig = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-    plt.hold(1)
+    #plt.hold(1)
     plt.plot(x,y,'--%s'%meanColor)
     plt.plot(xaxis,yaxis,'-o%s'%color)
     plt.xlabel('Time')
@@ -440,7 +440,7 @@ def F_Error_Rate_New_plt_GUI(Correct_Rate,Ticks,color='b',meanColor='r',LenDark=
     plt.axis([-0.5,len(Correct_Rate)-0.5,0,1])
     plt.grid()
     plt.axvspan(xStartDark,xEndDark,0,1,alpha=alpha)
-    plt.hold(0)
+    #plt.hold(0)
     
     return(fig)
 
@@ -457,7 +457,7 @@ def F_Error_Bar_New_plt_GUI(yaxis,yerr,Ticks,color='b',meanColor='r',LenDark=12,
     x=[-0.5,len(yaxis)-0.5]
     y=[Mean,Mean]
     fig = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-    plt.hold(1)
+    #plt.hold(1)
     plt.plot(x,y,'--%s'%meanColor)
     plt.errorbar(xaxis,yaxis,yerr=yerr)
     plt.xlabel('Time')
@@ -479,7 +479,7 @@ def F_Error_Bar_New_plt_GUI(yaxis,yerr,Ticks,color='b',meanColor='r',LenDark=12,
         plt.ylabel(yLabel)
     plt.grid()
     plt.axvspan(xStartDark,xEndDark,0,1,alpha=alpha)
-    plt.hold(0)
+    #plt.hold(0)
     
     return(fig)
 
@@ -567,7 +567,7 @@ def F_Raster_Plt_GUI(Raster,strn,scale,*other):
         strings = [strn, other[1]]
         scales = [scale, other[2]]
         fig = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-        plt.hold(1)
+        #plt.hold(1)
         XMIN,XMAX,YMIN,YMAX = np.inf, 0, np.inf, 0
         for k in [0, 1]:
             print(('k:',k))
@@ -742,7 +742,7 @@ def Plt_RawPowerDensity_GUI(Freq, y_axis_list, color_list = ['r'],
                 The power density figure
     """
     fig = plt.figure(figsize=(4.5*3.13,3.5*3.13))
-    plt.hold(1)        
+    #plt.hold(1)        
     for k in range(len(y_axis_list)):
         plt.plot(Freq, y_axis_list[k], color = color_list[k],
                  linewidth = linewidth, label = legend_list[k])
@@ -753,7 +753,7 @@ def Plt_RawPowerDensity_GUI(Freq, y_axis_list, color_list = ['r'],
     plt.xlim(0,max(Freq))
     if type(ylim) is tuple:
         plt.ylim(ylim)
-    plt.hold(0)
+    #plt.hold(0)
     return fig
 
 def Plt_RawPowerDensity_Loop_GUI(Freq,Power_Wake,Power_Rem,Power_NRem,IndexGroup,
@@ -797,7 +797,6 @@ def Plt_MedianPowerDensity_GUI(Freq, PowerW_matrix, PowerR_matrix,
     fig = plt.figure(figsize=(5.5*3.13,3.5*3.13))
     nrow = len(list(IndexArray_dict.keys()))
     ind = 1
-    plt.hold(1)
     MAX_list = []
     for key in list(IndexArray_dict.keys()):
         Index   = IndexArray_dict[key]
@@ -866,8 +865,7 @@ def Plt_MedianPowerDensity_GUI(Freq, PowerW_matrix, PowerR_matrix,
         plt.ylim(ylim)  
         plt.xlim(0,max(Freq))
     plt.suptitle(suptitle, fontsize = suptitle_size)
-    plt.hold(0)
-    plt.hold(1)
+
     list_title = ['Power Wake','Power REM','Power NREM']
     tuple_fig = ()
     color_list = ['k', 'r', 'b','g','y',(125./255,)*3,'m','c']
@@ -887,7 +885,6 @@ def Plt_MedianPowerDensity_GUI(Freq, PowerW_matrix, PowerR_matrix,
         plt.xlabel('Frequency (Hz)', fontsize = axis_label_size)
         plt.ylabel('Power Density', fontsize = axis_label_size)
         plt.legend(legend_list,legend_lab,fontsize = legend_size)
-    plt.hold(0)
     return (fig,) + tuple_fig
 def CDF_average_plot_GUI(Cdf,EmCdf,Group_Name,Mouse_Grouped,t0=3,t1=6):
     
@@ -900,7 +897,7 @@ def CDF_average_plot_GUI(Cdf,EmCdf,Group_Name,Mouse_Grouped,t0=3,t1=6):
     Row_Num=np.ceil(Num_Group/2.)
     i=1
 
-    plt.hold(1)
+    #plt.hold(1)
     print('\n\n%s\n=========\n\n'%Group_Name,Row_Num)
 
     for group in Group_Name:
@@ -923,7 +920,7 @@ def CDF_average_plot_GUI(Cdf,EmCdf,Group_Name,Mouse_Grouped,t0=3,t1=6):
         plt.legend()
         i+=1
     
-    plt.hold(0)
+    #plt.hold(0)
     plt.show()
     return(fig)
     
@@ -946,7 +943,7 @@ def CDF_Gr_Plot_GUI(Cdf,EmCdf,Group_Name,Mouse_Grouped,t0=3,t1=6):
     Row_Num=np.ceil(Num_Group/2.)
     i=1
     fig=plt.figure('CDF')
-    plt.hold(1)
+    #plt.hold(1)
     print('\n\n%s\n=========\n\n'%Group_Name,Row_Num)
     if Num_Group == 1:
         col = 1
@@ -965,7 +962,7 @@ def CDF_Gr_Plot_GUI(Cdf,EmCdf,Group_Name,Mouse_Grouped,t0=3,t1=6):
         plt.xlabel('Switch Latency(sec)')
         plt.ylabel('Cumulative Probability')
         i+=1
-    plt.hold(0)
+    #plt.hold(0)
     plt.show()
     return(fig)
 
@@ -975,7 +972,7 @@ def Plt_ErrorBar_Gr_DeltaReb(Mean, SEM, TimeLim, Colors = None,
                              linewidth = 2, elinewidth=2.5, ticksize=12,
                              titlesize = 20, labelsize = 15):
     fig = plt.figure()
-    plt.hold(1)
+    #plt.hold(1)
     for key in list(Mean.keys()):
         if not key in GroupLabel:
             raise ValueError('GroupLabel must be a list containing keys of\
@@ -1008,7 +1005,7 @@ def Plt_ErrorBar_Gr_DeltaReb(Mean, SEM, TimeLim, Colors = None,
     plt.xlabel('Time', fontsize = labelsize)
     plt.ylabel('EEG Delta Power', fontsize = labelsize)
     plt.legend()
-    plt.hold(0)
+    #plt.hold(0)
     return fig
 
 def plot_LDA_GUI(lda, X, y, y_pred,titlelabel='Linear Discriminant Analysis',
@@ -1019,7 +1016,7 @@ def plot_LDA_GUI(lda, X, y, y_pred,titlelabel='Linear Discriminant Analysis',
                  phaseLabel=['Dark phase','Light phase']):
     
     fig = plt.figure(figsize=(4.*3.13,3*3.13))
-    plt.hold(1)
+    #plt.hold(1)
     plt.title(titlelabel, fontsize = title_size)
 #    plt.ylabel('Data with fixed covariance')
     
@@ -1065,7 +1062,7 @@ def plot_LDA_GUI(lda, X, y, y_pred,titlelabel='Linear Discriminant Analysis',
             plt.text(X1[t,0],X1[t,1] + Dy, labelHourLight[t],fontsize = 12)
     plt.xlabel(x_label,fontsize = x_label_size)
     plt.ylabel(y_label,fontsize = y_label_size)
-    plt.hold(0)
+    #plt.hold(0)
     return fig
 
 def plot_LDA_Group_GUI(lda_dict, X_dict, y_dict, y_pred_dict,color_dict,
@@ -1078,7 +1075,7 @@ def plot_LDA_Group_GUI(lda_dict, X_dict, y_dict, y_pred_dict,color_dict,
                        markerface=['k','y'],newfig=True):
     if newfig:
         fig = plt.figure(figsize=(4.*3.13,3*3.13))
-    plt.hold(1)
+    #plt.hold(1)
     for key in list(lda_dict.keys()):
 #        lda = lda_dict[key]
         X = X_dict[key]
@@ -1142,7 +1139,7 @@ def plot_LDA_Group_GUI(lda_dict, X_dict, y_dict, y_pred_dict,color_dict,
     
     plt.legend()
 
-    plt.hold(0)
+    #plt.hold(0)
     if not newfig:
         return
     return fig
@@ -1163,7 +1160,7 @@ def plot_Standard_Input_Error_Bar_GUI(stdGroupMatrix, Dark_length,
         fig = {}
     else:
         fig = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-        plt.hold(True)
+        #plt.hold(True)
     for group in GroupList:
         y_axis = stdGroupMatrix[stat_ind]\
             [np.where(stdGroupMatrix['Group']==group)[0]]
@@ -1210,7 +1207,7 @@ def plot_Standard_Input_Error_Rate_GUI(stdGroupMatrix, Dark_length,
         fig = {}
     else:
         fig = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-#        plt.hold(True)
+#        #plt.hold(True)
     colorList = []
     for group in GroupList:
         y_axis = stdGroupMatrix[stat_ind]\
@@ -1244,7 +1241,7 @@ def plot_Standard_Input_Error_Rate_GUI(stdGroupMatrix, Dark_length,
     plt.ylim(0, 1)
 
     fig1 = plt.figure()
-#    plt.hold(True)
+#    #plt.hold(True)
     x_axis = []
     y_axis = []
     ind = 0
@@ -1322,7 +1319,7 @@ def plot_Standard_Input_Error_Rate_GUI(stdGroupMatrix, Dark_length,
 #        SEM += [np.nanstd(std_Matrix[varName][grIndex])/np.sqrt(len(grIndex))]
 #    x_axis = range(len(Mean))
 #    fig = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-#    plt.hold(1)
+#    #plt.hold(1)
 #    colorList = ('b', 'g', 'c', 'y', 'm', 'k')
 #    for k in x_axis:
 #        plt.bar([k], [Mean[k]], yerr=[SEM[k]], align='center',
@@ -1339,12 +1336,12 @@ def plot_Standard_Input_Error_Rate_GUI(stdGroupMatrix, Dark_length,
 #        bisect.insort_right(ticks, treshold)
 #        plt.yticks(ticks,ticks)
 #    plt.title(title, fontsize=title_size)
-#    plt.hold(0)
+#    #plt.hold(0)
 #    return fig
 
 def plt_Best_Period(Period_Array, Best_Fit_Param, subject=''):
     fig = plt.figure()
-    plt.hold(1)
+    #plt.hold(1)
     plt.plot(Best_Fit_Param['Period'], Best_Fit_Param['Pearson corr'],
              'or')
     plt.plot(Period_Array['Period'], Period_Array['Pearson corr'],
@@ -1410,7 +1407,7 @@ def std_Bar_Plot_GUI(std_Matrix_input, title, title_size=20, linewidth=1,
         SEM += [np.nanstd(std_Matrix[varName][grIndex])/np.sqrt(len(grIndex))]
     x_axis = list(range(len(Mean)))
     fig = plt.figure(figsize=(4.5*3.13,3.5*3.13))
-    plt.hold(1)
+    #plt.hold(1)
     colorList = ('b', 'g', 'c', 'y', 'm', 'k',(1,69/255.,0/255.),'r')
     for k in x_axis:
         plt.bar([k], [Mean[k]], yerr=[SEM[k]], align='center',
@@ -1427,7 +1424,7 @@ def std_Bar_Plot_GUI(std_Matrix_input, title, title_size=20, linewidth=1,
         bisect.insort_right(ticks, treshold)
         plt.yticks(ticks,ticks)
     plt.title(title, fontsize=title_size)
-    plt.hold(0)
+    #plt.hold(0)
     return fig
 
 def lineFunc(x, m, q):
@@ -1466,7 +1463,7 @@ def F_ExpGain_Plt_GUI(ExpLog, MaxRowl, Mean_minmax=(1, 9),
     for i in range(Mesh):
         Norm_ExpLog[i,:] = ExpLog[i,:] / max(ExpLog[i,:])
     fig = plt.figure()
-    plt.hold(1)
+    #plt.hold(1)
     ax = plt.subplot(111)
     ax.yaxis.set_major_formatter(plt.FormatStrFormatter('%.2f'))
     ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%.2f'))
@@ -1511,7 +1508,7 @@ def F_ExpGain_Plt_GUI(ExpLog, MaxRowl, Mean_minmax=(1, 9),
     plt.xticks(x, np.arange(Mean_minmax[0],Mean_minmax[1]+1))
     plt.xlabel('Mean')
     plt.ylabel('Coefficient of Variation (CV)')
-    plt.hold(0)
+    #plt.hold(0)
     return(fig)
 
 def std_ErrorBar_Plt_TimeCourse_GUI(std_Matrix_Group, title, x_label,
@@ -1528,7 +1525,7 @@ def std_ErrorBar_Plt_TimeCourse_GUI(std_Matrix_Group, title, x_label,
             ind += 1
     if hold_on:
         fig = plt.figure()
-        plt.hold(True)
+        #plt.hold(True)
     else:
         fig = {}
     for group in Groups:
