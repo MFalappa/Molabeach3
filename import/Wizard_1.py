@@ -24,12 +24,13 @@ class Wizard_1(QDialog, ui_Wizard_1.Ui_newAnalysis):
     def __init__(self,parent=None):
         super(Wizard_1, self).__init__(parent)
         self.setupUi(self)
-        self.analysisType = 'Single'
-        self.inputType = 'Sleep'
+        
         self.radioButton.setChecked(True)
         self.pushButton.setEnabled(False)
         self.lineEdit_analysis.textChanged[str].connect(self.checkContinue)
         self.lineEdit_plotting.textChanged[str].connect(self.checkContinue)
+        self.radioButton.setChecked(True)
+        self.analysisType = 'Behaviour'
        
 #   if continue is clicked return true else return false
     @pyqtSlot()
@@ -51,12 +52,15 @@ class Wizard_1(QDialog, ui_Wizard_1.Ui_newAnalysis):
 #   if radiobutton are clicked set analysis type to the following
     @pyqtSlot()
     def on_radioButton_clicked(self):
-        self.analysisType = 'Single'
+        self.analysisType = 'Behaviour'
     @pyqtSlot()
     def on_radioButton_1_clicked(self):
-        self.analysisType = 'Group'
+        self.analysisType = 'Sleep'
     @pyqtSlot()
     def on_radioButton_2_clicked(self):
+        self.analysisType = 'Spike'
+    @pyqtSlot()
+    def on_radioButton_3_clicked(self):
         self.analysisType = 'Integrative'
     
     
@@ -79,7 +83,7 @@ def main():
     
     #print(form.exec_())
     app.exec_() 
-    print(form.inputType)            
+    print(form.analysisType)            
 if __name__=='__main__':
     main()
     

@@ -50,3 +50,19 @@ def select_Function_GUI(funcName, *otherInputs):
     elif funcName == 'spikeStatistics':
         fig = plotSpikeStatistics(*otherInputs)
         return fig
+
+    elif funcName == 'Switch_Latency_TEST':
+        fig = plotSwitchLatency_TEST(*otherInputs)
+        return fig
+
+    elif funcName == 'Switch_Latency_TEST':
+        fig = plotSwitchLatency_TEST(*otherInputs)
+        return fig
+
+    elif funcName == 'Switch_Latency_TEST':
+        fig = plotSwitchLatency_TEST(*otherInputs)
+        return fig
+
+    elif funcName == 'Switch_Latency_TEST':
+        fig = plotSwitchLatency_TEST(*otherInputs)
+        return fig

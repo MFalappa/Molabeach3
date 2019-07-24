@@ -16,20 +16,17 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 
 import os
-import sys
 
 def functionCaller_Generator(pythonFilePath,newName,Dir):
     fh = open(pythonFilePath,'r')
     funcNameList = []
     if not newName.endswith('.py'):
         newName = newName.split('.')[0] + '.py'
-    if not Dir.endswith('\\') or not Dir.endswith('/'):
-        if sys.platform == 'win32':
-            Dir += '\\'
-        if sys.platform == 'darwin':
-            Dir += '/'
+    
+    
     if not os.path.exists(Dir):
         raise ValueError('Directory %s not found'%Dir)
+    
     for line in fh.readlines():
         if line[0] == '#':
             continue
@@ -45,10 +42,15 @@ def functionCaller_Generator(pythonFilePath,newName,Dir):
             break
     fh.close()
     fh = open(os.path.join(Dir,newName),'w')
+    
     program = 'from custom_Analysis import *\n\n'
     program += 'def function_Launcher(name,*myInput):\n'
     for name in funcNameList:
-        program += '    if name == \'%s\':\n'%name
+        if name == funcNameList[0]:
+            program += '    if name == \'%s\':\n'%name
+        else:
+            program += '    elif name == \'%s\':\n'%name
+            
         program += '        outputData, inputForPlots, info = %s(*myInput)\n'%name
         program += '        return outputData, inputForPlots, info\n'
     fh.write(program)

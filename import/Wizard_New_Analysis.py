@@ -96,16 +96,12 @@ class new_Analysis_Wizard(QDialog):
         self.path_analysis = dialog.lineEdit_analysis.text()
         self.path_plotting = dialog.lineEdit_plotting.text()
         self.analysisType = dialog.analysisType
-        if self.analysisType == 'Single':
-            self.customAnalysisFile = 'custom_Analysis.py'
-            self.customPlotsFile    = 'custom_Plots.py'
-            self.launcherAnalysis   = 'launcher.py'
-            self.launcherPlots      = 'plot_Launcher.py'
-        else:
-            self.customAnalysisFile = 'custom_Analysis_Gr.py'
-            self.customPlotsFile    = 'custom_Plots_Gr.py'
-            self.launcherAnalysis   = 'launcher_Gr.py'
-            self.launcherPlots      = 'plot_Launcher_Gr.py'
+        
+        self.customAnalysisFile = 'analysis_functions.py'
+        self.customPlotsFile    = 'custom_Plots.py'
+        self.launcherAnalysis   = 'launcher_all.py'
+        self.launcherPlots      = 'plot_Launcher.py'
+        
         
         if self.analysisType != 'Integrative':
             path_type_list = os.path.join(import_dir,'data_type_list.npy')
@@ -129,9 +125,9 @@ class new_Analysis_Wizard(QDialog):
         self.check_and_continue(dialog.dict_res, input_dict)
     
     def check_and_continue(self,type_list,input_dict):
-        print('CHECK AND CONTINUE')
-        print(input_dict)
-        print(type_list)
+#        print('CHECK AND CONTINUE')
+#        print(input_dict)
+#        print(type_list)
 #        Includo funzione in custom analysis
         tot_num = sum(input_dict.values())
         ind = 0
@@ -172,6 +168,7 @@ class new_Analysis_Wizard(QDialog):
                                          AddTo = self.customPlotsFile)                             
         add_To_Plot_Launcher(classes_dir,plotFun,funcName,
                              AddTo = self.launcherPlots)
+ 
         dictionary = np.load(os.path.join(phenopy_dir,'Analysis.npy')).all()
         
         dictionary[self.analysisType][funcName] = type_list

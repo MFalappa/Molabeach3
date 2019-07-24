@@ -50,6 +50,7 @@ from protocol_save_files import load_npz,save_data_container
 from Input_Dlg_std import inputDialog
 from copy import copy
 
+
 from plot_Launcher import select_Function_GUI
 from plot_Launcher_Gr import select_Function_GUI_Gr    
 
@@ -66,8 +67,7 @@ from Class_Analisi import (Analysis_Single_GUI, Analysis_Group_GUI)
 
 from export_files import select_export
 from editDatasetDlg import editDlg
-from Modify_Dataset_GUI import (OrderedDict,DatasetContainer_GUI,Dataset_GUI,
-                               save_A_Data_GUI)
+from Modify_Dataset_GUI import (OrderedDict,DatasetContainer_GUI,Dataset_GUI)
 
 from AnalysisThread import analysis_thread
 #from AnalysisSingle_Std import analysisSingle_thread

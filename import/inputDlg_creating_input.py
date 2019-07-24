@@ -14,12 +14,14 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
+import os
 
 def inputDlg_creating_input(pathToAutonomice,dictInput,func_Name):
-    if not pathToAutonomice.endswith('\\'):
-        pathToAutonomice += '\\'
+#    if not pathToAutonomice.endswith('\\'):
+#        pathToAutonomice += '\\'
     try:
-        fh = open(pathToAutonomice + 'inputDlgCreator.py','a')
+        fh = open(os.path.join(pathToAutonomice,'inputDlgCreator.py'),'a')
+        
         line =  '    if analysisName == \'%s\':\n'%func_Name
         for key in list(dictInput.keys()):
             line += '        dictInput[\'%s\'] = %s\n'%(key,dictInput[key])

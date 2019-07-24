@@ -16,9 +16,111 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 #from copy import copy
 #from scipy import stats
+from copy import deepcopy
 
 import numpy as np
-#import datetime
+import datetime as dt
+
+
+
+def vector_hours(timestamps):
+    
+    res = np.zeros(timestamps.shape[0],dtype = int)
+    for tt in range(timestamps.shape[0]):
+        res[tt] = timestamps[tt].hour
+    
+    return res
+
+def bin_epi(data_eeg, tbinSec, time0, time1,epoch='NR',epochDur = 4):
+    
+    binVect = np.array([time0])
+    tdelta = dt.timedelta(0,tbinSec)
+    tt = time0
+    while tt < time1 - tdelta:
+        binVect = np.hstack((binVect, [tt + tdelta]))
+        tt = tt + tdelta
+    
+    epi = np.array(extract_epi(data_eeg,epoch=epoch,merge_if=0,min_epi_len=1),{'names':('Start','End'),'formats':(float,float)})
+    
+    for tt in binVect:
+        idx_epi = 0
+        for episode in epi:
+            
+            if tt <= time0 + dt.timedelta(0,epochDur * episode['Start']):
+                idx_epi += 1
+                continue
+            elif tt < time0 + dt.timedelta(0,epochDur * episode['End']):
+                tmpE = deepcopy(episode['End'])
+                epi['End'][idx_epi] = ((tt - time0).seconds + 3600*24*(tt - time0).days) / float(epochDur)
+                tmpepi = np.zeros(1,dtype={'names':('Start','End'),'formats':(float,float)})
+                tmpepi['Start'] = epi['End'][idx_epi]
+                tmpepi['End'] = tmpE
+                epi = np.hstack((epi, tmpepi))
+                sort_idx = np.argsort(epi,order='Start')
+                epi = epi[sort_idx]
+                idx_epi += 1
+                break
+            elif idx_epi + 1 < epi.shape[0] and tt <  time0 + dt.timedelta(0,epochDur * epi['Start'][idx_epi+1]):
+#                idx_epi = cyle_epi_idx + idx_epi + 1
+                idx_epi += 1
+                break
+            idx_epi += 1
+    return epi
+
+def epidur_if_binAdj(epi, bins, epochDur=4):
+    binepi = (epi['End'] * epochDur) // bins
+    idx = 0
+    binvec = np.arange(0,binepi[-1]+1)
+
+    res = np.zeros(binvec.shape[0])
+    for k in binvec:
+        res[idx] = np.nansum(epi['End'][binepi==k] - epi['Start'][binepi==k])
+        idx += 1
+    return res
+
+def extract_epi(data_eeg,epoch='NR',merge_if=3,min_epi_len=3):
+    epoch_vect = data_eeg.Stage
+    index = np.zeros(len(epoch_vect))
+    index[np.where(epoch_vect==epoch)[0]] = 1
+    dict_episodes = {}
+    k = 0
+    old_end = 0
+    while True:
+        try:
+            start,end = None,None
+            start = old_end + np.where(index[old_end:] == 1)[0][0]
+            end = start + np.where(index[start:] == 0)[0][0]
+            old_end = end
+        except IndexError:
+            if not start is None:
+                end = len(index) - 1
+                dict_episodes[k] = [start,end]
+            break
+        dict_episodes[k] = [start,end]
+        k += 1
+     
+    list_keys = dict_episodes.keys()
+    for key in list_keys:
+        try:
+            if dict_episodes[key+1][0] - dict_episodes[key][1] <= merge_if:
+                start,end = dict_episodes.pop(key)
+                dict_episodes[key+1] = [start,dict_episodes[key+1][1]]
+        except:
+            break
+           
+    list_keys = dict_episodes.keys()
+    for key in list_keys:
+        num_nrem = len(np.where(epoch_vect[dict_episodes[key][0]:dict_episodes[key][1]]==epoch)[0])
+        if num_nrem < min_epi_len:
+            dict_episodes.pop(key) 
+    
+    array_episodes = np.zeros(len(dict_episodes.keys()),dtype={'names':('Start','End'),'formats':(int,int)}) 
+    
+    list_keys = dict_episodes.keys()
+    for k in range(array_episodes.shape[0]):
+        array_episodes['Start'][k],array_episodes['End'][k] = dict_episodes[list_keys[k]]
+    return array_episodes
+
 
 def powerDensity_function(dataDict, Group_Dict, freqLim_Hz,
                    delimiter = '\t'):
