@@ -19,7 +19,8 @@ import os,sys
 lib_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'libraries')
 sys.path.append(lib_dir)
 from PyQt5.QtWidgets import (QTableView,QWidget,QDialog,QApplication,
-                             QHBoxLayout,QPushButton)
+                             QHBoxLayout,QVBoxLayout,QPushButton,QComboBox,
+                             QSpacerItem,QSizePolicy,QLabel)
 import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
 import pandas as pd
@@ -149,28 +150,29 @@ class MyTableView(QTableView):
 class TableView_excelFile(QWidget):
     def __init__(self,excel,parent=None):
         super(TableView_excelFile,self).__init__(parent)
-        layout = QtGui.QVBoxLayout()
-        hlayout = QtGui.QHBoxLayout()
+        layout = QVBoxLayout()
+        hlayout = QHBoxLayout()
         self.dict_excel = {}
         self.dict_nrows = {}
         self.list_sheet = excel.sheet_names
-        combo = QtGui.QComboBox()
+        combo = QComboBox()
         for key in excel.sheet_names:
             self.dict_excel[key] = excel.parse(sheetname=key)
             self.dict_nrows[key] = self.dict_excel[key].shape[0]
             combo.addItem(key)
         self.tableWidget = table_view_setter(self.dict_excel[self.list_sheet[0]])[0]
         self.model = self.tableWidget.model
-        hspacer = QtGui.QSpacerItem(20,20,QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        label = QtGui.QLabel('%s:'%self.list_sheet[0])
+        hspacer = QSpacerItem(20,20,QSizePolicy.Expanding, QSizePolicy.Minimum)
+        label = QLabel('%s:'%self.list_sheet[0])
         hlayout.addWidget(label)
         hlayout.addSpacerItem(hspacer)
         layout.addLayout(hlayout)
         layout.addWidget(self.tableWidget)
-        hspacer = QtGui.QSpacerItem(20,20,QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        hspacer = QSpacerItem(20,20,QSizePolicy.Expanding, QSizePolicy.Minimum)
         layout.addWidget(combo)
         self.setLayout(layout)
-        self.connect(combo,QtCore.SIGNAL('currentIndexChanged (const QString&)'),self.switch_table)
+        
+        combo.currentIndexChanged[str].connect(self.switch_table)
         
     def switch_table(self,string):
         model = PandasModel(self.dict_excel[string])
@@ -183,12 +185,12 @@ class TableView_excelFile(QWidget):
 class TableView_dictionary(QWidget):
     def __init__(self,dictionary,parent=None):
         super(TableView_dictionary,self).__init__(parent)
-        layout = QtGui.QVBoxLayout()
-        hlayout = QtGui.QHBoxLayout()
+        layout = QVBoxLayout()
+        hlayout = QHBoxLayout()
         self.dict_excel = dictionary
         self.dict_nrows = {}
         self.list_sheet = list(dictionary.keys())
-        combo = QtGui.QComboBox()
+        combo = QComboBox()
         for key in self.list_sheet:
             try:
                 self.dict_nrows[key] = self.dict_excel[key].shape[0]
@@ -199,16 +201,16 @@ class TableView_dictionary(QWidget):
         if not self.tableWidget:
             data = np.zeros(0, dtype={'names':('unkown',),'formats':(int,)})
             self.tableWidget = table_view_setter(data)[0]
-        hspacer = QtGui.QSpacerItem(20,20,QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        label = QtGui.QLabel('%s:'%self.list_sheet[0])
+        hspacer = QSpacerItem(20,20,QSizePolicy.Expanding, QSizePolicy.Minimum)
+        label = QLabel('%s:'%self.list_sheet[0])
         hlayout.addWidget(label)
         hlayout.addSpacerItem(hspacer)
         layout.addLayout(hlayout)
         layout.addWidget(self.tableWidget)
-        hspacer = QtGui.QSpacerItem(20,20,QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        hspacer = QSpacerItem(20,20,QSizePolicy.Expanding, QSizePolicy.Minimum)
         layout.addWidget(combo)
-        self.setLayout(layout)
-        self.connect(combo,QtCore.SIGNAL('currentIndexChanged (const QString&)'),self.switch_table)
+        self.setLayout(layout)        
+        combo.currentIndexChanged[str].connect(self.switch_table)
         
     def switch_table(self,string):
         if type(self.dict_excel[string]) == pd.DataFrame:
@@ -265,47 +267,7 @@ class prova(QDialog):
 def main():
     import sys
     app = QApplication(sys.argv)
-#    excel = pd.ExcelFile('C:\Users\ebalzani\IIT\Dottorato\Tracking\Lab book  Cancedda\\Final DREADDs huddling analyses up to p10_8_11_16.xlsx')
-#    widget = TableView_excelFile(excel)
-#    widget.show()
-#    app.exec_()
-#==============================================================================
-#     Dizionario
-#==============================================================================
-#    d ={}
-#    for key in excel.sheet_names:
-#        d[key] = excel.parse(key)
-#    d[key] = np.array(d[key])
-#    d['Edo'] = {}
-#    d['Mat'] = np.arange(5)
-#    widget = TableView_dictionary(d)
-#
-#    widget.show()
-#    app.exec_()
-#==============================================================================
-    
-    
-#==============================================================================
-#   excel file 
-#==============================================================================
-#    widget = TableView_excelFile(excel)
-#    widget.show()
-#    app.exec_()
-#==============================================================================
-   
-   
-#==============================================================================
-# Pandas dataframe
-#==============================================================================
-#    model = PandasModel
-#    df = pd.ExcelFile('C:\Users\ebalzani\IIT\Dottorato\Tracking\Lab book  Cancedda\\time_course_npy\\subjective_tc_time_spent_togheter_control.xls').parse()
-#    form = prova(df)
-#    print form.exec_()
-#==============================================================================
 
-#==============================================================================
-#   numpy array structured
-#==============================================================================
     import numpy as np
     df = np.ones(1000,dtype={'names':('a','b'),'formats':('S120',float)})
     df['b'] = np.random.uniform(size=1000)
@@ -315,6 +277,5 @@ def main():
     form.show()
     res = app.exec_()
     
-#    print res
 if __name__ == '__main__':
     main()

@@ -26,7 +26,6 @@ from PyQt5.QtWidgets import (QDialog,QLabel,QComboBox,QTextBrowser,QPushButton,
 from PyQt5.QtCore import (pyqtSignal,Qt)
 
 from Modify_Dataset_GUI import DatasetContainer_GUI
-from changeLabelshow import info_label
 from tableGrouping import TableWidget
 from integrativeLabelPairing import intLabelPairing_dlg
 #from importDataset import *
@@ -162,7 +161,10 @@ class integrativeDlg(QDialog):
                     line = fh.readline()
                     continue
                                 
-                label, description, type_func = info_label(funName)
+                label = self.analysisDict[funName]['label']
+                description = self.analysisDict[funName]['description']
+                type_func = self.analysisDict[funName]['type_func']
+                
                 if type_func == 'Integrative':
                     self.comboBox.addItem(label)
                     self.descr_dict[label] = description

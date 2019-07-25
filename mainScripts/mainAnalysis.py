@@ -42,7 +42,6 @@ from PyQt5.QtGui import (QIcon,QImage,QKeySequence,QPixmap)
 
 from get_folder_and_format_dlg_export import get_export_info_dlg
 from Wizard_New_Analysis import new_Analysis_Wizard
-#from pairDataDlg import pairDataDlg
 from datainfodlg import datainfodlg 
 from protocol_save_files import load_npz,save_data_container
 
@@ -67,11 +66,9 @@ from Class_Analisi import (Analysis_Single_GUI, Analysis_Group_GUI)
 
 from export_files import select_export
 from editDatasetDlg import editDlg
-from Modify_Dataset_GUI import (OrderedDict,DatasetContainer_GUI,Dataset_GUI)
+from Modify_Dataset_GUI import (DatasetContainer_GUI,Dataset_GUI)
 
 from AnalysisThread import analysis_thread
-#from AnalysisSingle_Std import analysisSingle_thread
-#from AnalysisGroup_Std  import analysisGroup_thread
 from analysis_data_type_class import refreshTypeList
 
 #from spikeGUI import spk_gui
@@ -120,9 +117,6 @@ class MainWindow(QMainWindow):
         # keys function names and values a list of the accepted types
         self.AnalysisAndLabels = np.load(os.path.join(os.path.dirname(__file__),'Analysis.npy')).all()
 
-        self.AnalysisAndLabels['Single'] = OrderedDict(self.AnalysisAndLabels['Single'])
-        self.AnalysisAndLabels['Group'] = OrderedDict(self.AnalysisAndLabels['Group'])
-        
         
         ind=0
         for key in self.TimeStampsKey:
@@ -132,10 +126,10 @@ class MainWindow(QMainWindow):
 #       Keeping Track of original timestamps
         self.OriginalTimeStamps = self.TimeStamps.copy()
         self.OriginalTimeStampsKey = copy(self.TimeStampsKey)
-#        plt.ion()
+
 
 #       Input will contain the input used as well as the dataset name
-        self.Input = OrderedDict()
+#        self.Input = OrderedDict()
 
         self.filename = None
         self.currentDatasetLabel = None
@@ -223,11 +217,7 @@ class MainWindow(QMainWindow):
         startWizardAction = self.createAction('&Upload Analysis',self.startWizard,None,
                                               None,'Upload a new function for data analysis')
         
-        
-#        self.analysisAction  = self.createAction('&Analyze Data',self.startAnalysis,
-#                                        'Ctrl+A', None,'Perform a single group analysis')
-        
-                                              
+                                                      
         self.spikeAction = self.createAction('&Spike Analysis',self.startSpikeAnalysis,
                                              None,'wave_spike','Perform spike analysis')
         
@@ -240,8 +230,6 @@ class MainWindow(QMainWindow):
         self.integrativenAction = self.createAction('&Integrative Analysis',self.startIntegrativeAnalysis,
                                                  None,None,'Perform analysis from different recordings')                      
                                               
-#        self.extractingDataAction=self.createAction('Extract time stamps',self.extractingData,
-#                                                    None,None,'Extract timestamps from dataset')    
                                    
         clearLogAction = self.createAction('Clear Log',self.listWidgetRight.clear,None,'rubber','Clear Log')
                                         
@@ -252,11 +240,6 @@ class MainWindow(QMainWindow):
         
         self.renameDatasetAction = self.createAction('Rename Dataset',self.renameData,
                                                      'F2',None,'Rename selected dataset')
-
-        #c'è un seganle da sistemare
-#        self.editSelectIntervalAction = self.createAction("Select &Interval",self.editSelectInterval,
-#                                                          "Alt+I", None,"Keep only a selected time inteval",
-#                                                          signal='triggered()')
         
         self.editFunctDlgAction = self.createAction('&Edit Dataset...',self.startEditDlg,
                                                     "CTRL+E",None)
@@ -375,17 +358,10 @@ class MainWindow(QMainWindow):
         
 #       Analisis single thread
         self.lock = QReadWriteLock()
-#        self.analysisSingleThread = analysisSingle_thread(self.Dataset,
-#                                                          self.lock,
-#                                                          self)
-#        self.analysisGroupThread = analysisGroup_thread(self.Dataset,
-#                                                          self.lock)
         
         self.analysisThread = analysis_thread(self.Dataset,self.lock)
 
         # questi segnali vanno sistemati
-#        self.analysisSingleThread.threadFinished.connect(lambda Type = 'Single': self.completedAnalysis(Type))
-#        self.analysisGroupThread.threadFinished.connect(lambda Type = 'Group': self.completedAnalysis(Type))
         self.analysisThread.threadFinished.connect(lambda Type = 'General': self.completedAnalysis(Type))
         
 #       connecting Dockwidget items to some methods   
@@ -393,15 +369,6 @@ class MainWindow(QMainWindow):
         self.listWidgetLeft.customContextMenuRequested.connect(self.on_context_menu)
         self.listWidgetLeft.itemSelectionChanged.connect(self.enable_disable_actions)
 
-# vecchia modalità
-# vecchia modalità, lho cambiat ma non debuggata, vedi sopra
-#        self.connect(self.analysisSingleThread,pyqtSignal('threadFinished()'),\
-#                     lambda Type = 'Single': self.completedAnalysis(Type))
-#        self.connect(self.analysisGroupThread,pyqtSignal('threadFinished()'),\
-#                     lambda Type = 'Group': self.completedAnalysis(Type))
-#        self.connect(self.listWidgetLeft,pyqtSignal("itemClicked (QListWidgetItem *)"),self.UpdateCurrentDataset)
-#        self.connect(self.listWidgetLeft,pyqtSignal('customContextMenuRequested(const QPoint&)'),self.on_context_menu)
-#        self.connect(self.listWidgetLeft,pyqtSignal('itemSelectionChanged ()'),self.enable_disable_actions)
     
     def enable_disable_actions(self):
         
@@ -516,7 +483,6 @@ class MainWindow(QMainWindow):
                 list_npz += [File]
         self.Dataset = load_npz(list_npz, self.Dataset)
 
-    # questo va sistemato in base a se trova sleep, behavior o entrambe
     def updateDataListWidget(self):
         """
             Metodo chiamato da datacontainer ogni volta che viene aggiunto
@@ -667,7 +633,7 @@ class MainWindow(QMainWindow):
 #        self.InputOrData = False
         
     def closeEvent(self, event):
-#        plt.close('all')
+
         settings = QSettings()
         settings.setValue("MainWindow/Geometry", self.saveGeometry())
         settings.setValue("MainWindow/State", self.saveState())
@@ -688,6 +654,7 @@ class MainWindow(QMainWindow):
                     settings.setValue(key,filename)
         finally:
             self.lock.unlock()
+        
         KeyNum=0
         for key in self.TimeStampsKey:
             TimeStampLabel = key
@@ -696,24 +663,9 @@ class MainWindow(QMainWindow):
             settings.setValue('TimeStampsCode %d'%KeyNum,TimeStampCode)
             KeyNum+=1
         
-        for key in ['Single','Group']:
-            KeyNum=0
-            
-            for analysis in list(self.AnalysisAndLabels[key].keys()):
-                Analysis = analysis
-                settings.setValue('%s %d'%(key,KeyNum),Analysis)
-                KeyNum += 1
-        
-        for analysis in list(self.AnalysisAndLabels.keys()):
-            KeyNum=0
-            Types = self.AnalysisAndLabels[analysis]
-            for Type in Types:
-               AnType = Type
-               settings.setValue('Type %s %d'%(analysis,KeyNum),AnType)
-
             
     def RemoveDataset(self):
-        if self.analysisSingleThread.isRunning():
+        if self.analysisThread.isRunning():
             QMessageBox.warning(self, 'Running analysis thread',
             'Wait until the analysis is finished')
             return
@@ -725,7 +677,7 @@ class MainWindow(QMainWindow):
             self.Dataset.remove(label)
         
     def RemoveAllDataset(self):
-        if self.analysisSingleThread.isRunning():
+        if self.analysisThread.isRunning():
             QMessageBox.warning(self, 'Running analysis thread',
             'Wait until the analysis is finished')
             return
@@ -737,36 +689,7 @@ class MainWindow(QMainWindow):
             self.listWidgetLeft.clear()
             self.Dataset.clear()
     
-#    def dataTypeList(self):
-#        """
-#            This function returns a dataTypeList of the imported data
-#        """
-#        type_list = []
-#        try:
-#            self.lock.lockForRead()
-#            for dataName, dataset in self.Dataset:
-#                this_type = self.Dataset.dataType(dataName)[0]
-#                if not this_type in type_list:
-#                    type_list +=  [this_type]
-#        finally:
-#            self.lock.unlock()
-#        return type_list
-    
-#    def subSetDataPerType(self,type_list):
-#        """
-#            Select over a subset of data tipes and retunrs a list of data 
-#            names
-#        """
-#        data_list = []
-#        try:
-#            self.lock.lockForRead()
-#            for name, tmp in self.Dataset:
-#                if self.Dataset.dataType(name)[0] in type_list:
-#                    data_list += [name]
-#        finally:
-#            self.lock.unlock()
-#        return data_list
-    
+
     # qui vanno lanciate le varie analisi    
     def startSpikeAnalysis(self):
         print('andrebbe ridesignato in base a cio che vogliamo mettere')
@@ -848,33 +771,16 @@ class MainWindow(QMainWindow):
     def startAnalysis(self,analysisDict):
 
         anType = analysisDict['anType']
-#        dataType = analysisDict['dataType']
         analysisName = analysisDict['analysisName']
         selectedDataDict = analysisDict['Groups']
         pairedGroups = analysisDict['Pairing']
 
-#        if anType == 'Integrative':
-#            # Data select and pairing
-#            type_list = []
-#            for tl in list(dataType.values()):
-#                type_list += tl
-#            paired_matrix = self.integrativeSpecificProcessing(analysisName)
-#            if paired_matrix is None:
-#                return
-#        else:
-#            type_list = dataType
-#            paired_matrix = None
-
         analysisThread = self.analysisThread
         if anType in ['Group', 'Integrative']:
-            analysisCreator = Analysis_Group_GUI
-#            analysisThread = self.analysisGroupThread
-            
+            analysisCreator = Analysis_Group_GUI            
         else:
             analysisCreator = Analysis_Single_GUI
-#            analysisThread = self.analysisSingleThread
         
-#        pairedGroups = self.groupDictPerPaired(paired_matrix,selectedDataDict)
         createAnalysis = analysisCreator(analysisName)
         inputCreator = createAnalysis.inputCreator
         
@@ -892,34 +798,11 @@ class MainWindow(QMainWindow):
         analysisThread.run()
         self.status.showMessage('%s analysis is running'%analysisName)
         
-#    def groupDictPerPaired(self,paired_matrix, selectedDataDict):
-#        if paired_matrix is None:
-#            groupDict = None
-#        else:
-#            groupDict = {}
-#            grouped = paired_matrix.dtype.names[1]
-#            for group in list(selectedDataDict.keys()):
-#                groupDict[group] = {}
-#                for mat_type in paired_matrix.dtype.names[1:]:
-#                    groupDict[group][mat_type] = []
-#                for subject in selectedDataDict[group]:
-#                    findRow = np.where(paired_matrix[grouped] == subject)[0][0]
-#                    for mat_type in paired_matrix.dtype.names[1:]:
-#                        groupDict[group][mat_type] += [paired_matrix[mat_type][findRow]]
-#        return groupDict
-                
-        
-#    def integrativeSpecificProcessing(self,analysisName):
-#        dialog = pairDataDlg(self.AnalysisAndLabels['Integrative'][analysisName], self.Dataset,
-#                             self.lock)
-#        paired_matrix = None
-#        if dialog.exec_():
-#            paired_matrix = dialog.pairMatrix
-#        return paired_matrix
+
             
     def inputDlgLauncher(self,inputCreator, selectedDataDict):
         Input = {}
-#        print('inputDlg called')
+
         phaseSel = None
         if not inputCreator.returnInput(0,'PhaseSel') is None:
             phaseSel = [self.Dataset, np.hstack(list(selectedDataDict.values()))]
@@ -943,22 +826,16 @@ class MainWindow(QMainWindow):
             if not dialog.exec_():
                 return -1
             Input[dialogNum] = dialog.createStdOutput()
-#            if 'DoubleSpinBox' in Input[dialogNum]:
-#                print(Input[dialogNum]['DoubleSpinBox'])
+
         return Input
 
     def disableActionDuringAnalysis(self,Type):
-#        self.analysisAction.setEnabled(False)
         self.renameDatasetAction.setEnabled(False)
-#        self.rescaleADatasetAction.setEnabled(False)
         self.removeAllDatasetAction.setEnabled(False)
         self.removeDatasetAction.setEnabled(False)
         
     def enableActionAfterAnalysis(self,Type):
-        
-#        self.analysisAction.setEnabled(True)
         self.renameDatasetAction.setEnabled(True)
-#        self.rescaleADatasetAction.setEnabled(True)
         self.removeAllDatasetAction.setEnabled(True)
         self.removeDatasetAction.setEnabled(True)
 
@@ -969,10 +846,8 @@ class MainWindow(QMainWindow):
         thread = self.analysisThread
        
         if Type == 'Single':
-#            thread = self.analysisSingleThread
             select_plotFun = select_Function_GUI
         else:
-#            thread = self.analysisGroupThread
             select_plotFun = select_Function_GUI_Gr
         try:
             Dir = thread.savingDetails[0]
@@ -981,7 +856,7 @@ class MainWindow(QMainWindow):
             Save = True
         except:
             Save = False
-#        plt.close('all')
+
         analysisName = thread.analysisName
         dataDict = thread.outputData
         inputs = thread.inputForPlots
@@ -1003,9 +878,7 @@ class MainWindow(QMainWindow):
                 os.mkdir(DirFig)
             for figKey in list(figDict[analysis].keys()):
                 fig = figDict[analysis][figKey]
-#                print('saving ',analysis,figKey)
                 try:
-#                    plt.show(block=False)
                     fileName = os.path.join(DirFig, figKey + ext)
                     fig.savefig(fileName)
                 except IndexError:
@@ -1036,127 +909,11 @@ class MainWindow(QMainWindow):
                                       fct)
             writer.save()
             writer.close()
-#    def editSelectInterval(self):
-#        groupDialog=CreateGroupsDlg(1,list(self.Dataset.keys()),DataContainer=self.Dataset,
-#                                     Analysis=('Single','actogramPrint'),
-#                                    TypeList=['Time Action Dataset','Switch Latency',
-#                           'BART'],AnDict=self.AnalysisAndLabels,
-#                                     parent=self)
-#        if groupDialog.exec_():
-#            comboBox=[('Keep time interval:', ['Inside','Outside'],
-#                       ['Inside','Outside'], 0)]
-#            timeSpinBox = [('Day Time 0:', 0, 0),('Day Time 1:', 24, 0),None]
-#            Datalist=''
-#            for ind in range(groupDialog.groupListWidget[0].count()):
-#                item=groupDialog.groupListWidget[0].item(ind)
-#                Datalist+=str(item.text())+'<br>'
-#            Datalist=Datalist[:-4]
-#            dialog = inputDialog(Datalist,comboBox,timeSpinBox,None,NewDataLineEdit=True,
-#                                 DatasetNum=groupDialog.groupListWidget[0].count(),
-#                                 parent=self)
-#            if dialog.exec_():
-#                
-#                secStart = dialog.HourSpinBox[0].value()*3600+dialog.MinuteSpinbox[0].value()*60
-#                secEnd = dialog.HourSpinBox[1].value()*3600+dialog.MinuteSpinbox[1].value()*60
-#                InOrOut = str(dialog.ComboBox[0].itemText(dialog.ComboBox[0].currentIndex()))
-#                NameInput=None
-#                if len(str(dialog.NewDataLineEdit.text()))>0:
-#                    NameInput=str(dialog.NewDataLineEdit.text()).split(';')
-#                    try:
-#                        while True:
-#                            NameInput.remove('')
-#                    except ValueError:
-#                        pass
-#                                    
-#                if InOrOut=='Inside':
-#                    InOrOut = 'In'
-#                else:
-#                    InOrOut = 'Out'
-#                Item = groupDialog.groupListWidget[0].takeItem(0)
-#                DataLabel=str(Item.text())
-#                
-#                while Item:
-#                    try:
-#                        Item=groupDialog.groupListWidget[0].takeItem(0)
-#                        Dataset = self.Dataset.takeDataset(DataLabel)
-#                        Types = self.Dataset.dataType(DataLabel)
-#                        edited = False
-#                        for typeName in Types:
-#                            if 'EEG' in typeName:
-#                                Dataset = self.editSelectInterval_EEG(Dataset, 
-#                                                                      secStart,
-#                                                                      secEnd,
-#                                                                      InOrOut)
-#                                edited = True
-#                                break
-#                        Scaled = self.Dataset.scaled(DataLabel)
-#                        if not edited:
-#                            
-#                            Start_exp,Start_Time,End_Time =\
-#                                Time_Details_GUI(Dataset,self.TimeStamps)
-#                            Dataset = Select_Interval_GUI(Dataset,secStart,
-#                                                          secEnd,self.TimeStamps,
-#                                                          InOrOut=InOrOut)
-#                    
-#                        message = 'Selected interval from Dataset %s'%DataLabel
-#                    
-#                        if NameInput:
-#                            self.currentDatasetLabel = NameInput[0]
-#                            NameInput.pop(0)
-#                            if '.'  not in self.currentDatasetLabel:
-#                                self.currentDatasetLabel+='.csv'
-#                        else:
-#                            strings = DataLabel.split('.')
-#                            self.currentDatasetLabel  = strings[0]+'_SelectedInterval.csv'
-#                        self.flagData=True
-#                        if self.currentDatasetLabel in self.Dataset:
-#                            self.Dataset.pop(self.currentDatasetLabel)
-#                            self.flagData=False
-#                        data = Dataset_GUI(Dataset,self.currentDatasetLabel,
-#                                           Path=None,Types=Types,Scaled=Scaled)
-#                        self.Dataset.add(data)
-#                        
-#                        self.listWidgetRight.addItem(message)
-#                        try:
-#                            DataLabel=str(Item.text())
-#                        except:
-#                            pass
-#                    except IndexError:
-#                        message = 'Failed to cut Dataset %s'%DataLabel
-#                        self.listWidgetRight.addItem(message)
-                    
-#    def editSelectInterval_EEG(self, Dataset, secStart, secEnd, InOrOut):
-#        Dataset = copy(Dataset)
-#        timeVect = Dataset.Timestamp
-#        if secStart//3600 == 24:
-#           start_time = dt.time(23, 59, 59)
-#        else:
-#            start_time = dt.time(secStart//3600, (secStart % 3600) // 60, 0)
-#        if secEnd//3600 == 24:
-#            end_time = dt.time(23, 59, 59)
-#        else:
-#            end_time = dt.time(secEnd//3600, (secEnd % 3600) // 60, 0)
-#        index = 0
-#        keep_index = []
-#        if InOrOut == 'In':
-#            for t in timeVect:
-#                if t.time() >= start_time and t.time() <= end_time:
-#                    keep_index += [index]
-#                index += 1
-#        else:
-#            for t in timeVect:
-#                if t.time() < start_time or t.time() > end_time:
-#                    keep_index += [index]
-#                index += 1
-#        Dataset.PowerSp = Dataset.PowerSp[keep_index]
-#        Dataset.Timestamp = Dataset.Timestamp[keep_index]
-#        Dataset.Stage = Dataset.Stage[keep_index]
-#        return Dataset
-    
-    
+
+ 
     def renameData(self):
-        if self.analysisSingleThread.isRunning():
-            self.analysisSingleThread.wait()
+        if self.analysisThread.isRunning():
+            self.analysisThread.wait()
         row = self.listWidgetLeft.currentRow()
         title = "Rename Dataset"
         item = self.listWidgetLeft.item(row)
@@ -1183,193 +940,6 @@ class MainWindow(QMainWindow):
                 self.listWidgetRight.addItem('Dataset %s\nrenamed to %s'%(self.currentDatasetLabel,str(string)))
                 self.currentDatasetLabel = str(string)
 
-                
-#    def RenameDataColumns(self):
-#        if self.analysisSingleThread.isRunning():
-#            self.analysisSingleThread.wait()
-#        groupDialog=CreateGroupsDlg(1,list(self.Dataset.keys()),DataContainer=self.Dataset,
-#                                    Analysis=('Single','actogramPrint'),SetIndex=8,
-#                                     AnDict=self.AnalysisAndLabels,parent=self)
-#        if groupDialog.exec_():
-#            Datalist=''
-#            LabelList=[]
-#            for ind in range(groupDialog.groupListWidget[0].count()):
-#                item=groupDialog.groupListWidget[0].item(ind)
-#                Datalist+=str(item.text())+'<br>'
-#                LabelList+=[str(item.text())]
-#            Datalist=Datalist[:-4]
-#            tuple_0=(self.Dataset.takeDataset(LabelList[0])).dtype.names
-#            for label in LabelList[1:]:
-#                if (self.Dataset.takeDataset(label)).dtype.names !=tuple_0:
-#                    QMessageBox.warning(self,'Type Error', 'All Dataset must have the same column labels in the same order!')    
-#                    return
-#            lineEdit=[]
-#            for col in tuple_0:
-#                lineEdit+=['Previus column name: %s\nNew column name:\n\n'%col]
-#            inputDlg=inputDialog(Datalist,None,None,None,lineEdit,[],parent=self)
-#            listCols=[]
-#            if inputDlg.exec_():
-#                for k in list(inputDlg.LineEdit.keys()):
-#                    col=str(inputDlg.LineEdit[k].text())
-#                    if len(col):
-#                        listCols+=[col]
-#                    else:
-#                        listCols+=[None]
-#                
-#                for label in LabelList:
-#                    self.Dataset.renameColumns(label,listCols)
-            
-        
-#    def extractingData(self):
-#        groupDialog=CreateGroupsDlg(1,list(self.Dataset.keys()),DataContainer=self.Dataset,
-#                                     Analysis=('Single','actogramPrint'),
-#                                     AnDict=self.AnalysisAndLabels,
-#                                    TypeList=['Time Action Dataset','Switch Latency',
-#                                              'BART'],
-#                                     parent=self)
-#        if groupDialog.exec_():
-#            Datalist=''
-#            for ind in range(groupDialog.groupListWidget[0].count()):
-#                item=groupDialog.groupListWidget[0].item(ind)
-#                Datalist+=str(item.text())+'<br>'
-#            Datalist=Datalist[:-4]
-#            
-#                  
-#            On=list(self.TimeStamps.keys()).index('Center Light On')
-#            Off=list(self.TimeStamps.keys()).index('Start Intertrial Interval')
-#            Minuti=[]
-#            for i in [5,10,15,20,30,60]:
-#                Minuti+=['%d min'%i]
-#            comboBox=[('Extract:',
-#                       ['All Dataset','Inside Trial','Outside Trial'],
-#                        ['All Dataset','Inside Trial','Outside Trial'],0),
-#                      ('Trial Start:',list(self.TimeStamps.keys()),
-#                       list(self.TimeStamps.keys()),On),
-#                       ('Trial End:',list(self.TimeStamps.keys()),list(self.TimeStamps.keys())
-#                       ,Off),('Time Interval:',Minuti,Minuti,5)]
-#            doubleSpinBox = ([('Max Trial Duration:',(0,100000),30)]) 
-#            spinBox = [('Dark start:',(0,23),20)]
-#            inputdlg=inputDialog(Datalist,comboBox,None,doubleSpinBox,
-#                                 NewDataLineEdit=True,SpinBox = spinBox,
-#                                 ActivityList=list(self.TimeStamps.keys()),
-#                                    DatasetNum=groupDialog.groupListWidget[0].count(),
-#                                 parent=self)
-#            if inputdlg.exec_():
-#                NameInput=None
-#                if len(str(inputdlg.NewDataLineEdit.text()))>0:
-#                    NameInput=str(inputdlg.NewDataLineEdit.text()).split(';')
-#                    try:
-#                        while True:
-#                            NameInput.remove('')
-#                    except ValueError:
-#                        pass
-#                stdOutput = inputdlg.createStdOutput()
-#                Index=stdOutput['Combo'][0]
-#                if Index is 0:
-#                    InOutAll='All'
-#                elif Index is 1:
-#                    InOutAll='In'
-#                else:
-#                    InOutAll='Out'
-#                Actions=[]
-#                item=inputdlg.activitySelectedWidget.takeItem(0)
-#                while item:
-#                    Actions.append(str(item.text()))
-#                    item=inputdlg.activitySelectedWidget.takeItem(0)
-#                TrialOn=str(stdOutput['Combo'][1])
-#                TrialOff=str(stdOutput['Combo'][2])
-#                TimeIntervalText=str(stdOutput['Combo'][3]).split(' ')
-#                TimeInterval=int(TimeIntervalText[0])*60
-#                
-#                NumDailyTimePoint = 24 * (3600//TimeInterval)                
-#                StartH = stdOutput['SpinBox'][0]
-#                StartBin = StartH * (3600//TimeInterval)
-#                
-#                timeBinVec = np.arange(StartBin,StartBin + NumDailyTimePoint)%\
-#                    (NumDailyTimePoint)
-#                TimeVect =  TimeUnit_to_Hours_GUI(timeBinVec, TimeInterval)
-#                
-#                TimeToConsider = stdOutput['DoubleSpinBox'][0]
-#                allDataItems=[]
-#                item=groupDialog.groupListWidget[0].takeItem(0)
-#                while item:
-#                    allDataItems+=[item]
-#                    item=groupDialog.groupListWidget[0].takeItem(0)
-#                Index=0
-#                subjectNum = len(allDataItems)
-#                lung = 0
-#                for dataitem in allDataItems:
-#                    dataname=str(dataitem.text())
-#                    lung = max(len(dataname),lung)
-#                averageMatrix = np.zeros(subjectNum * len(TimeVect),
-#                                         dtype = {'names':
-#                                             ('Subject','Time',
-#                                             'Mean','Median','SEM',),
-#                                             'formats':
-#                                             ('|S%d'%lung,'|S5',
-#                                              float,float,float)})
-#                for dataitem in allDataItems:
-#                    dataname=str(dataitem.text())
-#                    try:
-#                    
-#                        Extracted_Data=Extracting_Data_GUI(self.Dataset.takeDataset(dataname),self.TimeStamps,
-#                                            Actions,TrialOn,TrialOff,InOutAll=InOutAll,
-#                                            TimeToConsider=TimeToConsider,TimeInterval=TimeInterval)
-#                        minBinUnit = Extracted_Data['Bins_Unit'][0]
-#                        maxBinUnit = Extracted_Data['Bins_Unit'][-1]
-#                        binVect = np.arange(minBinUnit,maxBinUnit + 1)
-#                        binTot  = np.zeros(len(binVect), dtype = int)
-#
-#                        indBin = 0
-#                        for hourBin in binVect:
-#                            binTot[indBin] =  len(np.where(\
-#                                Extracted_Data['Bins_Unit'] == hourBin)[0])
-#                            indBin += 1
-#                        Mean, Median, SEM = [],[],[]
-#                        for hourBin in timeBinVec:
-#                            binIndex = np.where(binVect %\
-#                                NumDailyTimePoint == hourBin)[0]
-#                            Mean += [sts.nanmean(binTot[binIndex])]
-#                            SEM  += [sts.nanstd(binTot[binIndex])/\
-#                                np.sqrt(len(binIndex))]
-#                            Median += [sts.nanmedian(binTot[binIndex])]
-#                        averageMatrix['Mean']\
-#                            [Index * len(TimeVect) :\
-#                            (Index + 1) * len(TimeVect)] = Mean 
-#                        averageMatrix['SEM']\
-#                            [Index * len(TimeVect) :\
-#                            (Index + 1) * len(TimeVect)] = SEM
-#                        averageMatrix['Median']\
-#                            [Index * len(TimeVect) :\
-#                            (Index + 1) * len(TimeVect)] = Median
-#                        averageMatrix['Subject']\
-#                            [Index * len(TimeVect) :\
-#                            (Index + 1) * len(TimeVect)] = dataname
-#                        averageMatrix['Time']\
-#                            [Index * len(TimeVect) :\
-#                            (Index + 1) * len(TimeVect)] = TimeVect
-#                            
-#                        data = Dataset_GUI(Extracted_Data,NameInput[Index],Types=['Extracted Time Stamps'])
-#                        try:
-#                            self.lock.lockForWrite()
-#                            self.Dataset.add(data)
-#                        finally:
-#                            self.lock.unlock()
-#                        self.listWidgetRight.addItem('Timestamps extracted from dataset\n%s'%dataname)
-#                        Index+=1
-#                    except NameError:
-#                        
-#                        self.listWidgetRight.addItem('Unable to extract timestamps from dataset\n%s'%dataname)
-#                        Index+=1
-#                NameInput = 'Daily_Activity.csv'
-#                Types = ['Single Subject', 'Extracted Time Stamps']
-#                data = Dataset_GUI(averageMatrix,NameInput,Types=Types)
-#                try:
-#                    self.lock.lockForWrite()
-#                    self.Dataset.add(data)               
-#                finally:
-#                    self.lock.unlock()
-
                         
     def AddDatasetToList(self,Extracted_Data,Name,Types,FactorColumns=None):
         try:
@@ -1382,8 +952,8 @@ class MainWindow(QMainWindow):
                 'Do you want to replace data %s?'\
                 %Name,QMessageBox.No|QMessageBox.Yes)
             if reply == QMessageBox.Yes:
-                if self.analysisSingleThread.isRunning():
-                    self.analysisSingleThread.wait()
+                if self.analysisThread.isRunning():
+                    self.analysisThread.wait()
                 self.Dataset.pop(Name)
                 self.flagData=False
                 self.listWidgetRight.addItem('Replaced dataset %s'%Name)
@@ -1397,8 +967,6 @@ class MainWindow(QMainWindow):
             self.Dataset.add(data)
         finally:
             self.lock.unlock()
-     
-     
             
 def main():   
     

@@ -363,7 +363,7 @@ import EEG, EMG, TEMPERATURE and motor ACTIVITY from DSI recordings==EDF data
 
     scale = 1
     Scaled = (True,scale)
-    Types =['EFT']
+    Types =['EDF']
     f = pyedflib.EdfReader(path)
     START = f.getStartdatetime()
     EEG = f.readSignal(0)

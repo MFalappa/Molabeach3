@@ -34,7 +34,7 @@ dict_functions['Sleep_Time_Course'] = {
 
 dict_functions['LDA'] = {
         'label' : 'LDA',
-        'description' : 'Compute the Linear discriminant analysis combining behaviour data and sleep data.\nIn order to run the analysis, create groups with the same name for each data type, the data will be matched according to the order',
+        'description' : 'Compute the Linear discriminant analysis combining behaviour data and sleep data.\nIn order to run the analysis, create groups with the same name for each data type\n\nData will be matched according to the order',
         'type_func' : 'Integrative'}
 
 dict_functions['delta_rebound'] = {
@@ -43,13 +43,13 @@ dict_functions['delta_rebound'] = {
         'type_func' : 'Sleep'}
 
 dict_functions['Actograms'] = {
-        'label' : 'Delta - Theta',
+        'label' : 'Actograms',
         'description' : 'Display circadian activity data.\nThis analysis should be compute from TSE or Mycrosystem data or with data from running wheels',
         'type_func' : 'Behaviour'}
 
 dict_functions['AIT'] = {
         'label' : 'Acutal inter trial',
-        'description' : 'Compute the mean and std error of the actual inter trial (AIT) per daily hour',
+        'description' : 'Compute the mean and standard error of the actual inter trial (AIT) per daily hour',
         'type_func' : 'Behaviour'}
 
 dict_functions['peak_procedure'] = {
@@ -59,7 +59,7 @@ dict_functions['peak_procedure'] = {
 
 dict_functions['raster_plot'] = {
         'label' : 'Raster analysis',
-        'description' : 'Compute the raster plot for the selected location by bose-poke activity',
+        'description' : 'Compute the raster plot for the selected location by nose-poke activity',
         'type_func' : 'Behaviour'}           
         
 dict_functions['error_rate'] = {
@@ -74,13 +74,30 @@ dict_functions['Attentional_analysis'] = {
         
 dict_functions['sleep_fragmentation'] = {
         'label' : 'Sleep fragmentation',
-        'description' : 'Compute the number of sleep episodes of slected duration.\nTo be added to Phenopy',
+        'description' : 'Compute the number of sleep episodes of selected duration.\nTo be added to Phenopy',
         'type_func' : 'Sleep'}  
+
+dict_functions['Sleep_cycles'] = {
+        'label' : 'Sleep cycle',
+        'description' : 'Compute the duration of REM - non-REM alternations.\nTo be added to Phenopy',
+        'type_func' : 'Sleep'} 
+
+dict_functions['emg_normalized'] = {
+        'label' : 'EMG analysis',
+        'description' : 'Compute the distributions of Normalized EMG Values (DNE) along each sleep stage.\nTo be added to Phenopy',
+        'type_func' : 'Sleep'} 
 
 
 np.save('/Users/Matte/Python_script/Phenopy3/mainScripts/Analysis.npy',dict_functions)
 
-        
+ 
+
+
+
+
+
+
+
 
         
   
