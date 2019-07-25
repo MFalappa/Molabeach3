@@ -12,6 +12,11 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
                           facilitates data sharing
                           
         DOI: 10.1038/nprot.2018.031
+
+TODO:
+use the info from the first wizard dialog to get infos for the Analysis.npy dicitonary
+check add function
+check remove functions step by step
           
 """
 import sys,os
@@ -95,6 +100,8 @@ class new_Analysis_Wizard(QDialog):
             return
         self.path_analysis = dialog.lineEdit_analysis.text()
         self.path_plotting = dialog.lineEdit_plotting.text()
+
+        alias,function_descr = dialog.get_func_info()
         self.analysisType = dialog.analysisType
         
         self.customAnalysisFile = 'analysis_functions.py'
@@ -184,37 +191,28 @@ class new_Analysis_Wizard(QDialog):
             return
         analysisType = dialog.analysisType
         path = str(path) 
-        
-        if analysisType == 'Single':
-            String = ''
-        else:
-            String = '_Gr'
-        funcList_1 = get_Function_List(os.path.join(path, 'custom_Analysis%s.py'%String))
-        funcList = funcList_1 + get_Function_List(os.path.join(path , 'custom_Plots%s.py'%String))
+
+        funcList_1 = get_Function_List(os.path.join(path, 'analysis_functions.py'))
+        funcList = funcList_1 + get_Function_List(os.path.join(path , 'plots_functions.py'))
         dialog = deleteDlg(funcList,self)
         if not dialog.exec_():
             self.reject()
             return
+
         deleteList = dialog.get_List()
         print('delete list ',deleteList)
-        remove_Functions(path,deleteList,String)
+        remove_Functions(path,deleteList)
         dictionary = np.load(os.path.join(phenopy_dir,'Analysis.npy')).all()
-        if analysisType == 'Single':
-            for func in deleteList:
-                if func in funcList_1:
-                   dictionary['Single'].pop(func)
-        else:
-            for func in deleteList:
-                if func in funcList_1:
-                    try:
-                        dictionary['Group'].pop(func)
-                    except:
-                        dictionary['Integrative'].pop(func)
+        for func in deleteList:
+            if func in funcList_1:
+                dictionary.pop(func)
+
         
         np.save(os.path.join(phenopy_dir,'Analysis.npy'),dictionary)
         
         
         self.accept()
+
 def main():
     app = QApplication(sys.argv)
 

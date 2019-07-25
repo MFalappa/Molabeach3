@@ -75,6 +75,12 @@ class Wizard_1(QDialog, ui_Wizard_1.Ui_newAnalysis):
             self.pushButton.setEnabled(True)
         else:
             self.pushButton.setEnabled(False)
+
+    def get_func_info(self):
+        alias = self.lineEdit.text()
+        descr = self.textEdit.toPlainText()
+        return alias,descr
+
 def main():
     app = QApplication(sys.argv)
 
