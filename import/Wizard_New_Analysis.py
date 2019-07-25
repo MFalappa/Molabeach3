@@ -14,6 +14,7 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
 
 TODO:
+allow multiple data types
 use the info from the first wizard dialog to get infos for the Analysis.npy dicitonary
 check add function
 check remove functions step by step
@@ -101,7 +102,8 @@ class new_Analysis_Wizard(QDialog):
         self.path_analysis = dialog.lineEdit_analysis.text()
         self.path_plotting = dialog.lineEdit_plotting.text()
 
-        alias,function_descr = dialog.get_func_info()
+        self.alias,self.function_descr = dialog.get_func_info()
+
         self.analysisType = dialog.analysisType
         
         self.customAnalysisFile = 'analysis_functions.py'
@@ -132,10 +134,31 @@ class new_Analysis_Wizard(QDialog):
         self.check_and_continue(dialog.dict_res, input_dict)
     
     def check_and_continue(self,type_list,input_dict):
-#        print('CHECK AND CONTINUE')
-#        print(input_dict)
-#        print(type_list)
-#        Includo funzione in custom analysis
+        # get the list of available funcitons
+        list_analysis_func = get_Function_List(os.path.join(lib_dir,self.customAnalysisFile))
+        list_plot_func = get_Function_List(os.path.join(lib_dir,self.customPlotsFile))
+        # get base names
+        an_func = get_Function_List(self.path_analysis)[0]
+        plt_func = get_Function_List(self.path_plotting)[0]
+        # check if already present
+        if an_func in list_analysis_func:
+            print('function with the same name already present in: %s'%os.path.join(lib_dir,self.customAnalysisFile))
+            self.reject()
+            return
+        if plt_func in list_plot_func:
+            print('function with the same name already present in: %s' % os.path.join(lib_dir, self.customPlotsFile))
+            self.reject()
+            return
+        # import dictionary info
+        dictionary = np.load(os.path.join(phenopy_dir, 'Analysis.npy')).all()
+        for func in dictionary.keys():
+            alias = dictionary[func]['label']
+            if alias == self.alias:
+                print('Function label %s already used!'%alias)
+                self.reject()
+                return
+
+
         tot_num = sum(input_dict.values())
         ind = 0
         dictionaryInput = {}
@@ -151,6 +174,7 @@ class new_Analysis_Wizard(QDialog):
                     ButtonText = 'Continue'
                 dialog = inputDialog_Wizard(inputName,num, ButtonText = ButtonText,parent=self)
                 if not dialog.exec_():
+                    self.reject()
                     return
                 string += dialog.input + ','
                 ind += 1
@@ -176,9 +200,12 @@ class new_Analysis_Wizard(QDialog):
         add_To_Plot_Launcher(classes_dir,plotFun,funcName,
                              AddTo = self.launcherPlots)
  
-        dictionary = np.load(os.path.join(phenopy_dir,'Analysis.npy')).all()
-        
-        dictionary[self.analysisType][funcName] = type_list
+
+        dictionary[an_func] = {'label' : self.alias,
+                               'description' : self.function_descr,
+                               'type_func' : self.self.analysisType,
+                               'accepted_type' : self.analysisType
+                               }
         np.save(os.path.join(phenopy_dir,'Analysis.npy'),dictionary)
         self.accept()
 #==============================================================================
