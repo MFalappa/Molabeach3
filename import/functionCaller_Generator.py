@@ -260,7 +260,7 @@ def remove_Functions(PathToAutonomice,functionList):
     PathToCustomAnalysis = os.path.join(PathToAutonomice, 'analysis_functions.py')
     PathToCustomPlots    = os.path.join(PathToAutonomice, 'custom_Plots.py')
     PathToLauncher       = os.path.join(path_to_launcher, 'launcher_all.py')
-    PathToPltLauncher    = os.path.join(path_to_launcher, 'plot_Launcher.py')
+    PathToPltLauncher    = os.path.join(path_to_launcher, 'plot_Launcher_all.py')
     PathToInputCreator   = os.path.join(path_to_launcher, 'inputDlgCreator.py')
     
     for func in functionList:

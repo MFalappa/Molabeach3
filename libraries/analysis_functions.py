@@ -1,11 +1,8 @@
 """
 Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
-
 Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
                    E. Balzani, M. Falappa - All rights reserved
-
 @author: edoardo.balzani87@gmail.com; mfalappa@outlook.it
-
                                 Publication:
          An approach to monitoring home-cage behavior in mice that 
                           facilitates data sharing
@@ -13,7 +10,6 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
 import os,sys
 lib_fld = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'libraries')
 sys.path.append(lib_fld)
@@ -23,9 +19,6 @@ import numpy as np
 from copy import copy
 from auxiliary_functions import (powerDensity_function,
                                  vector_hours,bin_epi,epidur_if_binAdj)
-
-
-
 def Power_Density(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
@@ -33,15 +26,12 @@ def Power_Density(*myInput):
     Input      = myInput[1]
     DataGroup  = myInput[2]
     lock       = myInput[4]
-
     lenName = 0
     lenGroupName = 0
     for key in list(DataGroup.keys()):
         lenGroupName = max(lenGroupName,len(key))
         for name in DataGroup[key]:
             lenName = max(lenName,len(name))
-
-
     freqLim_Hz = Input[0]['DoubleSpinBox'][0]
     MeanOrMedian = Input[0]['Combo'][0]
     color_list = [Input[0]['Combo'][1],
@@ -72,7 +62,6 @@ def Power_Density(*myInput):
                               powerDensity_function(AllData,DataGroup, freqLim_Hz)
                               
             
-
     first = True
     rc = 0
     for key in list(DataGroup.keys()):
@@ -95,21 +84,15 @@ def Power_Density(*myInput):
                 cc += 1
             df_wake['Subject'][rc] = name
             df_wake['Group'][rc] = key
-
             df_nrem['Subject'][rc] = name
             df_nrem['Group'][rc] = key
-
             df_rem['Subject'][rc] = name
             df_rem['Group'][rc] = key
             rc += 1
-
                 
     DataDict['Power Density Wake'] = pd.DataFrame(df_wake)
-
     DataDict['Power Density NRem'] = pd.DataFrame(df_nrem)
-
     DataDict['Power Density Rem'] = pd.DataFrame(df_rem)
-
     dictPlot['Fig:Power Density'] = {}
     dictPlot['Fig:Power Density']['Single Subject'] = (Fr,Power_Wake,\
                                                        Power_Rem,Power_NRem,\
@@ -127,7 +110,6 @@ def Power_Density(*myInput):
                                               suptitle_size, axis_label_size,
                                               legend_size, title_size,
                                               MeanOrMedian)
-
     info['Types']  = ['Group EEG','Power Density']
     info['Factor'] = [0,1,2]
     datainfo = {'Power Density Wake': info,'Power Density Rem': info,
@@ -137,10 +119,7 @@ def Power_Density(*myInput):
     DD['Power Density']['Power Density Wake'] = DataDict['Power Density Wake']
     DD['Power Density']['Power Density Rem'] = DataDict['Power Density Rem']
     DD['Power Density']['Power Density NRem'] = DataDict['Power Density NRem']
-
     return DD, dictPlot, datainfo
-
-
 def Sleep_Time_Course(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
@@ -148,7 +127,6 @@ def Sleep_Time_Course(*myInput):
     Input      = myInput[1]
     DataGroup  = myInput[2]
     lock       = myInput[4]
-
     lenName = 0
     lenGroupName = 0
     for key in list(DataGroup.keys()):
@@ -223,19 +201,16 @@ def Sleep_Time_Course(*myInput):
             
         i0 = index_light[0]
         i1 = index_light[-1]
-
         epi = bin_epi(AllData[name][index_light], epidur, Time[i0],Time[i1],epoch=epochType)
         epi_dur_light = epidur_if_binAdj(epi, epidur,binvec = range(0,12,Bin), epochDur=EpochDur)*EpochDur
         
         i0 = index_dark[0]
         i1 = index_dark[-1]
-
         epi = bin_epi(AllData[name][index_dark], epidur, Time[i0],Time[i1],epoch=epochType)
         epi_dur_dark = epidur_if_binAdj(epi, epidur,binvec = range(0,12,Bin), epochDur=EpochDur)*EpochDur
         
         
         time_course = (np.hstack((epi_dur_light,epi_dur_dark))*100)/(3600*Bin)
-
         
         if first:
             types_hours = np.array(range(0,24,Bin),dtype=np.str_)
@@ -254,7 +229,6 @@ def Sleep_Time_Course(*myInput):
         
         df_time_course['Subject'][rc] = name
         df_time_course['Group'][rc] = key
-
        
         rc += 1
         
@@ -263,7 +237,6 @@ def Sleep_Time_Course(*myInput):
     title = 'Time spent in: %s'%epochType
     x_label = 'Time [Zt]'
     y_label = '% of total time'
-
     dictPlot['Fig:Sleep Time Course'] = {}
     dictPlot['Fig:Sleep Time Course']['Single Subject'] = (pd.DataFrame(df_time_course),
                                                             title,x_label,
@@ -273,7 +246,6 @@ def Sleep_Time_Course(*myInput):
                                                             stat_index,
                                                             total_or_mean)
                                                       
-
     info['Types']  = ['Single Subject EEG','Total time in %']
     info['Factor'] = [0]
     datainfo = {'Sleep time course': info }
@@ -285,9 +257,6 @@ def Sleep_Time_Course(*myInput):
     
     
     return DataDict,dictPlot, datainfo
-
-
-
 def Group_Error_Rate(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
@@ -296,9 +265,7 @@ def Group_Error_Rate(*myInput):
     DataGroup  = myInput[2]
     TimeStamps = myInput[3]
     lock       = myInput[4]
-
     return DataDict, dictPlot, info
-
 def error_rate():
     DataDict, dictPlot, info = {},{},{}
     
@@ -309,8 +276,6 @@ def error_rate():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
-
 def LDA():
     DataDict, dictPlot, info = {},{},{}
     
@@ -321,7 +286,6 @@ def LDA():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
 def Switch_Latency():
     DataDict, dictPlot, info = {},{},{}
     
@@ -332,7 +296,6 @@ def Switch_Latency():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
 def delta_rebound():
     DataDict, dictPlot, info = {},{},{}
     
@@ -343,7 +306,6 @@ def delta_rebound():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
 def Actograms():
     DataDict, dictPlot, info = {},{},{}
     
@@ -354,7 +316,6 @@ def Actograms():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
 def AIT():
     DataDict, dictPlot, info = {},{},{}
     
@@ -365,7 +326,6 @@ def AIT():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
 def raster_plot():
     DataDict, dictPlot, info = {},{},{}
     
@@ -376,7 +336,6 @@ def raster_plot():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
 def peak_procedure():
     DataDict, dictPlot, info = {},{},{}
     
@@ -387,7 +346,6 @@ def peak_procedure():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
 def Attentional_analysis():
     DataDict, dictPlot, info = {},{},{}
     
@@ -398,7 +356,6 @@ def Attentional_analysis():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
 def sleep_fragmentation():
     DataDict, dictPlot, info = {},{},{}
     
@@ -409,7 +366,6 @@ def sleep_fragmentation():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
 def Sleep_cycles():
     DataDict, dictPlot, info = {},{},{}
     
@@ -420,7 +376,6 @@ def Sleep_cycles():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
 def emg_normalized():
     DataDict, dictPlot, info = {},{},{}
     
@@ -431,127 +386,3 @@ def emg_normalized():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-
-def Switch_Latency_TEST(*myInput):
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
-    Tend = Input[0]['DoubleSpinBox'][0]
-    group_list = DataGroup.keys()
-    group_list.sort()
-    long_side_dict = {}
-    k = 0
-    for gr in group_list:
-        long_side_dict[gr] = Long_Side
-        k += 1
-    Mouse_Name = np.hstack(DataGroup.values())
-    lenName = 0
-    lenGroupName = 0
-    for key in DataGroup.keys():
-        lenGroupName = max(lenGroupName,len(key))
-        for name in DataGroup[key]:
-            lenName = max(lenName,len(name))
-    Mouse_Grouped = DataGroup
-    AllData = OrderedDict()
-    TimeStamps_Dict = {}
-    DataDict = {}
-    DataDict['Group Switch Latency'] = {}
-    long_side_sub = {}
-    print('CREATING TIMESTAMPS DICT')
-    for gr in Mouse_Grouped.keys():
-        for dataName in Mouse_Grouped[gr]:
-            try:
-                lock.lockForRead()
-                AllData[dataName] = copy(Datas.takeDataset(dataName))
-                if Datas.getTimeStamps(dataName):
-                    TimeStamps_Dict[dataName] = Datas.getTimeStamps(dataName)
-                else:
-                    TimeStamps_Dict[dataName] = TimeStamps
-            finally:
-                lock.unlock()
-    for gr in Mouse_Grouped.keys():
-        for dataName in Mouse_Grouped[gr]:
-            long_side_sub[dataName] = long_side_dict[gr]
-    print('\n\nGR SWITCH LAT\n\n')          
-    table,left,right,Record_Switch,HSSwitch = F_New_Gr_Switch_Latency_GUI(AllData,TimeStamps_Dict,Mouse_Name,ts=ts,tl=tl,scale=1,Tend=Tend,Long_Side=long_side_sub,type_tr=type_tr)
-    for name in Record_Switch.keys():
-        if Record_Switch[name].shape[0] < 10:
-            message = '%s less then 10 trials...'%name
-            Record_Switch.pop(name)
-            HSSwitch.pop(name)
-            right.pop(name)
-            left.pop(name)
-            table.pop(name)
-            AllData.pop(name)
-            for gr in Mouse_Grouped.keys():
-                if name in Mouse_Grouped[gr]:
-                    Mouse_Grouped[gr].remove(name)
-    prev_groups = Mouse_Grouped.keys()
-    for gr in prev_groups:
-        if not len(Mouse_Grouped[gr]):
-            s = Mouse_Grouped.pop(gr)
-    func = lambda h : h.hour
-    v_func = np.vectorize(func)
-    tmp = {}
-    for name in Record_Switch.keys():
-        tmp[name] = v_func(HSSwitch[name])
-    HSSwitch = tmp
-    Hour_Dark,Hour_Light=Hour_Light_and_Dark_GUI(Dark_start,Dark_length)
-    Best_Model,Pdf,Cdf,EmCdf=F_Gr_Fit_GMM_GUI(Record_Switch,Mouse_Grouped,n_gauss=1)
-    Median,Mean,Std=Subj_Median_Mean_Std_GUI(Record_Switch,HSSwitch)
-    Hour_label = TimeUnit_to_Hours_GUI(np.hstack((Hour_Dark,Hour_Light)),3600)
-    DataLen    = len(Hour_label) * len(Record_Switch.keys())
-    print('\n\nGMM FIT\n\n')  
-    std_Switch, GMM_Fit = std_Switch_Latency_GUI(Record_Switch, HSSwitch,
-                                                 Mouse_Grouped, Dark_start=Dark_start, 
-                                                 Dark_length=Dark_length)
-    EXP, MAX = F_ExpGain_GUI(Short, Long, ProbeShort, Cond_SProbe, Cond_LProbe,
-                             MeanRange=Mean_minmax,CVRange=Cv_minmax)
-    std_Exp_Gain = Exp_Gain_Matrix_GUI(GMM_Fit, Short, Long, Mouse_Grouped, 
-                                       ProbeShort, Cond_SProbe,
-                                       Cond_LProbe)
-    std_Exp_Gain['Value'] = std_Exp_Gain ['Value']/np.max(EXP)
-    DataDict['Group Switch Latency']['Group Switch Latency'] = np.zeros(DataLen, dtype = {
-        'names':('Group','Subject','Time','Mean','Median','SEM'),
-        'formats':('|S%d'%lenGroupName,'|S%d'%lenName,'|S5',float,
-                   float,float)})
-    DataDict['Group Switch Latency']['Group Switch Latency']['Time'] = list(Hour_label) * len(Record_Switch.keys())
-    ind = 0
-    for key in Mouse_Grouped.keys():
-        for name in Mouse_Grouped[key]:
-            DataDict['Group Switch Latency']['Group Switch Latency']['Group'][ind:len(Hour_label)+ind]\
-                = [key] * len(Hour_label)
-            DataDict['Group Switch Latency']['Group Switch Latency']['Subject'][ind:len(Hour_label)+ind]\
-                = [name] * len(Hour_label)
-            DataDict['Group Switch Latency']['Group Switch Latency']['Mean'][ind:len(Hour_label)+ind]\
-                = Mean[name]
-            DataDict['Group Switch Latency']['Group Switch Latency']['Median'][ind:len(Hour_label)+ind]\
-                = Median[name]
-            DataDict['Group Switch Latency']['Group Switch Latency']['SEM'][ind:len(Hour_label)+ind]\
-                = Std[name]
-            ind += len(Hour_label)
-    DataDict['Group Switch Latency']['Expected Gain'] = std_Exp_Gain
-    Gr_Mean,Gr_Std=Gr_Mean_Std_GUI(Median,Mouse_Grouped)
-    Group_Name = Mouse_Grouped.keys()
-    dictPlot = {}
-    dictPlot['Fig:Group Switch Latency'] = {}
-    dictPlot['Fig:Group Switch Latency']['Boxplot'] = Gr_Mean,Hour_Light,Hour_Dark,\
-                                            Group_Name
-    dictPlot['Fig:Group Switch Latency']['Gaussian Fit'] = Cdf, EmCdf, Group_Name,\
-                                            Mouse_Grouped, ts, tl
-    dictPlot['Fig:Group Switch Latency']['Optimal Surface'] =\
-        (EXP, MAX, Mean_minmax, Cv_minmax,
-         std_Exp_Gain, 40, 12)
-    dictPlot['Fig:Group Switch Latency']['Expected Gain'] =\
-        (std_Exp_Gain, 'Expected Gain', 20, 1, 3, 1, 0.95,
-        'Normalized Exp. Gain', 12, 15)
-    info = {}
-    info['Group Switch Latency'] = {}
-    info['Group Switch Latency']['Types']  = ['Group', 'Switch Latency']
-    info['Group Switch Latency']['Factor'] = [0,1,2]
-    info['Expected Gain'] = {}
-    info['Expected Gain']['Types']  = ['Single Subject', 'Expected Gain']
-    info['Expected Gain']['Factor'] = [0,1]
-    return DataDict,dictPlot,info
