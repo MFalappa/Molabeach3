@@ -16,14 +16,12 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 
 from Plotting_GUI import (Plt_RawPowerDensity_Loop_GUI,Plt_MedianPowerDensity_GUI,
-                          std_ErrorBar_Plt_TimeCourse_GUI,std_ErrorBar_Plt_TimeCourse_GUI)
+                          plot_new_time_sleep_course_single,
+                          plot_new_time_sleep_course_group)
 
-import matplotlib.pylab as plt
-import numpy as np
 
 
 def plotPowerDensity(*myinputs):
-    print('myinput',list(myinputs[0].keys()),list(myinputs[0]['Fig:Power Density'].keys()))
     figs  = Plt_RawPowerDensity_Loop_GUI(\
         *myinputs[0][list(myinputs[0].keys())[0]]['Single Subject'])
     figsall = Plt_MedianPowerDensity_GUI(\
@@ -43,19 +41,15 @@ def plotPowerDensity(*myinputs):
 
 def plotSleepTimeCourse(*myinputs):
     KeyVect = myinputs[0][list(myinputs[0].keys())[0]]
-    for key in KeyVect:
-        if 'Num' in key:
-            Key1 = key
-        else:
-            Key2 = key
-    print(KeyVect)
-    fig  = std_ErrorBar_Plt_TimeCourse_GUI(\
-        *myinputs[0][list(myinputs[0].keys())[0]][Key1])
-    fig1 = std_ErrorBar_Plt_TimeCourse_GUI(\
-        *myinputs[0][list(myinputs[0].keys())[0]][Key2])
+
+    fig_single = plot_new_time_sleep_course_single(KeyVect['Single Subject'][0])
+    fig_group = plot_new_time_sleep_course_group(KeyVect['Single Subject'][0])
+    
     figDict = {'Fig Sleep Time Course':{}}
-    figDict['Fig Sleep Time Course']['Num Episodes'] = fig
-    figDict['Fig Sleep Time Course']['Episode Duration'] = fig1
-    fig.show()
-    fig1.show()
+    figDict['Fig Sleep Time Course']['Time course single'] = fig_single
+    figDict['Fig Sleep Time Course']['Time course group'] = fig_group
+    
+    fig_single.show()
+    fig_group.show()
+    
     return figDict 

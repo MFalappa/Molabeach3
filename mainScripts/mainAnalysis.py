@@ -881,26 +881,26 @@ class MainWindow(QMainWindow):
 
             if not os.path.exists(Dir):
                 os.mkdir(Dir)
+            
+            try:
+                writer = pd.ExcelWriter(os.path.join(Dir, analysis+ '.xlsx'))
+    
+                for dataKey in list(dataDict[analysis].keys()):
+                    dataDict[analysis][dataKey].to_excel(writer,sheet_name=dataKey)
+                    
+                writer.save()
+                writer.close()
 
-            writer = pd.ExcelWriter(os.path.join(Dir, analysis+ '.xlsx'))
 
-            for dataKey in list(dataDict[analysis].keys()):
-                dataDict[analysis][dataKey].to_excel(writer,sheet_name=dataKey)
-#==============================================================================
-#   MODIFICARE LA PROCEDURA DI SALVATAGGIO DATI c Generalizzare il piu' possibile!!!
-#==============================================================================
-                try:
-                    if 'Factor' in info[dataKey]:
-                        fct = info[dataKey]['Factor']
-                    else:
-                        fct = None
-                except IndexError:
-                    print('Unable to save data:\n%s\n%s'%(analysis,dataKey))
-                self.AddDatasetToList(dataDict[analysis][dataKey],
-                                      dataKey,info[dataKey]['Types'],
-                                      fct)
-            writer.save()
-            writer.close()
+        
+            except IndexError:
+                print('Unable to save data:\n%s\n%s'%(analysis,dataKey))
+            
+            
+            self.AddDatasetToList(dataDict[analysis][dataKey],
+                                  dataKey,info[dataKey]['Types'],
+                                  None)
+
 
  
     def renameData(self):

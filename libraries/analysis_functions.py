@@ -234,17 +234,17 @@ def Sleep_Time_Course(*myInput):
         epi_dur_dark = epidur_if_binAdj(epi, epidur,binvec = range(0,12,Bin), epochDur=EpochDur)*EpochDur
         
         
-        time_course = np.hstack((epi_dur_light,epi_dur_dark))
+        time_course = (np.hstack((epi_dur_light,epi_dur_dark))*100)/(3600*Bin)
 
         
         if first:
             types_hours = np.array(range(0,24,Bin),dtype=np.str_)
             types = np.hstack((['Group','Subject'],types_hours))
             
-            
             df_time_course = np.zeros((count_sub,),dtype={'names':types,
                                   'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_hours.shape[0]})
-        
+            
+          
             first = False
         
         cc = 0
@@ -262,10 +262,10 @@ def Sleep_Time_Course(*myInput):
     
     title = 'Time spent in: %s'%epochType
     x_label = 'Time [Zt]'
-    y_label = 'Time [seconds]'
+    y_label = '% of total time'
 
     dictPlot['Fig:Sleep Time Course'] = {}
-    dictPlot['Fig:Sleep Time Course']['Single Subject'] = (df_time_course,
+    dictPlot['Fig:Sleep Time Course']['Single Subject'] = (pd.DataFrame(df_time_course),
                                                             title,x_label,
                                                             y_label,
                                                             tick_Num,
@@ -274,8 +274,8 @@ def Sleep_Time_Course(*myInput):
                                                             total_or_mean)
                                                       
 
-    info['Types']  = ['Single Subject EEG','Total time in seconds']
-    info['Factor'] = [0,1,2]
+    info['Types']  = ['Single Subject EEG','Total time in %']
+    info['Factor'] = [0]
     datainfo = {'Sleep time course': info }
    
     
