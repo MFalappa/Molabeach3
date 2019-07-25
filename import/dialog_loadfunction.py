@@ -138,7 +138,7 @@ class listTypeDlg(QDialog):
         for lab in self.list_types:
             item = QListWidgetItem(lab)
             self.listWidget.addItem(item)
-#        self.listWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.listWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
         label = QLabel('Input Type List:')
         spaceritem = QSpacerItem(20,20,QSizePolicy.Expanding,QSizePolicy.Minimum)
         hlayout = QHBoxLayout()
