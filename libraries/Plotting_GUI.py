@@ -17,7 +17,7 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
+import scipy.stats as sts
 
 def plot_new_time_sleep_course_group(df):
     
