@@ -98,3 +98,6 @@ def inputDlgCreator(analysisName,group_list=[]):
     if analysisName == 'spikeStatistics':
         dictInput['DoubleSpinBox'] = [('Number of ISI histogram bars:',(10,999999),100.000000),('Binning in seconds for firing rate computing:',(0.1,999999),10.000000)]
         return dictInput
+    if analysisName == 'Switch_Latency_TEST':
+        dictInput['DoubleSpinBox'] = [('boh',(0,100),0.000000)]
+        return dictInput

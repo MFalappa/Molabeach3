@@ -203,8 +203,8 @@ class new_Analysis_Wizard(QDialog):
 
         dictionary[an_func] = {'label' : self.alias,
                                'description' : self.function_descr,
-                               'type_func' : self.self.analysisType,
-                               'accepted_type' : self.analysisType
+                               'type_func' : self.analysisType,
+                               'accepted_type' : type_list
                                }
         np.save(os.path.join(phenopy_dir,'Analysis.npy'),dictionary)
         self.accept()
@@ -213,10 +213,10 @@ class new_Analysis_Wizard(QDialog):
 #==============================================================================
     def remove_Functions_(self):
         path = lib_dir
-        dialog = Wizard_2()
-        if not dialog.exec_():
-            return
-        analysisType = dialog.analysisType
+        # dialog = Wizard_2()
+        # if not dialog.exec_():
+        #     return
+        # analysisType = dialog.analysisType
         path = str(path) 
 
         funcList_1 = get_Function_List(os.path.join(path, 'analysis_functions.py'))

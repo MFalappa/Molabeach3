@@ -53,3 +53,20 @@ def plotSleepTimeCourse(*myinputs):
     fig_group.show()
     
     return figDict 
+
+def plotSwitchLatency_TEST(*myInput):
+    figs  = Gr_BoxPlot_LD_GUI(*myInput[0]['Fig:Group Switch Latency']['Boxplot'])
+    fig1 = CDF_Gr_Plot_GUI(*myInput[0]['Fig:Group Switch Latency']['Gaussian Fit'])
+    figDict = {'Fig Switch Latency':{}}
+    figDict['Fig Switch Latency']['Gaussian Fit'] = fig1
+    fig2 = F_ExpGain_Plt_GUI(*myInput[0]['Fig:Group Switch Latency']['Optimal Surface'])
+    fig3 = std_Bar_Plot_GUI(*myInput[0]['Fig:Group Switch Latency']['Expected Gain'])
+    for key in figs.keys():
+        figDict['Fig Switch Latency']['Boxplot_%s'%key] = figs[key]
+        figs[key].show()
+    fig1.show()
+    fig2.show()
+    fig3.show()
+    figDict['Fig Switch Latency']['Expected Gain'] = fig3
+    figDict['Fig Switch Latency']['Optimal Surface'] = fig2
+    return figDict

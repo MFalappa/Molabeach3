@@ -66,9 +66,12 @@ class deleteDlg(QDialog):
         
         self.continueButton.clicked.connect(self.accept)
         cancelButton.clicked.connect(self.reject)
-   
+        self.deletefunc.dropped.connect(self.enableOk)
+        self.deletefunc.dragged.connect(self.enableOk)
+        self.keepFunc.dropped.connect(self.enableOk)
+        self.keepFunc.dragged.connect(self.enableOk)
 #        self.connect(self.deletefunc,pyqtSignal('dropped()'),self.enableOk)
-#        self.connect(self.deletefunc,pyqtSignal('dragged()'),self.enableOk) 
+#        self.connect(self.deletefunc,pyqtSignal('()'),self.enableOk)
 #        self.connect(self.keepFunc,pyqtSignal('dropped()'),self.enableOk)
 #        self.connect(self.keepFunc,pyqtSignal('dragged()'),self.enableOk)
         
