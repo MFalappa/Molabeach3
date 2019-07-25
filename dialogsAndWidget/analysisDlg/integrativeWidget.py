@@ -125,12 +125,12 @@ class integrativeDlg(QDialog):
             
     def runAnalysis(self):
         selectedAnalysis = self.comboBox.currentText()
+        
         for typeOfAnalysis in list(self.analysisDict.keys()):
-            if selectedAnalysis in list(self.analysisDict[typeOfAnalysis].keys()):
-                acceptedTypes = self.analysisDict[typeOfAnalysis][selectedAnalysis]
+            if selectedAnalysis in list(self.analysisDict.keys()):
+                acceptedTypes = self.analysisDict[typeOfAnalysis]['accepted_type']
                 break
-            
-            
+             
         dlg = intLabelPairing_dlg(self.tableWidget1.dict_elemenet,self.tableWidget2.dict_elemenet,parent=self)
         dlg.exec_()
 

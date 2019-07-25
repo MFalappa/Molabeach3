@@ -7,24 +7,7 @@ def function_Launcher(name,*myInput):
     elif name == 'Sleep_Time_Course':
         outputData, inputForPlots, info = Sleep_Time_Course(*myInput)
         return outputData, inputForPlots, info
-    elif name == 'Linear_Discriminant_Analysis':
-        outputData, inputForPlots, info = Linear_Discriminant_Analysis(*myInput)
-        return outputData, inputForPlots, info
     elif name == 'LDA':
         outputData, inputForPlots, info = LDA(*myInput)
         return outputData, inputForPlots, info
-    elif name == 'Switch_Latency_TEST':
-        outputData, inputForPlots, info = Switch_Latency_TEST(*myInput)
-        return outputData, inputForPlots, info
-    elif name == 'Switch_Latency_TEST':
-        outputData, inputForPlots, info = Switch_Latency_TEST(*myInput)
-        return outputData, inputForPlots, info
-    elif name == 'Switch_Latency_TEST':
-        outputData, inputForPlots, info = Switch_Latency_TEST(*myInput)
-        return outputData, inputForPlots, info
-    elif name == 'Switch_Latency_TEST':
-        outputData, inputForPlots, info = Switch_Latency_TEST(*myInput)
-        return outputData, inputForPlots, info
-    elif name == 'Switch_Latency_TEST':
-        outputData, inputForPlots, info = Switch_Latency_TEST(*myInput)
-        return outputData, inputForPlots, info
+ 
