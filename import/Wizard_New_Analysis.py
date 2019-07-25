@@ -98,9 +98,9 @@ class new_Analysis_Wizard(QDialog):
         self.analysisType = dialog.analysisType
         
         self.customAnalysisFile = 'analysis_functions.py'
-        self.customPlotsFile    = 'custom_Plots.py'
+        self.customPlotsFile    = 'plots_functions.py'
         self.launcherAnalysis   = 'launcher_all.py'
-        self.launcherPlots      = 'plot_Launcher.py'
+        self.launcherPlots      = 'plot_Launcher_all.py'
         
         
         if self.analysisType != 'Integrative':

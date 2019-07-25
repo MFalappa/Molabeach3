@@ -67,11 +67,11 @@ def bin_epi(data_eeg, tbinSec, time0, time1,epoch='NR',epochDur = 4):
             idx_epi += 1
     return epi
 
-def epidur_if_binAdj(epi, bins, epochDur=4):
-    binepi = (epi['End'] * epochDur) // bins
+def epidur_if_binAdj(epi, bins, binvec = range(24), epochDur=4):
+    binepi = (epi['Start'] * epochDur) // bins
     idx = 0
-    binvec = np.arange(0,binepi[-1]+1)
-
+    
+    binvec = np.array(binvec)
     res = np.zeros(binvec.shape[0])
     for k in binvec:
         res[idx] = np.nansum(epi['End'][binepi==k] - epi['Start'][binepi==k])
@@ -116,7 +116,7 @@ def extract_epi(data_eeg,epoch='NR',merge_if=3,min_epi_len=3):
     
     array_episodes = np.zeros(len(dict_episodes.keys()),dtype={'names':('Start','End'),'formats':(int,int)}) 
     
-    list_keys = dict_episodes.keys()
+    list_keys = list(dict_episodes.keys())
     for k in range(array_episodes.shape[0]):
         array_episodes['Start'][k],array_episodes['End'][k] = dict_episodes[list_keys[k]]
     return array_episodes

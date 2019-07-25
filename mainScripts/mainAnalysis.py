@@ -49,9 +49,7 @@ from protocol_save_files import load_npz,save_data_container
 from Input_Dlg_std import inputDialog
 from copy import copy
 
-
-from plot_Launcher import select_Function_GUI
-from plot_Launcher_Gr import select_Function_GUI_Gr    
+from plot_Launcher_all import select_Function_GUI_all
 
 import datetime as dt
 import numpy as np
@@ -844,11 +842,7 @@ class MainWindow(QMainWindow):
         self.enableActionAfterAnalysis(Type)
         
         thread = self.analysisThread
-       
-        if Type == 'Single':
-            select_plotFun = select_Function_GUI
-        else:
-            select_plotFun = select_Function_GUI_Gr
+        
         try:
             Dir = thread.savingDetails[0]
             Dir = Dir.rstrip('\\')
@@ -864,11 +858,9 @@ class MainWindow(QMainWindow):
         if inputs is None:
             self.listWidgetRight.addItem('Unable to perform analysis %s'%analysisName)
             return
-#==============================================================================
-#   modifico single subject plot come in gr analysis 
-#==============================================================================
+
         
-        figDict = select_plotFun(analysisName,inputs)
+        figDict = select_Function_GUI_all(analysisName,inputs)
         
         if not Save:
             return

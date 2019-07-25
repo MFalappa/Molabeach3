@@ -29,8 +29,8 @@ from PyQt5.QtGui import QFont
 from MyDnDDialog import MyDnDListWidget
 from copy import copy
 from abstractmodel_for_table_repr import table_view_setter
-from Modify_Dataset_GUI import *
-from Analyzing_GUI import *
+#from Modify_Dataset_GUI import *
+#from Analyzing_GUI import *
 import ui_datainfodlg
 
 MAC = 'qt_mac_set_native_menubar' in dir()

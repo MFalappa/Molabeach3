@@ -103,7 +103,6 @@ def Power_Density(*myInput):
             df_rem['Group'][rc] = key
             rc += 1
 
-
                 
     DataDict['Power Density Wake'] = pd.DataFrame(df_wake)
 
@@ -143,13 +142,20 @@ def Power_Density(*myInput):
 
 
 def Sleep_Time_Course(*myInput):
-    DataDict, dictPlot, datainfo = {},{},{}
+    DataDict, dictPlot, info = {},{},{}
     
-    Datas = myInput[0]
-    Input = myInput[1]
-    lock = myInput[4]
-    
+    Datas      = myInput[0]
+    Input      = myInput[1]
     DataGroup  = myInput[2]
+    lock       = myInput[4]
+
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+    
     Bin = Input[0]['SpinBox'][0]
     EpochDur = Input[0]['SpinBox'][1]
     tick_Num = Input[0]['SpinBox'][2]
@@ -157,7 +163,6 @@ def Sleep_Time_Course(*myInput):
     Type = Input[0]['Combo'][0]
     stat_index = Input[0]['Combo'][1]
     total_or_mean = Input[0]['Combo'][2]
-    
     
     epidur = 3600 * Bin
     
@@ -178,10 +183,22 @@ def Sleep_Time_Course(*myInput):
                 AllData[key] = copy(Datas.takeDataset(key))
             finally:
                 lock.unlock()
-
-
+    
+    count_sub = 0        
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            count_sub += 1
+    
+    first = True
+    rc = 0
     for name in list(AllData.keys()):
         Time = AllData[name].Timestamp
+        
+        if epochType == 'S':
+            for kk in ['R','NR']:
+                AllData[name].Stage[AllData[name].Stage == kk] = 'S'
+                AllData[name].Stage[AllData[name].Stage == kk +'*'] = 'S'
+            
         
         h0 = Time[0].hour
         if Time[0].minute > 58:
@@ -196,7 +213,6 @@ def Sleep_Time_Course(*myInput):
             
         hours = vector_hours(Time)
         
-        
         index_light = np.zeros(0,dtype=int)
         for h in light_hours:
             index_light = np.hstack((index_light, np.where(hours == h)[0]))
@@ -208,108 +224,60 @@ def Sleep_Time_Course(*myInput):
         i0 = index_light[0]
         i1 = index_light[-1]
 
-        epi_l = bin_epi(AllData[name][index_light], epidur, Time[i0],Time[i1],epoch=epochType)
-        mepidur_l = epidur_if_binAdj(epi_l, epidur,epochDur=EpochDur)
+        epi = bin_epi(AllData[name][index_light], epidur, Time[i0],Time[i1],epoch=epochType)
+        epi_dur_light = epidur_if_binAdj(epi, epidur,binvec = range(0,12,Bin), epochDur=EpochDur)*EpochDur
+        
+        i0 = index_dark[0]
+        i1 = index_dark[-1]
+
+        epi = bin_epi(AllData[name][index_dark], epidur, Time[i0],Time[i1],epoch=epochType)
+        epi_dur_dark = epidur_if_binAdj(epi, epidur,binvec = range(0,12,Bin), epochDur=EpochDur)*EpochDur
+        
+        
+        time_course = np.hstack((epi_dur_light,epi_dur_dark))
 
         
+        if first:
+            types_hours = np.array(range(0,24,Bin),dtype=np.str_)
+            types = np.hstack((['Group','Subject'],types_hours))
+            
+            
+            df_time_course = np.zeros((count_sub,),dtype={'names':types,
+                                  'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_hours.shape[0]})
+        
+            first = False
+        
+        cc = 0
+        for col in types_hours:
+            df_time_course[col][rc] = time_course[cc]
+            cc += 1
+        
+        df_time_course['Subject'][rc] = name
+        df_time_course['Group'][rc] = key
+
+       
+        rc += 1
+        
+    DataDict['Sleep Time Course'] = pd.DataFrame(df_time_course)
     
-                
-                
-    
-    
-#    if (2 in Type) and (3 in Type):
-#        word = 'Sleep'
-#    elif 1 in Type:
-#        word = 'Wake'
-#    elif 2 in Type:
-#        word = 'Rem'
-#    else:
-#        word = 'NRem'
-#    
-#    
-#    
-#    
-#    DataDict = {'Sleep Time Course' : {}}
-#    DataDict['Sleep Time Course']['Group %s Num Episodes'%word] =\
-#        std_Matrix_Group
-#    if total_or_mean == 'Mean':
-#        DataDict['Sleep Time Course']['Group %s Episode Duration'%word] =\
-#            std_Matrix_Group_Dur
-#    else:
-#        DataDict['Sleep Time Course']['Group Total %s'%word] =\
-#            std_Matrix_Group_Dur
-#    DataDict['Sleep Time Course']['%s Num Episodes'%word] = std_Matrix_Nep
-#    if total_or_mean == 'Mean':
-#        DataDict['Sleep Time Course']['%s Episode Duration'%word] =\
-#            std_Matrix_Dur
-#    else:
-#        DataDict['Sleep Time Course']['Total %s'%word] =\
-#            std_Matrix_Dur
-#    DataDict['Sleep Time Course']['Daily %s Num Episodes'%word] = std_Daily_Nep
-#    if total_or_mean == 'Mean':            
-#        DataDict['Sleep Time Course']['Daily %s Episode Duration'%word] =\
-#            std_Daily_Dur
-#    else:
-#        DataDict['Sleep Time Course']['Daily Total %s'%word] = std_Daily_Dur
-#    
-#    info = {}
-#    info['Types']  = ['Single Subject EEG','Num Episodes']
-#    info['Factor'] = [0,1]
-#    datainfo = {'%s Num Episodes'%word: info}
-#    
-#    info = {}
-#    info['Types']  = ['Single Subject EEG','Episode Duration']
-#    info['Factor'] = [0,1]
-#    if total_or_mean == 'Mean':
-#        datainfo['%s Episode Duration'%word] = info
-#    else:
-#        datainfo['Total %s'%word] = info
-#    info = {}
-#    info['Types']  = ['Single Subject EEG','Daily Num Episodes']
-#    info['Factor'] = [0,1]
-#    datainfo['Daily %s Num Episodes'%word] = info
-#    
-#    info = {}
-#    info['Types']  = ['Single Subject EEG','Daily Episode Duration']
-#    info['Factor'] = [0,1]
-#    if total_or_mean == 'Mean':
-#        datainfo['Daily %s Episode Duration'%word] = info
-#    else:
-#        datainfo['Daily Total %s'%word] = info
-#    
-#    
-#    info = {}
-#    info['Types']  = ['Group EEG','Episode Duration']
-#    info['Factor'] = [0,1]
-#    if total_or_mean == 'Mean':
-#        datainfo['Group %s Episode Duration'%word] = info
-#    else:
-#        datainfo['Group Total %s'%word] = info
-#    
-#    info = {}
-#    info['Types']  = ['Group EEG','Num Episodes']
-#    info['Factor'] = [0,1]
-#    datainfo['Group %s Num Episodes'%word] = info
-#      
-#    title = 'Number of sleep episodes: %s'%word
-#    x_label = ''
-#    y_label = 'Episodes num'
-#    dictPlot = {'Fig:Sleep Time Course' : {}}
-#    dictPlot['Fig:Sleep Time Course']['%s Num Episodes'%word] =\
-#        (std_Matrix_Group, title, x_label, y_label, True, stat_index, 1.5, 20,
-#         12, 15, tick_Num)
-#    if total_or_mean == 'Mean':
-#        title = '%s episode duration'%word
-#        y_label = 'Episodes duration (min)'
-#        saveName = '%s Episode Duration'%word
-#    else:
-#        title = 'Total %s'%word
-#        y_label = '%s total (min)'%word
-#        saveName = 'Total %s'%word
-#    x_label = ''
-#    
-#    dictPlot['Fig:Sleep Time Course'][saveName] = (std_Matrix_Group_Dur, title, x_label, y_label, True, stat_index,1.5, 20, 12, 15, tick_Num)
-#    
+    title = 'Time spent in: %s'%epochType
+    x_label = 'Time [Zt]'
+    y_label = 'Time [seconds]'
+
+    dictPlot['Fig:Sleep Time Course'] = {}
+    dictPlot['Fig:Sleep Time Course']['Single Subject'] = (df_time_course,
+                                                            title,x_label,
+                                                            y_label,
+                                                            tick_Num,
+                                                            dark_start,
+                                                            stat_index,
+                                                            total_or_mean)
+                                                      
+
+    info['Types']  = ['Single Subject EEG','Total time in seconds']
+    info['Factor'] = [0,1,2]
+    datainfo = {'Sleep time course': info }
+   
     
     return DataDict,dictPlot, datainfo
             

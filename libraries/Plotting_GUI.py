@@ -21,7 +21,7 @@ import string
 import scipy.stats as sts
 import bisect
 from copy import copy
-from Analyzing_GUI import Normalize_Action_x_Interval_GUI
+#from Analyzing_GUI import Normalize_Action_x_Interval_GUI
 from Modify_Dataset_GUI import TimeUnit_to_Hours_GUI
 
 def plotLDARes_Dict(X_norm_d, y_d, lda_res_d, gauss_light_d, gauss_dark_d,line_light_d,line_dark_d, Index_for_color_d, Struct_mat_d, v_ort_d ,hl, hd,title_d,xlabel,ylabel):
@@ -83,145 +83,145 @@ def Gr_SwitchLAtency_PLT_GUI(*myinput):
     fig2[max(fig2.keys())+1] = fig1
     return fig2
     
-def Print_Actogram_GUI(Action_x_Interval,N_Day,interval,returnFig = False, *other, **kwargs):
-    """
-
-    Function Targets:   Print an actogram
-    Input:              -Action_x_Interval=vector containing number of NP per time interval
-                        -N_Day=numbers of day of the acogram
-                        -interval=fraction of an hour in seconds
-                        -other=tuple, the periodicity of the activity we consider in hour 
-                        and/or the string specify how to normalize the actogram bars. 
-                        -kwargs=dictionary, key='Start_Hour','Norm'
-                            -kwargs['Norm']=boolean, true if data are normalized 
-                            false if not
-    Output:             -Actogram = the actogram graph
-    
-    """
-    
-    print('retfig',returnFig)
-    if len(other)==0:
-        period=24
-        string='All'
-    elif len(other)==1:
-        if type(other[0])==int:
-            period=other[0]
-            string='All'
-        else:
-            string=other[0]
-            period=24
-    elif len(other)==2:
-        if type(other[0])==int:
-            period=other[0]
-            string=other[1]
-        else:
-            string=other[0]
-            period=other[1]
-    elif len(other)>2:
-        print('Warning! Too many input argumet...')
-        return()
-    
-    if 3600%interval!=0:
-        print('Warning! The interval you choose is not a fraction of an hour')
-        return()
-    if 'Start_Hour' in kwargs:
-        Start_Hour=int(kwargs['Start_Hour'])
-    else:
-        Start_Hour=0
-    if 'Norm' in kwargs:
-        Norm=kwargs['Norm']
-    else:
-        Norm = False
-#    print 'Start_Hour',Start_Hour
-    Hour_Fraction=int(3600/interval)
-    period=int(period)
-    N_Day=int(N_Day)
-    #print Norm
-#   We keep only the NP that occured in the N_Day days of trials
-    if not Norm:
-        Norm_Action_x_Interval=Normalize_Action_x_Interval_GUI(Action_x_Interval,period,Hour_Fraction,N_Day,string)
-    else:
-        Norm_Action_x_Interval=Action_x_Interval
-    
-#   Actogram's total raw number = number of days minus one
-#   x_axis is a vector like [1,2,3,..,period*4-1,period*4,1,2,3,...,period*4-1,period*4,1,2...,period*4]
-#   repeting N_day-1 times the arange(1,period*4+1).
-    if string=='FullData':
-        
-        x_axis=np.array(np.ones((N_Day,1))*np.arange(1,Hour_Fraction*2*period+1)).reshape(-1,)
-                    
-        Norm_Action_x_Interval=np.hstack((Norm_Action_x_Interval,np.zeros((N_Day+1)*Hour_Fraction*period-len(Norm_Action_x_Interval))))
-    #   We create a matrix in with every raw contains the actions of an entire day
-        
-        Daily_Actions=np.array(Norm_Action_x_Interval.reshape((N_Day+1,Hour_Fraction*period)))
-    
-    #   We double from the second raw to the last but one
-    
-        Double=np.hstack((Daily_Actions[1:-1],Daily_Actions[1:-1])).reshape(-1,)
-        
-        y_axis=np.hstack((Norm_Action_x_Interval[0:Hour_Fraction*period],Double,Norm_Action_x_Interval[-Hour_Fraction*period:]))
-    
-        Bottom_y=(np.arange(1,N_Day+1).reshape((N_Day,1))*np.ones(2*period*Hour_Fraction)).reshape(-1,)    
-    
-    else:
-        x_axis=np.array(np.ones((N_Day-1,1))*np.arange(1,Hour_Fraction*2*period+1)).reshape(-1,)
-       
-    #   We create a matrix in with every raw contains the actions of an entire day
-    
-        Daily_Actions=np.array(Norm_Action_x_Interval.reshape((N_Day,Hour_Fraction*period)))
-    
-    #   We double from the second raw to the last but one
-    
-        Double=np.hstack((Daily_Actions[1:-1],Daily_Actions[1:-1])).reshape(-1,)
-        
-        y_axis=np.hstack((Norm_Action_x_Interval[0:Hour_Fraction*period],Double,Norm_Action_x_Interval[-Hour_Fraction*period:]))
-    
-        Bottom_y=(np.arange(1,N_Day).reshape((N_Day-1,1))*np.ones(2*period*Hour_Fraction)).reshape(-1,)
-    Bottom_y=Bottom_y[::-1]
-    x_axis=x_axis*interval/3600
-    FIG = plt.figure(figsize=(5.5*3.13,3.5*3.13))
-    if 'title' in kwargs:
-        plt.title(kwargs['title'])
-    Actogram = plt.bar(x_axis,y_axis,bottom=Bottom_y,align='center',width=interval/3600.0,color='b',lw=0.)
-     
-    if N_Day>=2 and string=='FullData':
-        label=[]
-        for i in range(N_Day):
-            label=label+['%d-%d' % (N_Day-i,N_Day-i+1)]
-        plt.yticks(np.arange(1,N_Day+1),label)
-        ymax=N_Day+1
-    elif N_Day>=2 and string!='FullData':
-        label=[]
-        for i in range(N_Day-1):
-            label=label+['%d-%d' % (N_Day-(i+1),N_Day-i)]
-        plt.yticks(np.arange(1,N_Day),label)
-        ymax=N_Day
-    else:
-        label=['1-2']
-        plt.yticks([1],label)
-        ymax=1
-   
-    plt.xlabel('Time(hours)')
-    plt.ylabel('Days')
-    if 'Title' in kwargs:
-        title=kwargs['Title']
-    else:
-        title='Actogram'
-    plt.title(title)
-    if 'Suptitle' in kwargs:
-        plt.suptitle(kwargs['Suptitle'],fontsize='large')
-    
-    plt.ylim(1,ymax)
-    #plt.xticks(np.arange(0,2*period+1,6),np.arange(Start_Hour,Start_Hour+2*period+1,6)%(period))
-    plt.xticks(np.arange(0,2*period+1,1),np.arange(Start_Hour,Start_Hour+2*period+1,1)%(period))
-    #plt.hold(1)
-    
-    plt.xlim((-0.5,2*period))
-    
-    if returnFig:
-        return(FIG)
-        
-    return(Actogram)
+#def Print_Actogram_GUI(Action_x_Interval,N_Day,interval,returnFig = False, *other, **kwargs):
+#    """
+#
+#    Function Targets:   Print an actogram
+#    Input:              -Action_x_Interval=vector containing number of NP per time interval
+#                        -N_Day=numbers of day of the acogram
+#                        -interval=fraction of an hour in seconds
+#                        -other=tuple, the periodicity of the activity we consider in hour 
+#                        and/or the string specify how to normalize the actogram bars. 
+#                        -kwargs=dictionary, key='Start_Hour','Norm'
+#                            -kwargs['Norm']=boolean, true if data are normalized 
+#                            false if not
+#    Output:             -Actogram = the actogram graph
+#    
+#    """
+#    
+#    print('retfig',returnFig)
+#    if len(other)==0:
+#        period=24
+#        string='All'
+#    elif len(other)==1:
+#        if type(other[0])==int:
+#            period=other[0]
+#            string='All'
+#        else:
+#            string=other[0]
+#            period=24
+#    elif len(other)==2:
+#        if type(other[0])==int:
+#            period=other[0]
+#            string=other[1]
+#        else:
+#            string=other[0]
+#            period=other[1]
+#    elif len(other)>2:
+#        print('Warning! Too many input argumet...')
+#        return()
+#    
+#    if 3600%interval!=0:
+#        print('Warning! The interval you choose is not a fraction of an hour')
+#        return()
+#    if 'Start_Hour' in kwargs:
+#        Start_Hour=int(kwargs['Start_Hour'])
+#    else:
+#        Start_Hour=0
+#    if 'Norm' in kwargs:
+#        Norm=kwargs['Norm']
+#    else:
+#        Norm = False
+##    print 'Start_Hour',Start_Hour
+#    Hour_Fraction=int(3600/interval)
+#    period=int(period)
+#    N_Day=int(N_Day)
+#    #print Norm
+##   We keep only the NP that occured in the N_Day days of trials
+#    if not Norm:
+#        Norm_Action_x_Interval=Normalize_Action_x_Interval_GUI(Action_x_Interval,period,Hour_Fraction,N_Day,string)
+#    else:
+#        Norm_Action_x_Interval=Action_x_Interval
+#    
+##   Actogram's total raw number = number of days minus one
+##   x_axis is a vector like [1,2,3,..,period*4-1,period*4,1,2,3,...,period*4-1,period*4,1,2...,period*4]
+##   repeting N_day-1 times the arange(1,period*4+1).
+#    if string=='FullData':
+#        
+#        x_axis=np.array(np.ones((N_Day,1))*np.arange(1,Hour_Fraction*2*period+1)).reshape(-1,)
+#                    
+#        Norm_Action_x_Interval=np.hstack((Norm_Action_x_Interval,np.zeros((N_Day+1)*Hour_Fraction*period-len(Norm_Action_x_Interval))))
+#    #   We create a matrix in with every raw contains the actions of an entire day
+#        
+#        Daily_Actions=np.array(Norm_Action_x_Interval.reshape((N_Day+1,Hour_Fraction*period)))
+#    
+#    #   We double from the second raw to the last but one
+#    
+#        Double=np.hstack((Daily_Actions[1:-1],Daily_Actions[1:-1])).reshape(-1,)
+#        
+#        y_axis=np.hstack((Norm_Action_x_Interval[0:Hour_Fraction*period],Double,Norm_Action_x_Interval[-Hour_Fraction*period:]))
+#    
+#        Bottom_y=(np.arange(1,N_Day+1).reshape((N_Day,1))*np.ones(2*period*Hour_Fraction)).reshape(-1,)    
+#    
+#    else:
+#        x_axis=np.array(np.ones((N_Day-1,1))*np.arange(1,Hour_Fraction*2*period+1)).reshape(-1,)
+#       
+#    #   We create a matrix in with every raw contains the actions of an entire day
+#    
+#        Daily_Actions=np.array(Norm_Action_x_Interval.reshape((N_Day,Hour_Fraction*period)))
+#    
+#    #   We double from the second raw to the last but one
+#    
+#        Double=np.hstack((Daily_Actions[1:-1],Daily_Actions[1:-1])).reshape(-1,)
+#        
+#        y_axis=np.hstack((Norm_Action_x_Interval[0:Hour_Fraction*period],Double,Norm_Action_x_Interval[-Hour_Fraction*period:]))
+#    
+#        Bottom_y=(np.arange(1,N_Day).reshape((N_Day-1,1))*np.ones(2*period*Hour_Fraction)).reshape(-1,)
+#    Bottom_y=Bottom_y[::-1]
+#    x_axis=x_axis*interval/3600
+#    FIG = plt.figure(figsize=(5.5*3.13,3.5*3.13))
+#    if 'title' in kwargs:
+#        plt.title(kwargs['title'])
+#    Actogram = plt.bar(x_axis,y_axis,bottom=Bottom_y,align='center',width=interval/3600.0,color='b',lw=0.)
+#     
+#    if N_Day>=2 and string=='FullData':
+#        label=[]
+#        for i in range(N_Day):
+#            label=label+['%d-%d' % (N_Day-i,N_Day-i+1)]
+#        plt.yticks(np.arange(1,N_Day+1),label)
+#        ymax=N_Day+1
+#    elif N_Day>=2 and string!='FullData':
+#        label=[]
+#        for i in range(N_Day-1):
+#            label=label+['%d-%d' % (N_Day-(i+1),N_Day-i)]
+#        plt.yticks(np.arange(1,N_Day),label)
+#        ymax=N_Day
+#    else:
+#        label=['1-2']
+#        plt.yticks([1],label)
+#        ymax=1
+#   
+#    plt.xlabel('Time(hours)')
+#    plt.ylabel('Days')
+#    if 'Title' in kwargs:
+#        title=kwargs['Title']
+#    else:
+#        title='Actogram'
+#    plt.title(title)
+#    if 'Suptitle' in kwargs:
+#        plt.suptitle(kwargs['Suptitle'],fontsize='large')
+#    
+#    plt.ylim(1,ymax)
+#    #plt.xticks(np.arange(0,2*period+1,6),np.arange(Start_Hour,Start_Hour+2*period+1,6)%(period))
+#    plt.xticks(np.arange(0,2*period+1,1),np.arange(Start_Hour,Start_Hour+2*period+1,1)%(period))
+#    #plt.hold(1)
+#    
+#    plt.xlim((-0.5,2*period))
+#    
+#    if returnFig:
+#        return(FIG)
+#        
+#    return(Actogram)
 
 
     
