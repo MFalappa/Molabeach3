@@ -151,12 +151,12 @@ class new_Analysis_Wizard(QDialog):
             return
         # import dictionary info
         dictionary = np.load(os.path.join(phenopy_dir, 'Analysis.npy')).all()
-        for func in dictionary.keys():
-            alias = dictionary[func]['label']
-            if alias == self.alias:
-                print('Function label %s already used!'%alias)
-                self.reject()
-                return
+        alias_list = list(dictionary.keys())
+
+        if self.alias in  alias_list:
+            print('Function label %s already used!'%self.alias)
+            self.reject()
+            return
 
 
         tot_num = sum(input_dict.values())
@@ -199,13 +199,26 @@ class new_Analysis_Wizard(QDialog):
                                          AddTo = self.customPlotsFile)                             
         add_To_Plot_Launcher(classes_dir,plotFun,funcName,
                              AddTo = self.launcherPlots)
- 
 
-        dictionary[an_func] = {'label' : self.alias,
+        if self.analysisType != 'Integrative':
+            dictionary[self.alias] = {'analysis_function' : an_func,
                                'description' : self.function_descr,
                                'type_func' : self.analysisType,
-                               'accepted_type' : type_list
+                               'accepted_type_0' : type_list,
+                               'is_integrative' : False,
+                               'plot_function' : plt_func
                                }
+        else:
+            dictionary[self.alias] = {'analysis_function': an_func,
+                                   'description': self.function_descr,
+                                   'type_func': self.analysisType,
+                                   'is_integrative': False,
+                                   'plot_function': plt_func
+                                   }
+            ## something like that
+            # for kk in range(num_data_types):
+            #     dictionary[an_func]['accepted_type_%d'%kk] = type_list[kk]
+
         np.save(os.path.join(phenopy_dir,'Analysis.npy'),dictionary)
         self.accept()
 #==============================================================================
@@ -217,11 +230,12 @@ class new_Analysis_Wizard(QDialog):
         # if not dialog.exec_():
         #     return
         # analysisType = dialog.analysisType
-        path = str(path) 
+        path = str(path)
+        dictionary = np.load(os.path.join(phenopy_dir, 'Analysis.npy')).all()
+        # get the label for each analysis
+        alias_list = list(dictionary.keys())
 
-        funcList_1 = get_Function_List(os.path.join(path, 'analysis_functions.py'))
-        funcList = funcList_1 + get_Function_List(os.path.join(path , 'plots_functions.py'))
-        dialog = deleteDlg(funcList,self)
+        dialog = deleteDlg(alias_list,self)
         if not dialog.exec_():
             self.reject()
             return
@@ -229,10 +243,9 @@ class new_Analysis_Wizard(QDialog):
         deleteList = dialog.get_List()
         print('delete list ',deleteList)
         remove_Functions(path,deleteList)
-        dictionary = np.load(os.path.join(phenopy_dir,'Analysis.npy')).all()
+
         for func in deleteList:
-            if func in funcList_1:
-                dictionary.pop(func)
+            dictionary.pop(func)
 
         
         np.save(os.path.join(phenopy_dir,'Analysis.npy'),dictionary)

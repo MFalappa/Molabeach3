@@ -255,7 +255,7 @@ def getPlotFunctName(PathToPltLauncher,anFunName):
         
             
 
-def remove_Functions(PathToAutonomice,functionList):
+def remove_Functions(PathToAutonomice,functionList,analysis_dict):
     path_to_launcher = os.path.join(os.path.dirname(PathToAutonomice),'classes','analysisClasses')
     PathToCustomAnalysis = os.path.join(PathToAutonomice, 'analysis_functions.py')
     PathToCustomPlots    = os.path.join(PathToAutonomice, 'custom_Plots.py')
@@ -264,12 +264,13 @@ def remove_Functions(PathToAutonomice,functionList):
     PathToInputCreator   = os.path.join(path_to_launcher, 'inputDlgCreator.py')
     
     for func in functionList:
-        remove_A_Funct(PathToCustomAnalysis, func)
-        pltfunc = getPlotFunctName(PathToPltLauncher,func)
-        remove_A_Funct(PathToCustomPlots, pltfunc)
-        remove_An_If_Close(PathToLauncher,'function_Launcher',func)
-        remove_An_If_Close(PathToInputCreator,'inputDlgCreator',func)
-        remove_An_If_Close(PathToPltLauncher,'select_Function_GUI',func)
+        an_func = analysis_dict[func]['analysis_function']
+        plt_func = analysis_dict[func]['plot_function']
+        remove_A_Funct(PathToCustomAnalysis, an_func)
+        remove_A_Funct(PathToCustomPlots, plt_func)
+        remove_An_If_Close(PathToLauncher,'function_Launcher',an_func)
+        remove_An_If_Close(PathToInputCreator,'inputDlgCreator',an_func)
+        remove_An_If_Close(PathToPltLauncher,'select_Function_GUI',an_func)
     print('Functions Removed')
     return
 
