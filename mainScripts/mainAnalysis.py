@@ -379,7 +379,24 @@ class MainWindow(QMainWindow):
     
     def startWizard(self):
         dialog = new_Analysis_Wizard(parent=self)
+        dialog.editedDictionary.connect(self.updateAnalysisDict)
         dialog.show()
+
+    def updateAnalysisDict(self,analysisDict):
+        # change to the new dict using singal connection from the wizard
+        self.AnalysisAndLabels = analysisDict
+        # get the central widget
+        centralWidget = self.centralWidget()
+        # check if the tabs are open and refresh the widget
+        if type(centralWidget) == QTabWidget:
+            for tabidx in range(centralWidget.count()):
+                anWidget = centralWidget.widget(tabidx)
+                anWidget.analysisDict = analysisDict
+
+                anWidget.populateCombo()
+        # method disconnect not working
+
+
         
     def startEditDlg(self):
         dialog = editDlg(parent=self)

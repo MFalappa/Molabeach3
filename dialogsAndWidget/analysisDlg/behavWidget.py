@@ -133,33 +133,20 @@ class behavDlg(QDialog):
         self.textBrowser_descr.setText(self.descr_dict[funName])
         
     def populateCombo(self):
-        fh = open(os.path.join(libraries_fld,'analysis_functions.py'))
-
-        line = fh.readline()
-
-        while line:
-            if line.startswith(('def ','def\t')):
-                funName = (line[3:].replace(' ','')).replace('\t','')
-                funName = funName.split('(')[0]
-                
-                if funName == 'main' or funName == 'create_laucher':
-                    line = fh.readline()
-                    continue
-                                
-                label = self.analysisDict[funName]['label']
-                description = self.analysisDict[funName]['description']
-                type_func = self.analysisDict[funName]['type_func']
+        self.comboBox.disconnect()
+        self.comboBox.clear()
+        # get function labels
+        analysis_list = self.analysisDict.keys()
+        for label in analysis_list:
+                description = self.analysisDict[label]['description']
+                type_func = self.analysisDict[label]['type_func']
                 
                 if type_func == 'Behaviour':
                     self.comboBox.addItem(label)
                     self.descr_dict[label] = description
-                    self.show_dict[label] = funName
-                
-                line = fh.readline()
-            else:
-                line = fh.readline()
+                    self.show_dict[label] = self.analysisDict[label]['analysis_function']
 
-        fh.close()
+        self.comboBox.currentIndexChanged[str].connect()
 
     def closeTab(self):
         self.close()

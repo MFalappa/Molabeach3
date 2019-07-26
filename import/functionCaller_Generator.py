@@ -258,7 +258,7 @@ def getPlotFunctName(PathToPltLauncher,anFunName):
 def remove_Functions(PathToAutonomice,functionList,analysis_dict):
     path_to_launcher = os.path.join(os.path.dirname(PathToAutonomice),'classes','analysisClasses')
     PathToCustomAnalysis = os.path.join(PathToAutonomice, 'analysis_functions.py')
-    PathToCustomPlots    = os.path.join(PathToAutonomice, 'custom_Plots.py')
+    PathToCustomPlots    = os.path.join(PathToAutonomice, 'plots_functions.py')
     PathToLauncher       = os.path.join(path_to_launcher, 'launcher_all.py')
     PathToPltLauncher    = os.path.join(path_to_launcher, 'plot_Launcher_all.py')
     PathToInputCreator   = os.path.join(path_to_launcher, 'inputDlgCreator.py')

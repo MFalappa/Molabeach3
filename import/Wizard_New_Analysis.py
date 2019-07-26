@@ -38,7 +38,7 @@ from PyQt5.QtWidgets import (QLabel,QDialog,QApplication,QPushButton,QVBoxLayout
                              QHBoxLayout,QSpacerItem,QSizePolicy)
 
 from PyQt5.QtGui import (QFont)
-#from PyQt5.QtCore import (pyqtSignal)
+from PyQt5.QtCore import (pyqtSignal)
 from inputDlg_creating_input import inputDlg_creating_input
 from functionCaller_Generator import (functionCaller_Generator,add_To_Custom_Analysis,
                                       add_To_Plot_Launcher,get_Function_List,remove_Functions)
@@ -48,6 +48,7 @@ from data_type_selection import data_type_selection
 from analysis_data_type_class import refreshTypeList
 
 class new_Analysis_Wizard(QDialog):
+    editedDictionary = pyqtSignal(dict)
     def __init__(self,parent = None):
         super(new_Analysis_Wizard,self).__init__(parent)
         print('VERSIONE DA TESTARE, NUOVA ORGANIZZAZIONE ANALISI')
@@ -220,6 +221,7 @@ class new_Analysis_Wizard(QDialog):
             #     dictionary[an_func]['accepted_type_%d'%kk] = type_list[kk]
 
         np.save(os.path.join(phenopy_dir,'Analysis.npy'),dictionary)
+        self.editedDictionary.emit(dictionary)
         self.accept()
 #==============================================================================
 #   sembra tutto ok... controllare      
@@ -242,14 +244,14 @@ class new_Analysis_Wizard(QDialog):
 
         deleteList = dialog.get_List()
         print('delete list ',deleteList)
-        remove_Functions(path,deleteList)
+        remove_Functions(path,deleteList,dictionary)
 
         for func in deleteList:
             dictionary.pop(func)
 
         
         np.save(os.path.join(phenopy_dir,'Analysis.npy'),dictionary)
-        
+        self.editedDictionary.emit(dictionary)
         
         self.accept()
 

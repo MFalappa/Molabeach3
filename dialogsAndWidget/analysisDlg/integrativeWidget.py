@@ -148,32 +148,17 @@ class integrativeDlg(QDialog):
         self.textBrowser_descr.setText(self.descr_dict[funName])
         
     def populateCombo(self):
-        fh = open(os.path.join(libraries_fld,'analysis_functions.py'))
-#        fh = open(os.path.join(libraries_fld,'custom_Analysis_Gr.py'))
-        line = fh.readline()
+        self.comboBox.clear()
+        analysis_list = self.analysisDict.keys()
+        for label in analysis_list:
+            description = self.analysisDict[label]['description']
+            type_func = self.analysisDict[label]['type_func']
 
-        while line:
-            if line.startswith(('def ','def\t')):
-                funName = (line[3:].replace(' ','')).replace('\t','')
-                funName = funName.split('(')[0]
-                
-                if funName == 'main' or funName == 'create_laucher':
-                    line = fh.readline()
-                    continue
-                                
-                label = self.analysisDict[funName]['label']
-                description = self.analysisDict[funName]['description']
-                type_func = self.analysisDict[funName]['type_func']
-                
-                if type_func == 'Integrative':
-                    self.comboBox.addItem(label)
-                    self.descr_dict[label] = description
-                
-                line = fh.readline()
-            else:
-                line = fh.readline()
-                
-        fh.close()
+            if type_func == 'Integrative':
+                self.comboBox.addItem(label)
+                self.descr_dict[label] = description
+                self.show_dict[label] = self.analysisDict[label]['analysis_function']
+
 
     def closeTab(self):
         self.close()

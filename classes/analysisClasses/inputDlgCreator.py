@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
-
 Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
                    E. Balzani, M. Falappa - All rights reserved
-
 @author: edoardo.balzani87@gmail.com; mfalappa@outlook.it
-
                                 Publication:
          An approach to monitoring home-cage behavior in mice that 
                           facilitates data sharing
@@ -14,7 +11,6 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
 def inputDlgCreator(analysisName,group_list=[]):
     dictInput = {}
 #==============================================================================
@@ -99,5 +95,5 @@ def inputDlgCreator(analysisName,group_list=[]):
         dictInput['DoubleSpinBox'] = [('Number of ISI histogram bars:',(10,999999),100.000000),('Binning in seconds for firing rate computing:',(0.1,999999),10.000000)]
         return dictInput
     if analysisName == 'Switch_Latency_TEST':
-        dictInput['DoubleSpinBox'] = [('boh',(0,100),0.000000)]
+        dictInput['DoubleSpinBox'] = [('dsa',(0,100),0.000000)]
         return dictInput

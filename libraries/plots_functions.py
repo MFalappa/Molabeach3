@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
-
 Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
                    E. Balzani, M. Falappa - All rights reserved
-
 @author: edoardo.balzani87@gmail.com; mfalappa@outlook.it
-
                                 Publication:
          An approach to monitoring home-cage behavior in mice that 
                           facilitates data sharing
@@ -14,13 +11,9 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
 from Plotting_GUI import (Plt_RawPowerDensity_Loop_GUI,Plt_MedianPowerDensity_GUI,
                           plot_new_time_sleep_course_single,
                           plot_new_time_sleep_course_group)
-
-
-
 def plotPowerDensity(*myinputs):
     figs  = Plt_RawPowerDensity_Loop_GUI(\
         *myinputs[0][list(myinputs[0].keys())[0]]['Single Subject'])
@@ -37,11 +30,8 @@ def plotPowerDensity(*myinputs):
     figDict['Fig Power Density']['NREM x Group'] = figsall[3]
     fig1.show()
     return figDict
-
-
 def plotSleepTimeCourse(*myinputs):
     KeyVect = myinputs[0][list(myinputs[0].keys())[0]]
-
     fig_single = plot_new_time_sleep_course_single(KeyVect['Single Subject'][0])
     fig_group = plot_new_time_sleep_course_group(KeyVect['Single Subject'][0])
     
