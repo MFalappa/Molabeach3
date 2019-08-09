@@ -7,6 +7,14 @@ def function_Launcher(name,*myInput):
     elif name == 'Sleep_Time_Course':
         outputData, inputForPlots, info = Sleep_Time_Course(*myInput)
         return outputData, inputForPlots, info
+    elif name == 'delta_rebound':
+        outputData, inputForPlots, info = delta_rebound(*myInput)
+        return outputData, inputForPlots, info
+    elif name == 'Sleep_cycles':
+        outputData, inputForPlots, info = Sleep_cycles(*myInput)
+        return outputData, inputForPlots, info
+    
+    
     elif name == 'Group_Error_Rate':
         outputData, inputForPlots, info = Group_Error_Rate(*myInput)
         return outputData, inputForPlots, info
@@ -18,9 +26,6 @@ def function_Launcher(name,*myInput):
         return outputData, inputForPlots, info
     elif name == 'Switch_Latency':
         outputData, inputForPlots, info = Switch_Latency(*myInput)
-        return outputData, inputForPlots, info
-    elif name == 'delta_rebound':
-        outputData, inputForPlots, info = delta_rebound(*myInput)
         return outputData, inputForPlots, info
     elif name == 'Actograms':
         outputData, inputForPlots, info = Actograms(*myInput)
@@ -37,15 +42,6 @@ def function_Launcher(name,*myInput):
     elif name == 'Attentional_analysis':
         outputData, inputForPlots, info = Attentional_analysis(*myInput)
         return outputData, inputForPlots, info
-    elif name == 'sleep_fragmentation':
-        outputData, inputForPlots, info = sleep_fragmentation(*myInput)
-        return outputData, inputForPlots, info
-    elif name == 'Sleep_cycles':
-        outputData, inputForPlots, info = Sleep_cycles(*myInput)
-        return outputData, inputForPlots, info
     elif name == 'emg_normalized':
         outputData, inputForPlots, info = emg_normalized(*myInput)
-        return outputData, inputForPlots, info
-    elif name == 'Switch_Latency_TEST':
-        outputData, inputForPlots, info = Switch_Latency_TEST(*myInput)
         return outputData, inputForPlots, info

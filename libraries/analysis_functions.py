@@ -18,7 +18,12 @@ import pandas as pd
 import numpy as np
 from copy import copy
 from auxiliary_functions import (powerDensity_function,
-                                 vector_hours,bin_epi,epidur_if_binAdj)
+                                 vector_hours,bin_epi,epidur_if_binAdj,
+                                 extract_epi,consecutive_bins,
+                                 filter_emg,
+                                 ellip_bandpass_filter,
+                                 normalize_emg,
+                                 compute_perc)
 def Power_Density(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
@@ -232,7 +237,8 @@ def Sleep_Time_Course(*myInput):
        
         rc += 1
         
-    DataDict['Sleep Time Course'] = pd.DataFrame(df_time_course)
+    DataDict['Sleep Time Course'] = {}
+    DataDict['Sleep Time Course'][epochType] = pd.DataFrame(df_time_course)
     
     title = 'Time spent in: %s'%epochType
     x_label = 'Time [Zt]'
@@ -248,7 +254,8 @@ def Sleep_Time_Course(*myInput):
                                                       
     info['Types']  = ['Single Subject EEG','Total time in %']
     info['Factor'] = [0]
-    datainfo = {'Sleep time course': info }
+    
+    datainfo = {epochType: info }
    
     
     return DataDict,dictPlot, datainfo
@@ -257,6 +264,351 @@ def Sleep_Time_Course(*myInput):
     
     
     return DataDict,dictPlot, datainfo
+def delta_rebound(*myInput):
+    DataDict, dictPlot, info = {},{},{}
+    
+    Datas      = myInput[0]
+    Input      = myInput[1]
+    DataGroup  = myInput[2]
+
+    lock       = myInput[4]
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+
+    bins = Input[0]['Combo'][0]
+    col_freq = Input[0]['Combo'][1]
+    epoch = Input[0]['Combo'][2]
+    
+    AllData  = {}
+    for group in list(DataGroup.keys()):
+        for key in DataGroup[group]:
+            try:
+                lock.lockForRead()
+                AllData[key] = copy(Datas.takeDataset(key))
+            finally:
+                lock.unlock()
+    
+    count_sub = 0        
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            count_sub += 1
+    
+
+    first = True
+    rc = 0
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            if Input[0]['PhaseSel'][0][name][0][5]:
+                condition = 'Baseline'
+                col_input = 0
+            elif Input[0]['PhaseSel'][0][name][1][5]:
+                condition = 'Sleep Deprivation'
+                col_input = 1
+            elif Input[0]['PhaseSel'][0][name][2][5]:
+                condition = 'Rebound'
+                col_input = 2
+                
+            start = Input[0]['PhaseSel'][0][name][col_input][1]
+            stop = Input[0]['PhaseSel'][0][name][col_input][2]
+            
+            norm_start = Input[0]['PhaseSel'][0][name][col_input][3]
+            norm_stop = Input[0]['PhaseSel'][0][name][col_input][4]
+            
+            idx = np.where(AllData[name].Timestamp >= start)[0]
+            AllData[name] = AllData[name][idx]
+                
+            idx = np.where(AllData[name].Timestamp <= stop)[0]
+            AllData[name] = AllData[name][idx]
+                
+            if Input[0]['PhaseSel'][0][name][col_input][6]:
+                idx_norm = None 
+            else:
+                idx_norm = (AllData[name].Timestamp >= norm_start) * (AllData[name].Timestamp <= norm_stop)
+                
+                
+            array_episodes = extract_epi(AllData[name], epoch = epoch, 
+                                     merge_if=1,
+                                     min_epi_len=2)
+            
+            index = []
+            for start,end in array_episodes:
+                index = np.hstack((index,range(start,end)))
+                
+            index = np.array(index,dtype=int)
+            mask = np.ones(AllData[name].Stage.shape[0], dtype=bool)
+            mask[index] = False
+            
+            non_index = np.arange(AllData[name].Stage.shape[0])[mask]
+            
+            Power = copy(AllData[name].PowerSp)
+            Power[non_index,:] = np.nan
+            Power[np.where(AllData[name].Stage!=epoch)[0],:] = np.nan
+            
+            
+            binvect = consecutive_bins(AllData[name].Timestamp,bins=bins)
+            all_bins = np.unique(binvect)
+            
+            if idx_norm is None:
+                norm_factor = 1
+            else:
+                norm_factor = np.nanmean(Power[idx_norm,col_freq])
+                
+            idx = 0
+            res = np.zeros(all_bins.shape[0])
+            for k in all_bins:
+                idx_sel = np.where(binvect==k)[0]
+                if idx_sel.shape[0] < 2:
+                    continue
+                res[idx] = np.nanmean(Power[idx_sel,col_freq])/norm_factor
+                idx += 1
+            
+            if first:
+                types_hours = np.array(range(0,24,int(bins/3600)),dtype=np.str_)
+                types = np.hstack((['Group','Subject','Norm factor'],types_hours))
+                
+                df_power = np.zeros((count_sub,),dtype={'names':types,
+                                      'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_hours.shape[0]+(float,)})
+                
+              
+                first = False
+            
+            cc = 0
+            for col in types_hours:
+                df_power[col][rc] = res[cc]
+                cc += 1
+            
+            df_power['Subject'][rc] = name
+            df_power['Group'][rc] = key
+            df_power['Norm factor'][rc] = norm_factor
+           
+            rc += 1
+        
+
+    DataDict['Delta-Theta'] = {}
+    DataDict['Delta-Theta'][epoch] = pd.DataFrame(df_power)
+    
+    
+    if col_freq == 0:
+        title = ' Delta Power during ' + condition
+    elif col_freq == 1:
+        title = 'Theta Power during ' + condition
+        
+    
+    x_label = 'Time'
+    y_label = 'Power'
+    dictPlot['Fig:EEG Power'] = {}
+    dictPlot['Fig:EEG Power']['Single Subject'] = (pd.DataFrame(df_power),
+                                                            title,x_label,
+                                                            y_label,
+                                                            None,
+                                                            None,
+                                                            None,
+                                                            None)
+                                                      
+    info['Types']  = ['Single Subject EEG','Total time in %']
+    info['Factor'] = [0]
+    
+    datainfo = {epoch: info }
+   
+    
+    return DataDict,dictPlot, datainfo  
+def Sleep_cycles(*myInput):
+    DataDict, dictPlot, info = {},{},{}
+    
+    Datas      = myInput[0]
+    DataGroup  = myInput[2]
+    lock       = myInput[4]
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+    
+    AllData  = {}
+    for group in list(DataGroup.keys()):
+        for key in DataGroup[group]:
+            try:
+                lock.lockForRead()
+                AllData[key] = copy(Datas.takeDataset(key))
+            finally:
+                lock.unlock()
+    
+    count_sub = 0        
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            count_sub += 1
+
+
+    maxTime = myInput[1][0]['DoubleSpinBox'][0]
+    steps = myInput[1][0]['Combo'][0]
+
+    bins = range(0,int(maxTime)+int(steps),int(steps))
+    first = True
+    rc = 0
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            array_episodes = extract_epi(AllData[name], epoch = 'R', 
+                                     merge_if=2,
+                                     min_epi_len=2)
+           
+            
+            cycle_dur_x_sbj = 0
+            for ep in range(array_episodes.shape[0]-1):
+                start = array_episodes['Start'][ep]
+                stop = array_episodes['Start'][ep+1]
+                res = (stop-start)*4
+                cycle_dur_x_sbj = np.hstack((cycle_dur_x_sbj,res))
+            
+            
+            res_min = cycle_dur_x_sbj/60.
+            n_res = np.histogram(res_min, bins=bins,range=(0, int(maxTime)))
+            
+            if first:
+                types_hours = np.array(bins[:-1],dtype=np.str_)
+                types = np.hstack((['Group','Subject'],types_hours))
+                
+                df_cycles = np.zeros((count_sub,),dtype={'names':types,
+                                      'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_hours.shape[0]})
+        
+                first = False
+            
+            cc = 0
+            for col in types_hours:
+                df_cycles[col][rc] = n_res[0][cc]
+                cc += 1
+            
+            df_cycles['Subject'][rc] = name
+            df_cycles['Group'][rc] = key
+           
+            rc += 1
+            
+    DataDict['Cycles durations'] = {}
+    DataDict['Cycles durations']['Cycles'] = pd.DataFrame(df_cycles)
+    
+
+    title = 'Cycles durations'   
+    x_label = 'Duration [minutes]'
+    y_label = 'Occurences [#]'
+    dictPlot['Fig:Cycles durations raw'] = {}
+    dictPlot['Fig:Cycles durations raw']['Single Subject'] = (pd.DataFrame(df_cycles),
+                                                            title,x_label,
+                                                            y_label,
+                                                            n_res[1],
+                                                            None,
+                                                            None,
+                                                            None)
+                                                      
+    info['Types']  = ['Cycles','Occurences in #']
+    info['Factor'] = [0]
+    
+    datainfo = {'Cycles': info }
+    
+    return DataDict, dictPlot, datainfo
+def emg_normalized(*myInput):
+    DataDict, dictPlot, info = {},{},{}
+    
+    Datas      = myInput[0]
+    DataGroup  = myInput[2]
+    lock       = myInput[4]
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+    
+    AllData  = {}
+    for group in list(DataGroup.keys()):
+        for key in DataGroup[group]:
+            try:
+                lock.lockForRead()
+                AllData[key] = copy(Datas.takeDataset(key))
+            finally:
+                lock.unlock()
+    
+    count_sub = 0        
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            count_sub += 1
+
+
+    percentile = myInput[1][0]['Combo'][0]
+    
+    stages = ['W','R','NR']
+    first = True
+    rc = 0
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            
+            emg = AllData[name].emg
+            std = 5
+            ampl = np.nanstd(emg)*std
+            
+            emg_filterd = filter_emg(emg,ampl)
+            emg_filterd_2 = ellip_bandpass_filter(emg_filterd, 0.1, 240, 500, order=3, rp=0.1, rs=40)
+        
+            scored = AllData[name].Stage
+
+            raEMG,av,norm_h, norm_l = normalize_emg(emg_filterd_2)
+            percent = compute_perc(raEMG,scored,stages,percentile)
+            
+            
+            if first:
+                types_hours = np.array(percentile,dtype=np.str_)
+                types = np.hstack((['Group','Subject','Norm high','Norm low'],types_hours))
+                
+                df_emg_norm = np.zeros((count_sub,),dtype={'names':types,
+                                      'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_hours.shape[0]+(float,)+(float,)})
+        
+                first = False
+            
+            cc = 0
+            for col in types_hours:
+                df_emg_norm[col][rc] = percent[cc]
+                cc += 1
+            
+            df_emg_norm['Subject'][rc] = name
+            df_emg_norm['Group'][rc] = key
+            df_emg_norm['Norm high'][rc] = norm_h
+            df_emg_norm['Norm low'][rc] = norm_l
+           
+            rc += 1
+            
+    DataDict['EMG norm'] = {}
+    DataDict['EMG norm']['EMGnorm'] = pd.DataFrame(df_emg_norm)
+    
+
+    title = 'emg normalized'   
+    x_label = 'Percentiles'
+    y_label = 'Amplitude [A.U.]'
+    dictPlot['Fig:emg normalized'] = {}
+    dictPlot['Fig:emg normalized']['Single Subject'] = (pd.DataFrame(df_emg_norm),
+                                                            title,x_label,
+                                                            y_label,
+                                                            percentile,
+                                                            None,
+                                                            None,
+                                                            None)
+                                                      
+    info['Types']  = ['Emg','nomralization in #']
+    info['Factor'] = [0]
+    
+    datainfo = {'Emg': info }
+            
+            
+    return DataDict, dictPlot, datainfo 
+
+    
+    
+    
+    
+    
+    
 def Group_Error_Rate(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
@@ -296,14 +648,10 @@ def Switch_Latency():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-def delta_rebound():
-    DataDict, dictPlot, info = {},{},{}
+
     
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
+    
+    
     
     return DataDict, dictPlot, info
 def Actograms():
@@ -356,36 +704,7 @@ def Attentional_analysis():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-def sleep_fragmentation():
-    DataDict, dictPlot, info = {},{},{}
-    
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
-    
-    return DataDict, dictPlot, info
-def Sleep_cycles():
-    DataDict, dictPlot, info = {},{},{}
-    
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
-    
-    return DataDict, dictPlot, info
-def emg_normalized():
-    DataDict, dictPlot, info = {},{},{}
-    
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
-    
-    return DataDict, dictPlot, info
+
 
 def Switch_Latency_TEST(*myInput):
     Datas      = myInput[0]

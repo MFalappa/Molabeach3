@@ -42,11 +42,11 @@ def inputDlgCreator(analysisName,group_list=[]):
             10800,21600,43200],4)]
         return dictInput
     if analysisName == 'Sleep_Time_Course':
-        print('Enterd sleep time course')
+#        print('Enterd sleep time course')
         dictInput['SpinBox'] = [('Time binning:',(1,24),1),
             ('Epoch duration:',(1,60),4),('Tick number:',(1,100),10),
             ('Dark phase start:',(0,23),20)]
-        print('spin ok')
+#        print('spin ok')
         
         dictInput['Combo'] = [('Epoch type:',['Sleep','Rem','NRem','Wake'],
                   [[2,3],[2],[3],[1]],0),
@@ -75,9 +75,10 @@ def inputDlgCreator(analysisName,group_list=[]):
                                 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
                                 20, 21, 22, 23],20)]
         return dictInput
-    if analysisName == 'Multiple_Regression_Analysis':
-        dictInput['SpinBox'] = [('Label size:',(5,100),15),('Title size:',(5,100),20),('Label rotation:',(-180,180),30)]
-        dictInput['DoubleSpinBox'] = [('Entrance probability:',(0,1),0.15),('Exit probability:',(0,1),0.15)]
+    if analysisName == 'Sleep_cycles':
+        dictInput['DoubleSpinBox'] = [('Maximun time in munutes:',(10,120),30)]
+        dictInput['Combo'] = [('Binning:',['1 min', '2 min', '3 min', '4 min','5 min'],
+                  [1,2,3,4,5],2)]
         return dictInput
     if analysisName == 'LDA':
         dictInput['Combo'] = [('Dark start hour:',['0',' 1',' 2',' 3',' 4',' 5',' 6',' 7',' 8',' 9',' 10',' 11',' 12',' 13',' 14',' 15',' 16',' 17',' 18',' 19',' 20',' 21',' 22',' 23'],[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],20),('Dark phase duration (hrs):',['0',' 1',' 2',' 3',' 4',' 5',' 6',' 7',' 8',' 9',' 10',' 11',' 12',' 13',' 14',' 15',' 16',' 17',' 18',' 19',' 20',' 21',' 22',' 23'],[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],12),('Cognitive score:',['Error Rate','Reaction Time'],['Error Rate','Reaction Time'],0),('Sleep score:',['Sleep Total','NREM Total','REM Total','Wake Total'],['Sleep Total','NREM Total','REM Total','Wake Total'],0)]
@@ -93,7 +94,4 @@ def inputDlgCreator(analysisName,group_list=[]):
         return dictInput
     if analysisName == 'spikeStatistics':
         dictInput['DoubleSpinBox'] = [('Number of ISI histogram bars:',(10,999999),100.000000),('Binning in seconds for firing rate computing:',(0.1,999999),10.000000)]
-        return dictInput
-    if analysisName == 'Switch_Latency_TEST':
-        dictInput['DoubleSpinBox'] = [('dsa',(0,100),0.000000)]
         return dictInput

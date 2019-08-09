@@ -116,8 +116,8 @@ class sleepDlg(QDialog):
         selectedAnalysis = self.show_dict[showed_name]
         
         for typeOfAnalysis in list(self.analysisDict.keys()):
-            if selectedAnalysis in list(self.analysisDict.keys()):
-                acceptedTypes = self.analysisDict[typeOfAnalysis]['accepted_type']
+            if showed_name in list(self.analysisDict.keys()):
+                acceptedTypes = self.analysisDict[typeOfAnalysis]['accepted_type_0']
                 break
             
         dictSelection = {'anType': typeOfAnalysis, 
@@ -127,6 +127,7 @@ class sleepDlg(QDialog):
                          'Pairing' : None }
         
         self.runAnalysisSig.emit(dictSelection)
+        
     def showDescription(self,funName):
         self.textBrowser_descr.setText(self.descr_dict[funName])
         

@@ -124,11 +124,12 @@ class integrativeDlg(QDialog):
             
             
     def runAnalysis(self):
-        selectedAnalysis = self.comboBox.currentText()
+        showed_name = self.comboBox.currentText()
+        selectedAnalysis = self.show_dict[showed_name]
         
         for typeOfAnalysis in list(self.analysisDict.keys()):
-            if selectedAnalysis in list(self.analysisDict.keys()):
-                acceptedTypes = self.analysisDict[typeOfAnalysis]['accepted_type']
+            if showed_name in list(self.analysisDict.keys()):
+                acceptedTypes = self.analysisDict[typeOfAnalysis]['accepted_type_0']
                 break
              
         dlg = intLabelPairing_dlg(self.tableWidget1.dict_elemenet,self.tableWidget2.dict_elemenet,parent=self)
@@ -149,6 +150,7 @@ class integrativeDlg(QDialog):
         
     def populateCombo(self):
         self.comboBox.clear()
+        # get function labels
         analysis_list = self.analysisDict.keys()
         for label in analysis_list:
             description = self.analysisDict[label]['description']

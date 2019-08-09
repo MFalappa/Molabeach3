@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(546, 358)
+        Form.resize(571, 358)
         Form.setStyleSheet("border-color: rgb(0, 0, 0);")
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout(Form)
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
@@ -152,6 +152,9 @@ class Ui_Form(object):
         self.dateTimeEdit_norm1 = QtWidgets.QDateTimeEdit(self.groupBox_phase_sel)
         self.dateTimeEdit_norm1.setObjectName("dateTimeEdit_norm1")
         self.horizontalLayout_7.addWidget(self.dateTimeEdit_norm1)
+        self.checkBox_noNorm = QtWidgets.QCheckBox(self.groupBox_phase_sel)
+        self.checkBox_noNorm.setObjectName("checkBox_noNorm")
+        self.horizontalLayout_7.addWidget(self.checkBox_noNorm)
         spacerItem1 = QtWidgets.QSpacerItem(58, 18, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_7.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout_7)
@@ -188,12 +191,13 @@ class Ui_Form(object):
         self.groupBox_phase_sel.setTitle(_translate("Form", "Phase Selection"))
         self.label.setText(_translate("Form", "Baseline"))
         self.label_3.setText(_translate("Form", "Sleep Deprivation"))
-        self.label_2.setText(_translate("Form", "Recovery"))
+        self.label_2.setText(_translate("Form", "Rebound"))
         self.label_8.setText(_translate("Form", "Norm Range"))
         self.label_6.setText(_translate("Form", "-"))
         self.label_5.setText(_translate("Form", "-"))
         self.label_4.setText(_translate("Form", "-"))
         self.label_9.setText(_translate("Form", "-"))
+        self.checkBox_noNorm.setText(_translate("Form", "No norm"))
         self.label_warning.setText(_translate("Form", "TextLabel"))
         self.pushButton.setText(_translate("Form", "Apply to"))
 

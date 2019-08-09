@@ -16,10 +16,13 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+#import pandas as pd
 import scipy.stats as sts
-
-def plot_new_time_sleep_course_group(df):
+def plot_sleep_cycles(Input):
+    df = Input[0]
+    title = Input[1]
+    x_axis = Input[2]
+    y_axis = Input[3]
     
     groups = np.unique(df['Group'])
     subject = len(df)
@@ -40,11 +43,59 @@ def plot_new_time_sleep_course_group(df):
         gg +=1
      
     fig = plt.figure()
+    plt.title(title)
     for kk in range(len(groups)):
-        print(kk)
-        print(groups[kk])
         sbj_tr = x_label == kk+1
-        print(sbj_tr)
+        m = np.nanmean(x_group[sbj_tr,:],axis = 0)
+        s = np.nanstd(x_group[sbj_tr,:],axis = 0)/np.sqrt(np.sum(sbj_tr))
+        
+        plt.errorbar(range(m.shape[0]),y = m, yerr = s,elinewidth=2.5,
+                                                       linewidth=2,
+                                                       marker='o',
+                                                       markersize=8,
+                                                       label = groups[kk])
+    
+    
+    labels = tuple(np.array(Input[4][:-1],dtype=np.str_))
+    ind = np.arange(m.shape[0])
+    plt.xticks(ind, labels)
+
+    plt.legend()
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
+    
+    
+    return fig
+
+
+def plot_new_time_sleep_course_group(Input):
+    df = Input[0]
+    title = Input[1]
+    x_axis = Input[2]
+    y_axis = Input[3]
+    
+    groups = np.unique(df['Group'])
+    subject = len(df)
+    fr = df.T
+    
+    x_group = np.zeros((subject,len(fr[0][2:])),dtype=float)
+    x_label = np.zeros((subject),dtype=int)
+    
+    gg = 1
+    sb = 0
+    for kk in groups:
+        for sbj in range(subject):
+            if fr[sbj]['Group'] == kk:
+                x_group[sb,:] = np.array(fr[sbj][2:])
+                x_label[sb] = gg
+                sb +=1
+                
+        gg +=1
+     
+    fig = plt.figure()
+    plt.title(title)
+    for kk in range(len(groups)):
+        sbj_tr = x_label == kk+1
         m = np.nanmean(x_group[sbj_tr,:],axis = 0)
         s = np.nanstd(x_group[sbj_tr,:],axis = 0)/np.sqrt(np.sum(sbj_tr))
         
@@ -54,9 +105,15 @@ def plot_new_time_sleep_course_group(df):
                                                          markersize=8,
                                                          label = groups[kk])
     
+    plt.legend()
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
     return fig
 
-def plot_new_time_sleep_course_single(df):
+def plot_new_time_sleep_course_single(Input):
+    df = Input[0]
+    x_axis = Input[2]
+    y_axis = Input[3]
     
     groups = np.unique(df['Group'])
     subject = len(df)
@@ -75,6 +132,12 @@ def plot_new_time_sleep_course_single(df):
                 plt.plot(fr[sbj][2:],label=fr[sbj][1])
                 
         gg +=1
+        
+        plt.legend()
+        
+    
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
     
     return fig
 

@@ -117,8 +117,8 @@ class behavDlg(QDialog):
         selectedAnalysis = self.show_dict[showed_name]
         
         for typeOfAnalysis in list(self.analysisDict.keys()):
-            if selectedAnalysis in list(self.analysisDict.keys()):
-                acceptedTypes = self.analysisDict[typeOfAnalysis]['accepted_type']
+            if showed_name in list(self.analysisDict.keys()):
+                acceptedTypes = self.analysisDict[typeOfAnalysis]['accepted_type_0']
                 break
             
         dictSelection = {'anType': typeOfAnalysis, 
@@ -133,36 +133,22 @@ class behavDlg(QDialog):
         self.textBrowser_descr.setText(self.descr_dict[funName])
         
     def populateCombo(self):
-        self.comboBox.disconnect()
         self.comboBox.clear()
         # get function labels
         analysis_list = self.analysisDict.keys()
         for label in analysis_list:
-                description = self.analysisDict[label]['description']
-                type_func = self.analysisDict[label]['type_func']
-                
-                if type_func == 'Behaviour':
-                    self.comboBox.addItem(label)
-                    self.descr_dict[label] = description
-                    self.show_dict[label] = self.analysisDict[label]['analysis_function']
+            description = self.analysisDict[label]['description']
+            type_func = self.analysisDict[label]['type_func']
 
-        self.comboBox.currentIndexChanged[str].connect()
+            if type_func == 'Behaviour':
+                self.comboBox.addItem(label)
+                self.descr_dict[label] = description
+                self.show_dict[label] = self.analysisDict[label]['analysis_function']
 
     def closeTab(self):
         self.close()
         self.closeSig.emit('closeSig')
         super(behavDlg, self).close()
-        
-        
-#            Row = self.analysisList.currentRow()
-#        if Row !=-1:
-#            self.selectedAnalysis = self.analysisList.item(Row).text()
-#            for dtype in self.dict_type.keys():
-#                if self.dict_type[dtype].has_key(self.selectedAnalysis):
-#                    break
-#            self.selectedDataTypes = self.dict_type[dtype][self.selectedAnalysis]
-#            self.selectedType = dtype
-#        QDialog.accept(self)
 
 def main():
     import sys

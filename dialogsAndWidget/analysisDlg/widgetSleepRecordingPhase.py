@@ -38,18 +38,20 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         self.Dataset = Dataset
         self.list_selected = list_selected
         self.comboBox.addItems(self.list_selected)
-                
+
         self.label_warning.setText('')
         
         self.setInitialPhase()
+        self.setTimeLims(self.list_selected[0])
         self.setDateInitialTimes(self.list_selected[0],phase='bs')
         self.setDateInitialTimes(self.list_selected[0],phase='sd')
         self.setDateInitialTimes(self.list_selected[0],phase='rc')
         self.setDateInitialTimes(self.list_selected[0],phase='nm')
-        self.setTimeLims(self.list_selected[0])
+        
         
         
         self.checkBox_bs.setChecked(1)
+        self.checkBox_noNorm.setChecked(1)
         
         bs_func = lambda : self.checkerBoxChanged('BS')
         sd_func = lambda : self.checkerBoxChanged('SD')
@@ -90,15 +92,26 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         """
         if phase == 'BS':
             isChecked = self.checkBox_bs.isChecked()
+            if isChecked:
+                self.checkBox_sd.setChecked(False)
+                self.checkBox_rc.setChecked(False)
             idx = 0
         elif phase == 'SD':
             isChecked = self.checkBox_sd.isChecked()
+            if isChecked:
+                self.checkBox_bs.setChecked(False)
+                self.checkBox_rc.setChecked(False)
             idx = 1
         else:
             isChecked = self.checkBox_rc.isChecked()
+            if isChecked:
+                self.checkBox_bs.setChecked(False)
+                self.checkBox_sd.setChecked(False)
             idx = 2
+        
         for label in self.list_selected:
             self.phase_dict[label]['isChecked'][idx] = isChecked
+            self.phase_dict[label]['normFactor'][idx] = self.checkBox_noNorm.isChecked()
         self.checkPhases()
         
     def refreshDate(self,label):
@@ -136,19 +149,21 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         self.dateTimeEdit_rc_1.setDateTime(qDate1)
         self.checkBox_rc.setChecked(isChecked)
         
+        isChecked = self.checkBox_noNorm.isChecked()
         date0 = self.phase_dict[label][0]['normStart']
         date1 = self.phase_dict[label][0]['normEnd']
         qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
         qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
         self.dateTimeEdit_norm0.setDateTime(qDate0)
         self.dateTimeEdit_norm1.setDateTime(qDate1)
-       
+        self.checkBox_noNorm.setChecked(isChecked) 
+        
     def setTimeLims(self,label):
 #        print(self.tmp,'SETLIM')
         self.tmp+=1
         minDT = self.Dataset.takeDataset(label).Timestamp[0]
         maxDT = self.Dataset.takeDataset(label).Timestamp[-1]
-        
+                
         minDT = QDateTime(minDT)
         maxDT = QDateTime(maxDT)
                 
@@ -180,8 +195,8 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         """
         self.phase_dict = {}
         for label in self.list_selected:
-            self.phase_dict[label] = np.zeros(3,dtype={'names':('phase','dayStart','dayEnd','normStart','normEnd','isChecked'),
-                                                        'formats':('S2',dt.datetime,dt.datetime,dt.datetime,dt.datetime,bool)})
+            self.phase_dict[label] = np.zeros(3,dtype={'names':('phase','dayStart','dayEnd','normStart','normEnd','isChecked','normFactor'),
+                                                        'formats':('S2',dt.datetime,dt.datetime,dt.datetime,dt.datetime,bool,bool)})
             self.phase_dict[label]['phase'][0] = 'BS'
             self.phase_dict[label]['dayStart'][0] = self.Dataset.takeDataset(label).Timestamp[0]
             self.phase_dict[label]['dayEnd'][0] = self.Dataset.takeDataset(label).Timestamp[-1]
@@ -197,26 +212,41 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
             self.phase_dict[label]['dayEnd'][2] = self.Dataset.takeDataset(label).Timestamp[-1]
             self.phase_dict[label]['isChecked'][2] = False
             
-            self.phase_dict[label]['normStart'][:] = self.Dataset.takeDataset(label).Timestamp[0]
-            self.phase_dict[label]['normEnd'][:] = self.Dataset.takeDataset(label).Timestamp[-1]
+            self.phase_dict[label]['normStart'][:] = self.Dataset.takeDataset(label).Timestamp[0] + dt.timedelta(hours = 12)
+            self.phase_dict[label]['normEnd'][:] = self.Dataset.takeDataset(label).Timestamp[-1] - dt.timedelta(hours = 8)
+            self.phase_dict[label]['normFactor'][:] = True
             
     def setDateInitialTimes(self,label,phase):
         if phase == 'bs':
             dateTimeEdt_0 = self.dateTimeEdit_bs_0
             dateTimeEdt_1 = self.dateTimeEdit_bs_1
+            date0 = self.Dataset.takeDataset(label).Timestamp[0]
+            date1 = self.Dataset.takeDataset(label).Timestamp[-1]
+            qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
+            qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
         elif phase == 'sd':
             dateTimeEdt_0 = self.dateTimeEdit_sd_0
             dateTimeEdt_1 = self.dateTimeEdit_sd_1
+            date0 = self.Dataset.takeDataset(label).Timestamp[0]
+            date1 = self.Dataset.takeDataset(label).Timestamp[-1]
+            qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
+            qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
         elif phase == 'rc':
             dateTimeEdt_0 = self.dateTimeEdit_rc_0
             dateTimeEdt_1 = self.dateTimeEdit_rc_1
+            date0 = self.Dataset.takeDataset(label).Timestamp[0]
+            date1 = self.Dataset.takeDataset(label).Timestamp[-1]
+            qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
+            qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
         elif phase == 'nm':
             dateTimeEdt_0 = self.dateTimeEdit_norm0
             dateTimeEdt_1 = self.dateTimeEdit_norm1
-        date0 = self.Dataset.takeDataset(label).Timestamp[0]
-        date1 = self.Dataset.takeDataset(label).Timestamp[-1]
-        qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
-        qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
+            date0 = self.Dataset.takeDataset(label).Timestamp[0] + dt.timedelta(hours = 12)
+            date1 = self.Dataset.takeDataset(label).Timestamp[-1] - dt.timedelta(hours = 4)
+            qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
+            qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
+        
+        
         dateTimeEdt_0.setDateTime(qDate0)
         dateTimeEdt_1.setDateTime(qDate1)
         
@@ -266,6 +296,7 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         else:
             self.phase_dict[label][row][key] = dateTimeEdt.dateTime().toPyDateTime()
         self.checkPhases()
+        self.phase_dict[label]['normFactor'][0] = self.checkBox_noNorm.isChecked()
         
     def checkPhases(self):
         """
@@ -355,8 +386,9 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
             d0 = self.dateTimeEdit_norm0.dateTime().toPyDateTime()
             d1 = self.dateTimeEdit_norm1.dateTime().toPyDateTime()
             
-            self.phase_dict[label]['normStart'][:] = d0
-            self.phase_dict[label]['normEnd'][:] = d1
+            self.phase_dict[label]['normStart'][:] = d0 + dt.timedelta(hours = 12)
+            self.phase_dict[label]['normEnd'][:] = d1 - dt.timedelta(hours = 4)
+            self.phase_dict[label]['normFactor'][:] = self.checkBox_noNorm.isChecked()
             
 #            print(label)
     
@@ -429,7 +461,7 @@ class select_names_dlg(Ui_Dialog,QDialog):
 def main():
 
     dc = DatasetContainer_GUI()
-    dd = np.load('/Users/Matte/Desktop/Paper marta/data/Sleep phz/sd-tnz/PWs_BL_22.phz')
+    dd = np.load('/Users/Matte/Python_script/Phenopy3/data example/workspace_2019-3-7T16_22.phz')
     kl = []
     for key in dd.files[:3]:
         dc.add(dd[key].all())

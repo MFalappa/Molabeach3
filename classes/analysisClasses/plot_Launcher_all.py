@@ -24,25 +24,11 @@ def select_Function_GUI_all(funcName, *otherInputs):
     elif funcName == 'Sleep_Time_Course':
         fig = plotSleepTimeCourse(*otherInputs)
         return fig
-    elif funcName == 'Switch_Latency_TEST':
-        fig = plotSwitchLatency_TEST(*otherInputs)
+ 
+    elif funcName == 'delta_rebound':
+        fig = plotDeltaTimeCourse(*otherInputs)
         return fig
-    elif funcName == 'Switch_Latency_TEST':
-        fig = plotSwitchLatency_TEST(*otherInputs)
-        return fig
-    elif funcName == 'Switch_Latency_TEST':
-        fig = plotSwitchLatency_TEST(*otherInputs)
-        return fig
-    elif funcName == 'Switch_Latency_TEST':
-        fig = plotSwitchLatency_TEST(*otherInputs)
-        return fig
-    elif funcName == 'Switch_Latency_TEST':
-        fig = plotSwitchLatency_TEST(*otherInputs)
-        return fig
-    elif funcName == 'Switch_Latency_TEST':
-        fig = plotSwitchLatency_TEST(*otherInputs)
-        return fig
-
-    elif funcName == 'Switch_Latency_TEST':
-        fig = plotSwitchLatency_TEST(*otherInputs)
+    
+    elif funcName == 'Sleep_cycles':
+        fig = plotSleep_cycles(*otherInputs)
         return fig

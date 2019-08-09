@@ -15,12 +15,90 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 #from copy import copy
-#from scipy import stats
-from copy import deepcopy
 
+from copy import deepcopy
+from scipy.signal import filtfilt,ellip
 import numpy as np
 import datetime as dt
 
+def compute_perc(sig,sc,states,perc_list):
+    res_perc = np.zeros((states.__len__(),perc_list.__len__()),dtype = float)
+    idx = 0
+    for st in states:
+        s_e__epocs = extract_epi(sc,epoch = st,merge_if=2,min_epi_len=2)
+        s_e__epocs['Start'] = 2*(s_e__epocs['Start']*4)
+        s_e__epocs['End'] = 2*(s_e__epocs['End']*4)
+        
+        sig_stage = np.array([])
+        for tr in range(s_e__epocs.shape[0]):
+            start = s_e__epocs['Start'][tr]
+            stop = s_e__epocs['End'][tr]
+            sig_stage = np.hstack((sig_stage,sig[start:stop]))
+       
+        pc = 0
+        for pp in perc_list:
+            try:
+                val = np.percentile(sig_stage,pp)
+            except:
+                val = np.nan
+                
+            res_perc[idx,pc] = val
+            pc += 1
+        idx += 1
+           
+    return res_perc
+
+def normalize_emg(signal):
+    
+    # process EMG signal: rectify
+    emg_rectified = abs(signal)
+    # 250 is not a magic number: fs = 500 Hz, wanted bin = 0.5 s
+    ra = np.zeros(int(emg_rectified.shape[0]/250))
+    idx = 0
+    for kk in range(0, emg_rectified.shape[0],250):
+        ra[idx] = np.nanmean(emg_rectified[kk:kk+250])
+        idx += 1
+    
+    hp = np.percentile(ra,99.5)
+    lp = np.percentile(ra,0.5)
+
+    ra[ra > hp] = hp  
+    ra[ra < lp] = lp
+  
+    emg_norm = ((ra - np.min(ra))/(np.max(ra)-np.min(ra)))*100
+    avgEMG = np.nanmean(emg_norm)
+        
+    return emg_norm,avgEMG,hp,lp
+
+def ellip_bandpass(lowcut, highcut, fs, order=5, rp=0.1, rs=40):
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = ellip(order, rp, rs, [low, high], btype='bandpass')
+    return b, a
+
+def ellip_bandpass_filter(data, lowcut, highcut, fs, order=5, rp=0.1, rs=40):
+    b, a = ellip_bandpass(lowcut, highcut, fs, order=order, rp=rp, rs=rs)
+    y = filtfilt(b, a, data)
+    return y
+
+def consecutive_bins(ts,bins,startfromzero=True):
+    binvect = np.zeros(len(ts))
+    if not startfromzero:
+        day0 = ts[0] - dt.timedelta(0,ts[0].hour*3600 + ts[0].minute * 60 +ts[0].second)
+    #    print day0
+        k=0
+        for time in ts:
+            s0 = (time - day0).days *3600*24 + (time - day0).seconds
+            binvect[k] = s0//bins
+            k+=1
+    else:
+        dts = ts- dt.datetime(ts[0].year,ts[0].month,ts[0].day,ts[0].hour,0,0)
+        k = 0
+        for DT in dts:
+            binvect[k] = ((dts[k].days * 3600 * 24) + dts[k].seconds)//bins
+            k+=1
+    return binvect
 
 
 def vector_hours(timestamps):
@@ -99,7 +177,8 @@ def extract_epi(data_eeg,epoch='NR',merge_if=3,min_epi_len=3):
         dict_episodes[k] = [start,end]
         k += 1
      
-    list_keys = dict_episodes.keys()
+#    list_keys = dict_episodes.keys()
+    list_keys = list(dict_episodes)
     for key in list_keys:
         try:
             if dict_episodes[key+1][0] - dict_episodes[key][1] <= merge_if:
@@ -108,7 +187,7 @@ def extract_epi(data_eeg,epoch='NR',merge_if=3,min_epi_len=3):
         except:
             break
            
-    list_keys = dict_episodes.keys()
+    list_keys = list(dict_episodes)
     for key in list_keys:
         num_nrem = len(np.where(epoch_vect[dict_episodes[key][0]:dict_episodes[key][1]]==epoch)[0])
         if num_nrem < min_epi_len:
@@ -116,7 +195,7 @@ def extract_epi(data_eeg,epoch='NR',merge_if=3,min_epi_len=3):
     
     array_episodes = np.zeros(len(dict_episodes.keys()),dtype={'names':('Start','End'),'formats':(int,int)}) 
     
-    list_keys = list(dict_episodes.keys())
+    list_keys = list(dict_episodes)
     for k in range(array_episodes.shape[0]):
         array_episodes['Start'][k],array_episodes['End'][k] = dict_episodes[list_keys[k]]
     return array_episodes
