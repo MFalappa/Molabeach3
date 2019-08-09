@@ -95,6 +95,7 @@ class integrativeDlg(QDialog):
         self.setLayout(hLayout)
         
         self.descr_dict = {}
+        self.show_dict = {} 
         self.path_dict = {}
         self.populateCombo()
         self.textBrowser_descr.setText(self.descr_dict[str(self.comboBox.currentText())]) 

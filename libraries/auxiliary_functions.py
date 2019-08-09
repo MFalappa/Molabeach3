@@ -21,6 +21,33 @@ from scipy.signal import filtfilt,ellip
 import numpy as np
 import datetime as dt
 
+def filter_emg(emg_sig,cut_amp):
+    emg_f = np.zeros(int(emg_sig.shape[0]))
+    for kk in range(emg_sig.shape[0]):
+        if emg_sig[kk] > cut_amp:
+            
+            tmp = np.nanmean(emg_f[kk-6:kk])
+            
+            if not np.isnan(tmp):
+                emg_f[kk] = np.nanmean(emg_f[kk-6:kk])
+            else:
+                continue
+            
+        elif emg_sig[kk] < -cut_amp:
+            
+            tmp = np.nanmean(emg_f[kk-6:kk])
+            
+            if not np.isnan(tmp):
+                emg_f[kk] = np.nanmean(emg_f[kk-6:kk])
+            else:
+                continue
+            
+        else:
+            emg_f[kk] = emg_sig[kk]
+        
+    
+    return emg_f
+
 def compute_perc(sig,sc,states,perc_list):
     res_perc = np.zeros((states.__len__(),perc_list.__len__()),dtype = float)
     idx = 0

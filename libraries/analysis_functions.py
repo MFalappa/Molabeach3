@@ -608,7 +608,6 @@ def emg_normalized(*myInput):
     
     
     
-    
 def Group_Error_Rate(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
