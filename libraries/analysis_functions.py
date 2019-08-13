@@ -16,6 +16,7 @@ sys.path.append(lib_fld)
 import pandas as pd
 #import datetime
 import numpy as np
+import datetime as dt
 from copy import copy
 from auxiliary_functions import (powerDensity_function,
                                  vector_hours,bin_epi,epidur_if_binAdj,
@@ -23,7 +24,8 @@ from auxiliary_functions import (powerDensity_function,
                                  filter_emg,
                                  ellip_bandpass_filter,
                                  normalize_emg,
-                                 compute_perc)
+                                 compute_perc,
+                                 extract_start)
 def Power_Density(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
@@ -513,99 +515,286 @@ def emg_normalized(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
     Datas      = myInput[0]
-    DataGroup  = myInput[2]
-    lock       = myInput[4]
+    DataGroup  = myInput[5]
+#    lock       = myInput[4]
+    
     lenName = 0
     lenGroupName = 0
     for key in list(DataGroup.keys()):
         lenGroupName = max(lenGroupName,len(key))
-        for name in DataGroup[key]:
+        for name in DataGroup[key]['Sleep']:
             lenName = max(lenName,len(name))
     
-    AllData  = {}
-    for group in list(DataGroup.keys()):
-        for key in DataGroup[group]:
-            try:
-                lock.lockForRead()
-                AllData[key] = copy(Datas.takeDataset(key))
-            finally:
-                lock.unlock()
     
     count_sub = 0        
     for key in list(DataGroup.keys()):
-        for name in DataGroup[key]:
+        for name in DataGroup[key]['EMG']:
             count_sub += 1
 
 
-    percentile = myInput[1][0]['Combo'][0]
+    percentile = np.array(myInput[1][0]['LineEdit'][0].split(','),dtype = int)
     
     stages = ['W','R','NR']
     first = True
     rc = 0
     for key in list(DataGroup.keys()):
-        for name in DataGroup[key]:
+        emg_data = DataGroup[key]['EMG']
+        sleep_data = DataGroup[key]['Sleep']
+        for kk in range(len(emg_data)):
             
-            emg = AllData[name].emg
+            emg =  Datas[emg_data[kk]].Dataset['emg']
             std = 5
             ampl = np.nanstd(emg)*std
             
             emg_filterd = filter_emg(emg,ampl)
             emg_filterd_2 = ellip_bandpass_filter(emg_filterd, 0.1, 240, 500, order=3, rp=0.1, rs=40)
         
-            scored = AllData[name].Stage
+            sleep = Datas[sleep_data[kk]].Dataset
 
             raEMG,av,norm_h, norm_l = normalize_emg(emg_filterd_2)
-            percent = compute_perc(raEMG,scored,stages,percentile)
+            percent = compute_perc(raEMG,sleep,stages,percentile)
             
             
             if first:
                 types_hours = np.array(percentile,dtype=np.str_)
-                types = np.hstack((['Group','Subject','Norm high','Norm low'],types_hours))
+                types = np.hstack((['Group','Subject emg','Subject scored','Norm high','Norm low'],types_hours))
                 
-                df_emg_norm = np.zeros((count_sub,),dtype={'names':types,
-                                      'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_hours.shape[0]+(float,)+(float,)})
-        
+                df_emg_norm_wake = np.zeros((count_sub,),dtype={'names':types,
+                                      'formats':('U%d'%lenGroupName,'U%d'%lenName,'U%d'%lenName)+(float,)*types_hours.shape[0]+(float,)+(float,)})
+                df_emg_norm_rem = np.zeros((count_sub,),dtype={'names':types,
+                                      'formats':('U%d'%lenGroupName,'U%d'%lenName,'U%d'%lenName)+(float,)*types_hours.shape[0]+(float,)+(float,)})
+                df_emg_norm_nrem = np.zeros((count_sub,),dtype={'names':types,
+                                      'formats':('U%d'%lenGroupName,'U%d'%lenName,'U%d'%lenName)+(float,)*types_hours.shape[0]+(float,)+(float,)})
+    
                 first = False
             
             cc = 0
             for col in types_hours:
-                df_emg_norm[col][rc] = percent[cc]
+                df_emg_norm_wake[col][rc] = percent[0,cc]
+                df_emg_norm_rem[col][rc] = percent[1,cc]
+                df_emg_norm_nrem[col][rc] = percent[2,cc]
                 cc += 1
             
-            df_emg_norm['Subject'][rc] = name
-            df_emg_norm['Group'][rc] = key
-            df_emg_norm['Norm high'][rc] = norm_h
-            df_emg_norm['Norm low'][rc] = norm_l
+            df_emg_norm_wake['Subject emg'][rc] = emg_data[kk]
+            df_emg_norm_wake['Subject scored'][rc] = sleep_data[kk]
+            df_emg_norm_wake['Group'][rc] = key
+            df_emg_norm_wake['Norm high'][rc] = norm_h
+            df_emg_norm_wake['Norm low'][rc] = norm_l
+            
+            df_emg_norm_rem['Subject emg'][rc] = emg_data[kk]
+            df_emg_norm_rem['Subject scored'][rc] = sleep_data[kk]
+            df_emg_norm_rem['Group'][rc] = key
+            df_emg_norm_rem['Norm high'][rc] = norm_h
+            df_emg_norm_rem['Norm low'][rc] = norm_l
+            
+            df_emg_norm_nrem['Subject emg'][rc] = emg_data[kk]
+            df_emg_norm_nrem['Subject scored'][rc] = sleep_data[kk]
+            df_emg_norm_nrem['Group'][rc] = key
+            df_emg_norm_nrem['Norm high'][rc] = norm_h
+            df_emg_norm_nrem['Norm low'][rc] = norm_l
            
             rc += 1
             
     DataDict['EMG norm'] = {}
-    DataDict['EMG norm']['EMGnorm'] = pd.DataFrame(df_emg_norm)
+    DataDict['EMG norm']['WAKE'] = pd.DataFrame(df_emg_norm_wake)
+    DataDict['EMG norm']['REM'] = pd.DataFrame(df_emg_norm_rem)
+    DataDict['EMG norm']['NREM'] = pd.DataFrame(df_emg_norm_nrem)
     
 
     title = 'emg normalized'   
     x_label = 'Percentiles'
     y_label = 'Amplitude [A.U.]'
     dictPlot['Fig:emg normalized'] = {}
-    dictPlot['Fig:emg normalized']['Single Subject'] = (pd.DataFrame(df_emg_norm),
-                                                            title,x_label,
-                                                            y_label,
-                                                            percentile,
-                                                            None,
-                                                            None,
-                                                            None)
+    dictPlot['Fig:emg normalized']['Single Subject'] = (pd.DataFrame(df_emg_norm_wake),
+                                                        pd.DataFrame(df_emg_norm_rem),
+                                                        pd.DataFrame(df_emg_norm_nrem),
+                                                        title,
+                                                        x_label,
+                                                        y_label,
+                                                        percentile,
+                                                        None)
                                                       
-    info['Types']  = ['Emg','nomralization in #']
-    info['Factor'] = [0]
+    info['Types']  = ['Emg','normalization in #']
+    info['Factor'] = [0,1,2]
     
-    datainfo = {'Emg': info }
+    datainfo = {'WAKE': info,'REM': info,
+                'NREM': info}
             
             
     return DataDict, dictPlot, datainfo 
 
+def Attentional_analysis(*myInput):
+    DataDict, dictPlot, info = {},{},{}
     
+    Datas      = myInput[0]
+    Input      = myInput[1]
+    DataGroup  = myInput[2]
+    TimeStamps = myInput[3]
+#    lock       = myInput[4]
     
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+
+    types = Input[0]['Combo'][0][0]
+    bins = Input[0]['Combo'][1]
+    dark = Input[0]['Combo'][2]
+    dur_dark = Input[0]['Combo'][3]
     
+    if types == 1: #reaction time
+        VAR = 'Reaction Time'           
+    elif types == 2: #anticipation
+        VAR = 'Time anticipated'        
+    elif types == 3: #food
+        VAR = 'Eaten food'  
+    elif types == 4: #error
+        VAR = 'Error Type' 
+      
+    nTrials = 0
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            time = Datas[name].Dataset['Time']
+            action = Datas[name].Dataset['Action']
+            
+            start = np.where(action==TimeStamps['ACT_START_TEST'])[0]
+            nTrials += start.shape[0]-1
+
+    types_res = ['Group','Subject','Trial type','Hour',VAR]
+    res = np.zeros((nTrials,),dtype={'names':types_res,
+                           'formats':('U%d'%lenGroupName,'U%d'%lenName,'U%d'%lenName)+(int,)+(float,)})
+            
+    tn = 0
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            time = Datas[name].Dataset['Time']
+            action = Datas[name].Dataset['Action']
+            
+            start = np.where(action==TimeStamps['ACT_START_TEST'])[0]
+            
+            date = extract_start(time,action,TimeStamps)
+       
+            
+            for tt in range(start.shape[0]-1):
+                tmp_time = time[start[tt]:start[tt+1]]
+                tmp_action = action[start[tt]:start[tt+1]]
+                
+                
+                hour = date + dt.timedelta(seconds = tmp_time[0])
+                    
+                if np.where(tmp_action == 60)[0]:
+                    trial = 'No Cue'
+                elif np.where(tmp_action == 61)[0]:
+                    trial = 'Cong'
+                elif np.where(tmp_action == 62)[0]:
+                    trial = 'Incon'
+                else:
+                    trial = 'Training'
+                    
+                
+                light_r = np.where(tmp_action == TimeStamps['Right Light On'])[0]
+                light_l = np.where(tmp_action == TimeStamps['Left Light On'])[0]
+
+                if light_r.shape[0]:
+                    pellet = tmp_time[tmp_action == TimeStamps['Give Pellet Right']]
+                    if pellet.shape[0]:
+                        food = 0.025
+                        nose = np.where(tmp_action == TimeStamps['Right NP In'])[0]
+                        t_n = tmp_time[nose]
+                        reaction = t_n[t_n >= tmp_time[light_r]][0] - tmp_time[light_r]
+                        before = np.sum(t_n < tmp_time[light_r])
+                        correct = 1
+                    else:
+                        food = 0
+                        tR = np.where(tmp_action == TimeStamps['ACT_TIMEOUT_REACHED'])[0]
+                        if tR:
+                            reaction = np.nan
+                            before = np.nan
+                            correct = 2
+                        else:
+                            opposite = np.where(tmp_action == TimeStamps['Left NP In'])[0]   
+                            wrong = tmp_time[opposite] >= tmp_time[light_r]
+                            if np.sum(wrong):
+                                correct = 3
+                            else:
+                                center = np.where(tmp_action == TimeStamps['Center NP In'])[0]
+                                wrong = tmp_time[center] >= tmp_time[light_r]
+                                if np.sum(wrong):
+                                    correct = 4
+                        
+                elif light_l.shape[0]:
+                    pellet = tmp_time[tmp_action == TimeStamps['Give Pellet Left']]
+                    if pellet.shape[0]:
+                        food = 0.025
+                        nose = np.where(tmp_action == TimeStamps['Left NP In'])[0]
+                        t_n = tmp_time[nose]
+                        reaction = t_n[t_n >= tmp_time[light_l]][0] - tmp_time[light_l]
+                        before = np.sum(t_n < tmp_time[light_l])
+                        correct = 1
+                    else:
+                        food = 0
+                        tR = np.where(tmp_action == TimeStamps['ACT_TIMEOUT_REACHED'])[0]
+                        if tR:
+                            reaction = np.nan
+                            before = np.nan
+                            correct = 2
+                        else:
+                            opposite = np.where(tmp_action == TimeStamps['Right NP In'])[0]   
+                            wrong = tmp_time[opposite] >= tmp_time[light_l]
+                            if np.sum(wrong):
+                                correct = 3
+                            else:
+                                center = np.where(tmp_action == TimeStamps['Center NP In'])[0]
+                                wrong = tmp_time[center] >= tmp_time[light_l]
+                                if np.sum(wrong):
+                                    correct = 4
+
+                res['Group'][tn] = key
+                res['Subject'][tn] = name
+                res['Trial type'][tn] = trial
+                res['Hour'][tn] = hour.hour
+                
+                if types == 1: #reaction time
+                    res['Reaction Time'][tn] = reaction 
+                    y_label = 'Time [seconds]'
+                elif types == 2: #anticipation
+                    res['Time anticipated'][tn] = before 
+                    y_label  = 'Occurences [#]'
+                elif types == 3: #food
+                    res['Eaten food'][tn] = food 
+                    y_label = 'Eaten food [mg]'
+                elif types == 4: #error
+                    res['Error Type'][tn] = correct 
+                    y_label = 'Rate [%]'
+                
+                tn +=1
+          
+    
+    DataDict['Attentional'] = {}
+    DataDict['Attentional'][VAR] = pd.DataFrame(res)
+    
+
+    title = 'Attentional analysis'   
+    x_label = 'Time'
+
+    dictPlot['Fig:Attentional analysis'] = {}
+    dictPlot['Fig:Attentional analysis']['Single Subject'] = (pd.DataFrame(res),
+                                                              title,
+                                                              x_label,
+                                                              y_label,
+                                                              bins,
+                                                              VAR,
+                                                              dark,
+                                                              dur_dark)
+                                                      
+    info['Types']  = ['Attentional','selected']
+    info['Factor'] = [0]
+    
+    datainfo = {VAR: info }
+    
+    return DataDict, dictPlot, datainfo
     
     
 def Group_Error_Rate(*myInput):
@@ -684,16 +873,6 @@ def raster_plot():
     
     return DataDict, dictPlot, info
 def peak_procedure():
-    DataDict, dictPlot, info = {},{},{}
-    
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
-    
-    return DataDict, dictPlot, info
-def Attentional_analysis():
     DataDict, dictPlot, info = {},{},{}
     
     Datas      = myInput[0]

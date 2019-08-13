@@ -18,19 +18,201 @@ import matplotlib.pyplot as plt
 import numpy as np
 #import pandas as pd
 import scipy.stats as sts
+
+def plot_attentional(Input):
+    
+    df = Input[0]
+#    title = Input[1]
+    xlabel = Input[2]
+    ylabel = Input[3]
+    bins = Input[4]
+    types = Input[5]
+    dark_start = Input[6]
+    dark_dur = Input[7]
+
+
+    groups = np.unique(df['Group'])
+    
+    dark = np.array(range(dark_start,dark_start+dark_dur,bins))%24
+    light = np.array(range(dark_start+dark_dur,dark_start+(dark_dur*2),bins))%24
+    
+    trials = df['Trial type']
+    
+    sbn = 1
+    fig = plt.figure(types)
+    for kk in np.unique(trials):
+        sub_df = df[df['Trial type']==kk]
+        plt.subplot(len(np.unique(trials)),1,sbn)
+        first = True
+        sbj_tr = np.array([])
+        for sb in np.unique(sub_df['Subject']):
+            tmp = np.zeros(int((dark_dur*2)/bins),dtype = float)
+            hd = 0
+            sbj_df = sub_df[sub_df['Subject']==sb]
+            
+            for hh in dark:
+                idx = (sbj_df['Hour']>=hh)&(sbj_df['Hour']<(hh+bins))
+                if 'Reaction' in types:
+                    tmp[hd] = np.nanmean(sbj_df[types][idx])
+                elif 'Error Type' in types:
+                   perf = sbj_df[types][idx]
+                   idx = perf == 1
+                   tmp[hd] = 1-(np.nansum(idx)/float(perf.shape[0]))
+                elif 'Anticipation' in types:
+                    tmp[hd] = np.nansum(sbj_df[types][idx])
+                elif 'Food' in types:
+                    tmp[hd] = np.nansum(sbj_df[types][idx])
+                    
+                hd += 1
+                
+            for hh in light:
+                idx = (sbj_df['Hour']>=hh)&(sbj_df['Hour']<(hh+bins))
+                if 'Reaction' in types:
+                    tmp[hd] = np.nanmean(sbj_df[types][idx])
+                elif 'Error Type' in types:
+                   perf = sbj_df[types][idx]
+                   idx = perf == 1
+                   tmp[hd] = 1-(np.nansum(idx)/float(perf.shape[0]))
+                elif 'Anticipation' in types:
+                    tmp[hd] = np.nansum(sbj_df[types][idx])
+                elif 'Food' in types:
+                    tmp[hd] = np.nansum(sbj_df[types][idx])
+                    
+                hd += 1
+            
+            if first:
+                first = False 
+                vect = tmp
+            else:
+                vect = np.vstack((vect,tmp))
+        
+        
+            sbj_tr = np.hstack((sbj_tr,np.unique(sbj_df['Group'])))
+        
+        for gg in groups:
+            idx = sbj_tr == gg
+            
+            m = np.nanmean(vect[idx,:],axis = 0)
+            s = np.nanstd(vect[idx,:],axis = 0)/np.sqrt(np.sum(idx))  
+            plt.errorbar(range(m.shape[0]),y = m, yerr = s,elinewidth=2.5,
+                                                       linewidth=2,
+                                                       marker='o',
+                                                       markersize=8,
+                                                       label = gg)
+            plt.title(kk)
+        
+        sbn += 1
+    
+    plt.legend()
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.tight_layout()
+    
+    return fig
+def plot_emg_norm(Input):
+    wake = Input[0]
+    rem = Input[1]
+    nrem = Input[2]
+#    title = Input[3]
+    x_axis = Input[4]
+    y_axis = Input[5]
+    x_lab = Input[6]
+    
+    groups = np.unique(wake['Group'])
+    subject = len(wake)
+
+    x_group_wake = np.zeros((subject,len(wake.T[0][5:])),dtype=float)
+    x_label_wake = np.zeros((subject),dtype=int)
+    x_group_rem = np.zeros((subject,len(rem.T[0][5:])),dtype=float)
+    x_label_rem = np.zeros((subject),dtype=int)
+    x_group_nrem = np.zeros((subject,len(nrem.T[0][5:])),dtype=float)
+    x_label_nrem = np.zeros((subject),dtype=int)
+    gg = 1
+    sb = 0
+    for kk in groups:
+        for sbj in range(subject):
+            if wake.T[sbj]['Group'] == kk:
+                x_group_wake[sb,:] = np.array(wake.T[sbj][5:])
+                x_label_wake[sb] = gg
+                x_group_rem[sb,:] = np.array(rem.T[sbj][5:])
+                x_label_rem[sb] = gg
+                x_group_nrem[sb,:] = np.array(nrem.T[sbj][5:])
+                x_label_nrem[sb] = gg
+                sb +=1  
+        gg +=1
+        
+    fig1 = plt.figure()
+    plt.title('Wake')
+    for kk in range(len(groups)):
+        sbj_tr = x_label_wake == kk+1
+        m = np.nanmean(x_group_wake[sbj_tr,:],axis = 0)
+        s = np.nanstd(x_group_wake[sbj_tr,:],axis = 0)/np.sqrt(np.sum(sbj_tr))
+        plt.errorbar(range(m.shape[0]),y = m, yerr = s,elinewidth=2.5,
+                                                       linewidth=2,
+                                                       marker='o',
+                                                       markersize=8,
+                                                       label = groups[kk])
+    labels = tuple(np.array(x_lab,dtype=np.str_))
+    ind = np.arange(m.shape[0])
+    plt.xticks(ind, labels)
+    plt.legend()
+    plt.yscale('log')
+    plt.ylim(0.01, 100)
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
+    
+    fig2 = plt.figure()
+    plt.title('rem')
+    for kk in range(len(groups)):
+        sbj_tr = x_label_rem == kk+1
+        m = np.nanmean(x_group_rem[sbj_tr,:],axis = 0)
+        s = np.nanstd(x_group_rem[sbj_tr,:],axis = 0)/np.sqrt(np.sum(sbj_tr))
+        plt.errorbar(range(m.shape[0]),y = m, yerr = s,elinewidth=2.5,
+                                                       linewidth=2,
+                                                       marker='o',
+                                                       markersize=8,
+                                                       label = groups[kk])
+    labels = tuple(np.array(x_lab,dtype=np.str_))
+    ind = np.arange(m.shape[0])
+    plt.xticks(ind, labels)
+    plt.legend()
+    plt.yscale('log')
+    plt.ylim(0.01, 100)
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
+    
+    fig3 = plt.figure()
+    plt.title('non rem')
+    for kk in range(len(groups)):
+        sbj_tr = x_label_nrem == kk+1
+        m = np.nanmean(x_group_nrem[sbj_tr,:],axis = 0)
+        s = np.nanstd(x_group_nrem[sbj_tr,:],axis = 0)/np.sqrt(np.sum(sbj_tr))
+        plt.errorbar(range(m.shape[0]),y = m, yerr = s,elinewidth=2.5,
+                                                       linewidth=2,
+                                                       marker='o',
+                                                       markersize=8,
+                                                       label = groups[kk])
+    labels = tuple(np.array(x_lab,dtype=np.str_))
+    ind = np.arange(m.shape[0])
+    plt.xticks(ind, labels)
+    plt.legend()
+    plt.yscale('log')
+    plt.ylim(0.01, 100)
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
+    
+    return fig1,fig2,fig3
+
 def plot_sleep_cycles(Input):
     df = Input[0]
     title = Input[1]
     x_axis = Input[2]
     y_axis = Input[3]
-    
     groups = np.unique(df['Group'])
     subject = len(df)
     fr = df.T
-    
     x_group = np.zeros((subject,len(fr[0][2:])),dtype=float)
     x_label = np.zeros((subject),dtype=int)
-    
     gg = 1
     sb = 0
     for kk in groups:
@@ -41,46 +223,35 @@ def plot_sleep_cycles(Input):
                 sb +=1
                 
         gg +=1
-     
     fig = plt.figure()
     plt.title(title)
     for kk in range(len(groups)):
         sbj_tr = x_label == kk+1
         m = np.nanmean(x_group[sbj_tr,:],axis = 0)
         s = np.nanstd(x_group[sbj_tr,:],axis = 0)/np.sqrt(np.sum(sbj_tr))
-        
         plt.errorbar(range(m.shape[0]),y = m, yerr = s,elinewidth=2.5,
                                                        linewidth=2,
                                                        marker='o',
                                                        markersize=8,
-                                                       label = groups[kk])
-    
-    
+                                                       label = groups[kk]) 
     labels = tuple(np.array(Input[4][:-1],dtype=np.str_))
     ind = np.arange(m.shape[0])
     plt.xticks(ind, labels)
-
     plt.legend()
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
-    
-    
     return fig
-
 
 def plot_new_time_sleep_course_group(Input):
     df = Input[0]
     title = Input[1]
     x_axis = Input[2]
     y_axis = Input[3]
-    
     groups = np.unique(df['Group'])
     subject = len(df)
     fr = df.T
-    
     x_group = np.zeros((subject,len(fr[0][2:])),dtype=float)
     x_label = np.zeros((subject),dtype=int)
-    
     gg = 1
     sb = 0
     for kk in groups:
@@ -88,23 +259,19 @@ def plot_new_time_sleep_course_group(Input):
             if fr[sbj]['Group'] == kk:
                 x_group[sb,:] = np.array(fr[sbj][2:])
                 x_label[sb] = gg
-                sb +=1
-                
+                sb +=1        
         gg +=1
-     
     fig = plt.figure()
     plt.title(title)
     for kk in range(len(groups)):
         sbj_tr = x_label == kk+1
         m = np.nanmean(x_group[sbj_tr,:],axis = 0)
         s = np.nanstd(x_group[sbj_tr,:],axis = 0)/np.sqrt(np.sum(sbj_tr))
-        
         plt.errorbar(range(m.shape[0]),y = m, yerr = s,  elinewidth=2.5,
                                                          linewidth=2,
                                                          marker='o',
                                                          markersize=8,
                                                          label = groups[kk])
-    
     plt.legend()
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
@@ -114,33 +281,22 @@ def plot_new_time_sleep_course_single(Input):
     df = Input[0]
     x_axis = Input[2]
     y_axis = Input[3]
-    
     groups = np.unique(df['Group'])
     subject = len(df)
     fr = df.T
-    
     fig = plt.figure()
-    
     gg = 1
-
     for kk in groups:
         plt.subplot(len(groups),1,gg)
         plt.title(kk)
-        
         for sbj in range(subject):
             if fr[sbj]['Group'] == kk:
-                plt.plot(fr[sbj][2:],label=fr[sbj][1])
-                
+                plt.plot(fr[sbj][2:],label=fr[sbj][1])     
         gg +=1
-        
         plt.legend()
-        
-    
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
-    
     return fig
-
 
 def Plt_RawPowerDensity_GUI(Freq, y_axis_list, color_list = ['r'],
                            linewidth = 2, legend_list = ['Wake'],

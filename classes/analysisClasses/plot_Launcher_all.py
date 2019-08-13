@@ -32,3 +32,11 @@ def select_Function_GUI_all(funcName, *otherInputs):
     elif funcName == 'Sleep_cycles':
         fig = plotSleep_cycles(*otherInputs)
         return fig
+    
+    elif funcName == 'emg_normalized':
+        fig = plotEMG(*otherInputs)
+        return fig
+    
+    elif funcName == 'Attentional_analysis':
+        fig = plotAttentional(*otherInputs)
+        return fig

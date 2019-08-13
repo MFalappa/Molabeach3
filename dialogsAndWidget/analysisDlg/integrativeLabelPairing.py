@@ -81,7 +81,7 @@ class intLabelPairing_dlg(QDialog):
         
     
     def addNameToLabel(self):
-        options = ("Behavior","Sleep","Spikes")
+        options = ("Behavior","Sleep","Spikes","EMG")
         type1, okPressed = QInputDialog.getItem(self, "Choose data type","Type I:", options, 0, False)
         if okPressed and type1:
             type2, okPressed = QInputDialog.getItem(self, "Choose data type","Type II:", options, 0, False)

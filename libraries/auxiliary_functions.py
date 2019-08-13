@@ -21,6 +21,19 @@ from scipy.signal import filtfilt,ellip
 import numpy as np
 import datetime as dt
 
+def extract_start(times,actions,codes):
+    
+    aa = times[actions==codes['Start Year']] 
+    mm = times[actions==codes['Start Month']]
+    dd = times[actions==codes['Start Day']] 
+    hh = times[actions==codes['Start Hour']] 
+    mi = times[actions==codes['Start Minute']] 
+    ss = times[actions==codes['Start Second']] 
+        
+    data_start = dt.datetime(aa,mm,dd,hh,mi,ss)
+    
+    return data_start
+
 def filter_emg(emg_sig,cut_amp):
     emg_f = np.zeros(int(emg_sig.shape[0]))
     for kk in range(emg_sig.shape[0]):
@@ -101,7 +114,9 @@ def ellip_bandpass(lowcut, highcut, fs, order=5, rp=0.1, rs=40):
     nyq = 0.5 * fs
     low = lowcut / nyq
     high = highcut / nyq
-    b, a = ellip(order, rp, rs, [low, high], btype='bandpass')
+    fcut = np.array(tuple((low, high)))
+    b, a = ellip(order, rp, rs, fcut, btype='bandpass')
+    
     return b, a
 
 def ellip_bandpass_filter(data, lowcut, highcut, fs, order=5, rp=0.1, rs=40):

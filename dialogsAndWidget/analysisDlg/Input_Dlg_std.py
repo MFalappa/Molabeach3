@@ -624,13 +624,13 @@ def main():
     timeSpinBox = None
 #    Range = None
     SAVE = False
-    lineEdit = None#['Insert text:']
+    lineEdit = ['Insert text:']
     
 #==============================================================================
 #     Phase Selection
 #==============================================================================
     dc = DatasetContainer_GUI()
-    dd = np.load('/Users/Matte/Desktop/Paper marta/data/Sleep phz/baseline/PWS_22.phz')
+    dd = np.load('/Users/Matte/Python_script/Phenopy3/data example/workspace_2019-3-7T16_22.phz')
     kl = []
     for key in list(dd.keys())[:3]:
         dc.add(dd[key].all())
@@ -640,9 +640,13 @@ def main():
 #==============================================================================
 #    comboBox = [('Hour Bins:',["1 hour","2 hours","3 hours"],[3600,7200,10800],1)]
     ##
+    
+#    comboBox = [('inserissci',[],[],1)]
     form = inputDialog(None,comboBox,timeSpinBox,doubleSpinBox,lineEdit,SpinBox,False,3,
                        ActivityList=None,folderSave=SAVE,RadioButton=RadioButton,
                        Range = Range,PhaseSel=PhaseSel)
+    
+#    form = inputDialog(lineEdit,SpinBox)
     
 
     form.show()

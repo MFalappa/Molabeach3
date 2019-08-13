@@ -75,11 +75,36 @@ def inputDlgCreator(analysisName,group_list=[]):
                                 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
                                 20, 21, 22, 23],20)]
         return dictInput
+    
     if analysisName == 'Sleep_cycles':
-        dictInput['DoubleSpinBox'] = [('Maximun time in munutes:',(10,120),30)]
+        dictInput['Combo'] = [('Epoch type:',['Sleep','Rem','NRem','Wake'],
+                  [[2,3],[2],[3],[1]],0),
+                   ('Statistical index:',['Mean','Median'],['Mean','Median'],0),
+                   ('Mean or total per time bin:',['Mean','Total'],
+                    ['Mean','Total'], 1)]
+                   
+                   
         dictInput['Combo'] = [('Binning:',['1 min', '2 min', '3 min', '4 min','5 min'],
                   [1,2,3,4,5],2)]
         return dictInput
+    if analysisName == 'Attentional_analysis':
+        dictInput['Combo'] = [
+                ('Type:',['Reaction time','Anticipation','Food','Error Rate'],
+                  [[1],[2],[3],[4]],0),
+                 ('Time binning:',['1 h','2 h', '3 h','6 h','12 h'],
+                  [1,2,3,6,12],3),
+            ('Dark phase start:',['0:00', '1:00', '2:00', '3:00', '4:00', '5:00',
+                                  '6:00', '7:00','8:00', '9:00', '10:00', '11:00',
+                                  '12:00', '13:00', '14:00','15:00', '16:00', 
+                                  '17:00', '18:00', '19:00', '20:00', '21:00','22:00','23:00'],
+                  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,14, 15, 16, 17, 
+                   18, 19, 20, 21, 22, 23],20),
+            ('Dark phase duration (hours):',['0',' 1',' 2',' 3',' 4',' 5',' 6',' 7',' 8',
+            ' 9',' 10',' 11',' 12',' 13',' 14',' 15',' 16',' 17',' 18',' 19',
+            ' 20',' 21',' 22',' 23',' 24'],[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],12)]
+        return dictInput
+        
     if analysisName == 'LDA':
         dictInput['Combo'] = [('Dark start hour:',['0',' 1',' 2',' 3',' 4',' 5',' 6',' 7',' 8',' 9',' 10',' 11',' 12',' 13',' 14',' 15',' 16',' 17',' 18',' 19',' 20',' 21',' 22',' 23'],[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],20),('Dark phase duration (hrs):',['0',' 1',' 2',' 3',' 4',' 5',' 6',' 7',' 8',' 9',' 10',' 11',' 12',' 13',' 14',' 15',' 16',' 17',' 18',' 19',' 20',' 21',' 22',' 23'],[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],12),('Cognitive score:',['Error Rate','Reaction Time'],['Error Rate','Reaction Time'],0),('Sleep score:',['Sleep Total','NREM Total','REM Total','Wake Total'],['Sleep Total','NREM Total','REM Total','Wake Total'],0)]
         return dictInput
@@ -95,3 +120,10 @@ def inputDlgCreator(analysisName,group_list=[]):
     if analysisName == 'spikeStatistics':
         dictInput['DoubleSpinBox'] = [('Number of ISI histogram bars:',(10,999999),100.000000),('Binning in seconds for firing rate computing:',(0.1,999999),10.000000)]
         return dictInput
+    if analysisName == 'emg_normalized':
+        dictInput['LineEdit'] = ['Percentile to compute (separated by ,):']
+        
+        return dictInput
+        
+        
+        

@@ -137,6 +137,7 @@ class MainWindow(QMainWindow):
         self.flagData=False
         self.flagInput = False
         self.lastSaveDirectory = None
+        self.sleepAction_option = False
 
 #       self.InputOrData is a flag to specify if you are saving an input or a 
 #       dataset, if you press save when an input is the last selected you will 
@@ -307,15 +308,15 @@ class MainWindow(QMainWindow):
             settingsKeys = settings.childKeys()
 
             # Restoring TimeStamps Code or Use the normal one
-            if 'TimeStampsKey 0' in settingsKeys:
-                
-                self.TimeStampsKey = []
-                self.TimeStamps={}
-                KeyNum=0
-                while 'TimeStampsKey %d'%KeyNum in settingsKeys:
-                    self.TimeStampsKey = self.TimeStampsKey + [settings.value('TimeStampsKey %d'%KeyNum)]
-                    self.TimeStamps[self.TimeStampsKey[-1]]=settings.value('TimeStampsCode %d'%KeyNum)
-                    KeyNum+=1
+#            if 'TimeStampsKey 0' in settingsKeys:
+#                
+#                self.TimeStampsKey = []
+#                self.TimeStamps={}
+#                KeyNum=0
+#                while 'TimeStampsKey %d'%KeyNum in settingsKeys:
+#                    self.TimeStampsKey = self.TimeStampsKey + [settings.value('TimeStampsKey %d'%KeyNum)]
+#                    self.TimeStamps[self.TimeStampsKey[-1]]=settings.value('TimeStampsCode %d'%KeyNum)
+#                    KeyNum+=1
                     
             
             self.restoreGeometry(
@@ -351,7 +352,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("PhenoPY [*]")
         self.setWindowIcon(QIcon(os.path.join(image_dir,"logo.ico")))
         QTimer.singleShot(0, lambda Name = fname: self.loadInitialFile(Name))
-        self.Dataset = DatasetContainer_GUI(self.TimeStamps)
+#        self.Dataset = DatasetContainer_GUI(self.TimeStamps)
+        self.Dataset = DatasetContainer_GUI(self.OriginalTimeStamps)
         self.Dataset.updateSignal.connect(self.updateDataListWidget)
         
 #       Analisis single thread
@@ -540,7 +542,8 @@ class MainWindow(QMainWindow):
                     print('decidere con edo, pensavo ad un modulo ad hoc per la detection')    
                 
                 elif self.Dataset[dts].Types == ['EDF']:
-                    self.sleepAction.setEnabled(True)
+                    self.sleepAction_option = True
+                    
                     
         else:
             self.behaviourAction.setEnabled(False)
@@ -549,6 +552,8 @@ class MainWindow(QMainWindow):
             self.spikeAction.setEnabled(False)
         
         if self.sleepAction.isEnabled() and self.behaviourAction.isEnabled():
+            self.integrativenAction.setEnabled(True)
+        elif self.sleepAction.isEnabled() and self.sleepAction_option:
             self.integrativenAction.setEnabled(True)
         else:
             self.integrativenAction.setEnabled(False)

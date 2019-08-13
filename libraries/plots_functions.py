@@ -14,7 +14,9 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 from Plotting_GUI import (Plt_RawPowerDensity_Loop_GUI,Plt_MedianPowerDensity_GUI,
                           plot_new_time_sleep_course_single,
                           plot_new_time_sleep_course_group,
-                          plot_sleep_cycles)
+                          plot_sleep_cycles,
+                          plot_emg_norm,
+                          plot_attentional)
 def plotPowerDensity(*myinputs):
     figs  = Plt_RawPowerDensity_Loop_GUI(\
         *myinputs[0][list(myinputs[0].keys())[0]]['Single Subject'])
@@ -54,11 +56,26 @@ def plotDeltaTimeCourse(*myinputs):
 def plotSleep_cycles(*myinputs):
     KeyVect = myinputs[0][list(myinputs[0].keys())[0]]
     fig = plot_sleep_cycles(KeyVect['Single Subject'])
-    
     figDict = {'Fig sleep cycles':{}}
     figDict['Fig sleep cycles']['Sleep cycles duration'] = fig
-    
     fig.show()
     return figDict 
-
+def plotEMG(*myinputs):
+    KeyVect = myinputs[0][list(myinputs[0].keys())[0]]
+    fig1,fig2,fig3 = plot_emg_norm(KeyVect['Single Subject'])
+    figDict = {'Fig EMG normalized':{}}
+    figDict['Fig EMG normalized']['Wake'] = fig1
+    figDict['Fig EMG normalized']['REM'] = fig2
+    figDict['Fig EMG normalized']['nonREM'] = fig3
+    fig1.show()
+    fig2.show()
+    fig3.show()
+    return figDict
+def plotAttentional(*myinputs):
+    KeyVect = myinputs[0][list(myinputs[0].keys())[0]]
+    fig = plot_attentional(KeyVect['Single Subject'])
+    figDict = {'Fig Attentional test':{}}
+    figDict['Fig Attentional test'][KeyVect['Single Subject'][5]] = fig
+    fig.show()
+    return figDict
 
