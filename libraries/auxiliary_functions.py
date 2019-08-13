@@ -21,9 +21,10 @@ from scipy.signal import filtfilt,ellip
 import numpy as np
 import datetime as dt
 
+
 def extract_start(times,actions,codes):
     
-    aa = times[actions==codes['Start Year']] 
+    aa = 2000 + times[actions==codes['Start Year']] 
     mm = times[actions==codes['Start Month']]
     dd = times[actions==codes['Start Day']] 
     hh = times[actions==codes['Start Hour']] 

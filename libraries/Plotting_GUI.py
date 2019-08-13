@@ -16,13 +16,88 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 import matplotlib.pyplot as plt
 import numpy as np
-#import pandas as pd
+import datetime as dt
 import scipy.stats as sts
 
+def plot_errors(Input):
+    
+    df = Input[0]
+    types = Input[1]
+    x_label = Input[2]
+    y_label = Input[3]
+    dark_start = Input[4]
+    dark_dur = Input[5]
+    StatIndex = Input[6]
+    Bins = Input[7]
+    h_bins = Bins/3600
+    
+    if StatIndex == 'Mean':
+        func = getattr(np,'nanmean')
+    else:
+        func = getattr(np,'nanmedian')
+        
+    
+    groups = np.unique(df['Group'])
+    subject = np.unique(df['Subject'])
+    
+    dark = np.arange(dark_start,dark_start+dark_dur,h_bins)%24
+    res = np.zeros((len(subject),2*dark.shape[0]),dtype = float)
+    
+    sj = 0
+    sbj_tr = np.array([])
+    for sb in subject:
+        time = np.array([])
+        sub_df = df[df['Subject']==sb]
+        for idx in sub_df.index:
+            tmp = dt.datetime.strptime(sub_df['Time'][idx][12:], "%H:%M:%S")
+            time = np.hstack((time,tmp))
+       
+        t0 = dt.datetime(1900, 1, 1, dark_start, 00)
+        for zt in range(res.shape[1]):
+            idx =  (time >= t0) & (time < t0+dt.timedelta(seconds = Bins))
+            res[sj,zt] = 1-(func(sub_df['Correct'][idx]))
+            t0 += dt.timedelta(seconds = Bins)
+            if t0.day > 1:
+                t0 -= dt.timedelta(hours = 24)
+        sj += 1
+        sbj_tr = np.hstack((sbj_tr,np.unique(sub_df['Group'])))
+    
+    
+    if types == 'Single subject':
+        fig = plt.figure()
+        ss = 0
+        for sb in subject:
+            plt.plot(res[ss,:],label = sb)
+            ss += 1
+        plt.legend()
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.tight_layout()
+        
+    else:
+        fig = plt.figure()
+        gg = 1
+        for gg in groups:
+            idx = sbj_tr == gg
+                
+            m = np.nanmean(res[idx,:],axis = 0)
+            s = np.nanstd(res[idx,:],axis = 0)/np.sqrt(np.sum(idx))  
+            plt.errorbar(range(m.shape[0]),y = m, yerr = s,elinewidth=2.5,
+                                                           linewidth=2,
+                                                           marker='o',
+                                                           markersize=8,
+                                                           label = gg)
+            
+        plt.legend()
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.tight_layout()
+  
+    return fig
+    
 def plot_attentional(Input):
     
     df = Input[0]
-#    title = Input[1]
     xlabel = Input[2]
     ylabel = Input[3]
     bins = Input[4]

@@ -16,7 +16,9 @@ from Plotting_GUI import (Plt_RawPowerDensity_Loop_GUI,Plt_MedianPowerDensity_GU
                           plot_new_time_sleep_course_group,
                           plot_sleep_cycles,
                           plot_emg_norm,
-                          plot_attentional)
+                          plot_attentional,
+                          plot_errors)
+
 def plotPowerDensity(*myinputs):
     figs  = Plt_RawPowerDensity_Loop_GUI(\
         *myinputs[0][list(myinputs[0].keys())[0]]['Single Subject'])
@@ -76,6 +78,13 @@ def plotAttentional(*myinputs):
     fig = plot_attentional(KeyVect['Single Subject'])
     figDict = {'Fig Attentional test':{}}
     figDict['Fig Attentional test'][KeyVect['Single Subject'][5]] = fig
+    fig.show()
+    return figDict
+def plotErrorRate(*myinputs):
+    KeyVect = myinputs[0][list(myinputs[0].keys())[0]]
+    fig = plot_errors(KeyVect['Single Subject'])
+    figDict = {'Fig Error rate':{}}
+    figDict['Fig Error rate'][KeyVect['Single Subject'][1]] = fig
     fig.show()
     return figDict
 

@@ -40,3 +40,7 @@ def select_Function_GUI_all(funcName, *otherInputs):
     elif funcName == 'Attentional_analysis':
         fig = plotAttentional(*otherInputs)
         return fig
+    
+    elif funcName == 'Group_Error_Rate':
+        fig = plotErrorRate(*otherInputs)
+        return fig

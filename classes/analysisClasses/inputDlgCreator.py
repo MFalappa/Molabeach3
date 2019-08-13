@@ -39,7 +39,7 @@ def inputDlgCreator(analysisName,group_list=[]):
             ('Statistical index:',['Mean','Median'],['Mean','Median'],0),
             ('Time binning:',['10 min', '15 min', '20 min', '30 min', '1 h',
             '2 h', '3 h', '6 h', '12 h'],[600,900,1200,1800,3600,7200,
-            10800,21600,43200],4)]
+            10800,21600,43200],4),('Type',['Single subject','Group'],[0,1],1)]
         return dictInput
     if analysisName == 'Sleep_Time_Course':
 #        print('Enterd sleep time course')

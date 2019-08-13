@@ -25,7 +25,8 @@ from auxiliary_functions import (powerDensity_function,
                                  ellip_bandpass_filter,
                                  normalize_emg,
                                  compute_perc,
-                                 extract_start)
+                                 extract_start
+                                 )
 def Power_Density(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
@@ -795,9 +796,102 @@ def Attentional_analysis(*myInput):
     datainfo = {VAR: info }
     
     return DataDict, dictPlot, datainfo
-    
-    
 def Group_Error_Rate(*myInput):
+    Datas      = myInput[0]
+    Input      = myInput[1]
+    DataGroup  = myInput[2]
+    TimeStamps = myInput[3]
+#    lock       = myInput[4]
+    
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+    
+    Dark_start = Input[0]['Combo'][0]
+    Dark_length = Input[0]['Combo'][1]
+    StatIndex = Input[0]['Combo'][2]
+    TimeInterval = Input[0]['Combo'][3]
+    Dataset_Dict = {}
+    TimeStamps_Dict = {}
+    
+    types = Input[0]['Combo'][4]
+    if types == 0:
+        types = 'Single subject'
+    elif types == 1:
+        types = 'Group'
+
+
+    nTrials = 0
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            time = Datas[name].Dataset['Time']
+            action = Datas[name].Dataset['Action']
+            
+            start = np.where(action==TimeStamps['ACT_START_TEST'])[0]
+            nTrials += start.shape[0]-1
+
+    types_res = ['Group','Subject','Time','Correct']
+    res = np.zeros((nTrials,),dtype={'names':types_res,
+                           'formats':('U%d'%lenGroupName,'U%d'%lenName,'U30')+(int,)})
+
+    nt = 0
+    for group in list(DataGroup.keys()):
+        for dataName in DataGroup[group]:
+            time = Datas[dataName].Dataset['Time']
+            action = Datas[dataName].Dataset['Action']
+            
+            start = np.where(action==TimeStamps['ACT_START_TEST'])[0]
+            
+            date = extract_start(time,action,TimeStamps)
+            
+            for tt in range(start.shape[0]-1):
+                tmp_time = time[start[tt]:start[tt+1]]
+                tmp_action = action[start[tt]:start[tt+1]]
+                
+                hour = date + dt.timedelta(seconds = tmp_time[0])
+                
+                idx_left = tmp_action == TimeStamps['Give Pellet Left']
+                idx_right = tmp_action == TimeStamps['Give Pellet Right']
+                
+                tot = np.sum(idx_left) + np.sum(idx_right)
+                
+                res['Group'][nt] = group
+                res['Subject'][nt] = dataName
+                res['Time'][nt] = hour.strftime("%Y/%m/%d, %H:%M:%S")
+                
+                if tot > 0:
+                    res['Correct'][nt] = 1
+                else:
+                    res['Correct'][nt] = 0
+                    
+                nt +=1
+    
+    x_label = 'Time'
+    y_label = 'Error Rate [%]'
+
+    DataDict = {'Group Error Rate' : {}}
+    DataDict['Group Error Rate']['Error Rate'] = pd.DataFrame(res)
+    dictPlot = {}
+    dictPlot['Fig: Group Error Rate'] = {}
+    dictPlot['Fig: Group Error Rate']['Single Subject'] = (pd.DataFrame(res),
+                                                            types,
+                                                            x_label,
+                                                            y_label,
+                                                            Dark_start,
+                                                            Dark_length,
+                                                            StatIndex,
+                                                            TimeInterval)    
+    info = {}
+    info['Error Rate'] = {'Error Rate' : {}}
+    info['Error Rate']['Types'] =\
+        ['Group', 'Error Rate']
+    info['Error Rate']['Factor'] = [0,1]
+    
+    return DataDict, dictPlot, info
+def LDA(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
     Datas      = myInput[0]
@@ -805,27 +899,13 @@ def Group_Error_Rate(*myInput):
     DataGroup  = myInput[2]
     TimeStamps = myInput[3]
     lock       = myInput[4]
-    return DataDict, dictPlot, info
-def error_rate():
-    DataDict, dictPlot, info = {},{},{}
-    
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
     
     return DataDict, dictPlot, info
-def LDA():
-    DataDict, dictPlot, info = {},{},{}
     
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
     
-    return DataDict, dictPlot, info
+
+
+
 def Switch_Latency():
     DataDict, dictPlot, info = {},{},{}
     
