@@ -18,9 +18,189 @@ import matplotlib.pyplot as plt
 import numpy as np
 import datetime as dt
 import scipy.stats as sts
+import bisect
+
+
+def Normalize_Action_x_Interval_GUI(Action_x_Interval,period,Hour_Fraction,N_Day,string):
+    """
+    Function Targets:           This function normalized the action per interval of time,
+                                day by day or normalize respect the total days
+    
+    Input:                      -Action_x_Interval=vector, activity per interval of time
+                                -period=scalar, the period you're considering
+                                -Hour_Fraction=scalar, integer,interval of time you consider
+                                -N_Day=scalr, number of days of the experiment
+                                -sring=string, specify how to normalize.
+    Output:                     -Norm_Action_x_Interval=vector,normalized Action_x_Interval
+    """
+    if string=='All':
+        length=int(Hour_Fraction*period*N_Day)
+        Norm_Action_x_Interval=Action_x_Interval[:length]/max(Action_x_Interval[:length])
+    elif string=='DayByDay':
+        #   We keep only the NP that occured in the N_Day days of trials
+        Norm_Action_x_Interval=np.zeros(N_Day*period*Hour_Fraction)
+        #   We normalize actions of each day...
+        for i in np.arange(N_Day):
+            Norm_Action_x_Interval[i*Hour_Fraction*period:(i+1)*Hour_Fraction*period]=Action_x_Interval[i*Hour_Fraction*period:(i+1)*Hour_Fraction*period]/max(Action_x_Interval[i*Hour_Fraction*period:(i+1)*Hour_Fraction*period])
+    elif string == 'FullData':
+        Norm_Action_x_Interval=Action_x_Interval/max(Action_x_Interval)
+    return(Norm_Action_x_Interval)
+
+def plt_Best_Period(Period_Array, Best_Fit_Param, subject=''):
+    fig = plt.figure()
+    plt.plot(Best_Fit_Param['Period'], Best_Fit_Param['Pearson corr'],
+             'or')
+    plt.plot(Period_Array['Period'], Period_Array['Pearson corr'],
+             linewidth = 2)
+    xticks,tmp = plt.xticks()
+    xticks = list(xticks)
+    bisect.insort_left(xticks,Best_Fit_Param['Period'])
+    tickList = []
+    for k in xticks:
+        tickList += ['%.2f'%k]
+        if tickList[-1].endswith('.00'):
+            tickList[-1] = tickList[-1][:-3]
+    try:
+        tickList.remove('24')
+        xticks.remove(24.)
+    except ValueError as inst:
+        print(inst.message)
+        
+    plt.xticks(xticks,tickList,fontsize='large')
+    plt.yticks(fontsize='large')
+    plt.plot([Best_Fit_Param['Period']]*2,[0,1],'--r')
+    plt.title('Periodicity extraction: best fit\n' + subject, fontsize=20)
+    plt.xlabel('Periodicity(h)',fontsize='x-large')
+    plt.ylabel('Correlation',fontsize='x-large')
+    ymax = max(0.7, Best_Fit_Param['Pearson corr'] + 0.1)
+    plt.ylim(0,ymax)
+    return fig
+
+def Print_Actogram_GUI(Action_x_Interval,N_Day,interval,returnFig = False, *other, **kwargs):
+    """
+
+    Function Targets:   Print an actogram
+    Input:              -Action_x_Interval=vector containing number of NP per time interval
+                        -N_Day=numbers of day of the acogram
+                        -interval=fraction of an hour in seconds
+                        -other=tuple, the periodicity of the activity we consider in hour 
+                        and/or the string specify how to normalize the actogram bars. 
+                        -kwargs=dictionary, key='Start_Hour','Norm'
+                            -kwargs['Norm']=boolean, true if data are normalized 
+                            false if not
+    Output:             -Actogram = the actogram graph
+    
+    """
+    
+    if len(other)==0:
+        period=24
+        string='All'
+    elif len(other)==1:
+        if type(other[0])==int:
+            period=other[0]
+            string='All'
+        else:
+            string=other[0]
+            period=24
+    elif len(other)==2:
+        if type(other[0])==int:
+            period=other[0]
+            string=other[1]
+        else:
+            string=other[0]
+            period=other[1]
+    elif len(other)>2:
+        print('Warning! Too many input argumet...')
+        return()
+    
+    if 3600%interval!=0:
+        print('Warning! The interval you choose is not a fraction of an hour')
+        return()
+    if 'Start_Hour' in kwargs:
+        Start_Hour=int(kwargs['Start_Hour'])
+    else:
+        Start_Hour=0
+    if 'Norm' in kwargs:
+        Norm=kwargs['Norm']
+    else:
+        Norm = False
+    Hour_Fraction=int(3600/interval)
+    period=int(period)
+    N_Day=int(N_Day)
+ 
+#   We keep only the NP that occured in the N_Day days of trials
+    if not Norm:
+        Norm_Action_x_Interval=Normalize_Action_x_Interval_GUI(Action_x_Interval,period,Hour_Fraction,N_Day,string)
+    else:
+        Norm_Action_x_Interval=Action_x_Interval
+    
+#   Actogram's total raw number = number of days minus one
+#   x_axis is a vector like [1,2,3,..,period*4-1,period*4,1,2,3,...,period*4-1,period*4,1,2...,period*4]
+#   repeting N_day-1 times the arange(1,period*4+1).
+    if string=='FullData':
+        
+        x_axis=np.array(np.ones((N_Day,1))*np.arange(1,Hour_Fraction*2*period+1)).reshape(-1,)
+                    
+        Norm_Action_x_Interval=np.hstack((Norm_Action_x_Interval,np.zeros((N_Day+1)*Hour_Fraction*period-len(Norm_Action_x_Interval))))
+    #   We create a matrix in with every raw contains the actions of an entire day
+        Daily_Actions=np.array(Norm_Action_x_Interval.reshape((N_Day+1,Hour_Fraction*period)))
+    #   We double from the second raw to the last but one
+        Double=np.hstack((Daily_Actions[1:-1],Daily_Actions[1:-1])).reshape(-1,)
+        y_axis=np.hstack((Norm_Action_x_Interval[0:Hour_Fraction*period],Double,Norm_Action_x_Interval[-Hour_Fraction*period:]))
+        Bottom_y=(np.arange(1,N_Day+1).reshape((N_Day,1))*np.ones(2*period*Hour_Fraction)).reshape(-1,)    
+    else:
+        x_axis=np.array(np.ones((N_Day-1,1))*np.arange(1,Hour_Fraction*2*period+1)).reshape(-1,)
+    #   We create a matrix in with every raw contains the actions of an entire day
+        Daily_Actions=np.array(Norm_Action_x_Interval.reshape((N_Day,Hour_Fraction*period)))
+    #   We double from the second raw to the last but one
+        Double=np.hstack((Daily_Actions[1:-1],Daily_Actions[1:-1])).reshape(-1,)
+        y_axis=np.hstack((Norm_Action_x_Interval[0:Hour_Fraction*period],Double,Norm_Action_x_Interval[-Hour_Fraction*period:]))
+        Bottom_y=(np.arange(1,N_Day).reshape((N_Day-1,1))*np.ones(2*period*Hour_Fraction)).reshape(-1,)
+    Bottom_y=Bottom_y[::-1]
+    x_axis=x_axis*interval/3600
+    FIG = plt.figure(figsize=(5.5*3.13,3.5*3.13))
+    if 'title' in kwargs:
+        plt.title(kwargs['title'])
+    Actogram = plt.bar(x_axis,y_axis,bottom=Bottom_y,align='center',width=interval/3600.0,color='b',lw=0.)
+    if N_Day>=2 and string=='FullData':
+        label=[]
+        for i in range(N_Day):
+            label=label+['%d-%d' % (N_Day-i,N_Day-i+1)]
+        plt.yticks(np.arange(1,N_Day+1),label)
+        ymax=N_Day+1
+    elif N_Day>=2 and string!='FullData':
+        label=[]
+        for i in range(N_Day-1):
+            label=label+['%d-%d' % (N_Day-(i+1),N_Day-i)]
+        plt.yticks(np.arange(1,N_Day),label)
+        ymax=N_Day
+    else:
+        label=['1-2']
+        plt.yticks([1],label)
+        ymax=1
+   
+    plt.xlabel('Time(hours)')
+    plt.ylabel('Days')
+    if 'Title' in kwargs:
+        title=kwargs['Title']
+    else:
+        title='Actogram'
+    plt.title(title)
+    if 'Suptitle' in kwargs:
+        plt.suptitle(kwargs['Suptitle'],fontsize='large')
+    
+    plt.ylim(1,ymax)
+    #plt.xticks(np.arange(0,2*period+1,6),np.arange(Start_Hour,Start_Hour+2*period+1,6)%(period))
+    plt.xticks(np.arange(0,2*period+1,1),np.arange(Start_Hour,Start_Hour+2*period+1,1)%(period))
+    #plt.hold(1)
+    plt.xlim((-0.5,2*period))
+    if returnFig:
+        return(FIG)
+        
+    return(Actogram)
 
 def plot_raster(Input):
-    
+    fig = plt.figure()
     for kk in Input.keys():
         Raster = Input[kk]
         XMIN,XMAX,YMIN,YMAX = np.inf, 0, np.inf, 0
@@ -51,7 +231,6 @@ def plot_raster(Input):
             label = 'NP left'
         
         scale = 10
-        fig = plt.figure()
         plt.plot(I1[1]/float(scale),I1[0]+1,'ow')
         plt.plot(I0[1]/float(scale),I0[0]+1,color2)
         plt.hlines(I0[0]+1,I0[1]/float(scale),I1[1]/float(scale),color1,label=label)

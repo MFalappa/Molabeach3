@@ -32,7 +32,11 @@ from auxiliary_functions import (powerDensity_function,
                                  F_OnSet_GUI,
                                  F_OffSet_GUI,
                                  F_Probes_x_TimeInterval_GUI,
-                                 F_PeakProbes_GUI)
+                                 F_PeakProbes_GUI,
+                                 F_Actogram_GUI,
+                                 StartDate_GUI,
+                                 EndDate_GUI,
+                                 Fit_Sin_BestPeriod)
 
 def Power_Density(*myInput):
     DataDict, dictPlot, info = {},{},{}
@@ -1232,16 +1236,16 @@ def raster_plot(*myInput):
             
             if Input[0]['Combo'][1] == 'Both':
                 DataDict[name] = {}
-                DataDict[name][loc_for_Pk] = pd.DataFrame(Pk[0])
-                DataDict[name][loc_for_Pk1] = pd.DataFrame(Pk1[0])
-                
+#                DataDict[name][loc_for_Pk] = pd.DataFrame(Pk[0])
+#                DataDict[name][loc_for_Pk1] = pd.DataFrame(Pk1[0])
+               
                 dictPlot[name] = {}
                 dictPlot[name][loc_for_Pk] = Pk[0]
                 dictPlot[name][loc_for_Pk1] = Pk1[0]
                 
             else:
                 DataDict[name] = {}
-                DataDict[name][loc_for_Pk] = pd.DataFrame(Pk[0])
+#                DataDict[name][loc_for_Pk] = pd.DataFrame(Pk[0])
                 
                 dictPlot[name] = {}
                 dictPlot[name][loc_for_Pk] = Pk[0]
@@ -1253,6 +1257,101 @@ def raster_plot(*myInput):
                 
     return DataDict, dictPlot, info
 
+def Actograms(*myInput):
+    DataDict, dictPlot, info = {},{},{}
+    
+    Datas      = myInput[0]
+    Input      = myInput[1]
+    DataGroup  = myInput[2]
+    TimeStamps = myInput[3]    
+    """
+        Actogram from std input dlg
+    """
+    interval = Input[0]['Combo'][0] * 60
+    step_num = Input[0]['SpinBox'][0]
+    p_min = Input[0]['Range'][0][0]
+    p_max = Input[0]['Range'][0][1]
+    Light_start = Input[0]['Combo'][1]
+
+
+
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+            
+            
+    count_sub = 0        
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            count_sub += 1
+   
+    
+    dtypeDict = np.zeros((count_sub,),dtype={'names':('Subject', 'Group','Period', 'Phase', 'Amplitude',
+                          'Translation', 'Pearson corr', 'p_value'),
+                 'formats':('|S%d'%lenName,'|S%d'%lenName, float, float, float, float, float,
+                            float)})
+    
+    ind = 0
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            data = Datas[name].Dataset
+            
+            Start_exp, Start_Time, End_Time = Time_Details_GUI(data,TimeStamps)
+            Start_H = (Start_exp)//3600
+            Actogram, N_Day = F_Actogram_GUI(data, Start_exp, End_Time,interval, TimeStamps, 24)
+            
+            Ms,Ds,Ys = StartDate_GUI(data, TimeStamps)
+            Me,De,Ye = EndDate_GUI(data, TimeStamps)
+            
+            Period_Array, Best_Fit_Param, Best_Fit = Fit_Sin_BestPeriod(Actogram,
+                                                                        p_min,
+                                                                        p_max,
+                                                                        Start_H, 
+                                                                        step_num = step_num,
+                                                                        Light_start = Light_start,
+                                                                        interval = interval)
+            
+            title = 'Actogram %s\nFrom: %d/%d/%d\nTo: %d/%d/%d'%(name,Ms,Ds,Ys,Me,De,Ye)
+            kwargs = {'Start_Hour': Start_H,'Title' : title}
+            
+            dtypeDict['Subject'][ind] = name
+            dtypeDict['Group'][ind] = key
+            dtypeDict['Period'][ind] = Best_Fit_Param['Period']
+            dtypeDict['Phase'][ind] =  Best_Fit_Param['Phase']
+            dtypeDict['Amplitude'][ind] = Best_Fit_Param['Amplitude']
+            dtypeDict['Translation'][ind] = Best_Fit_Param['Translation']
+            dtypeDict['Pearson corr'][ind] = Best_Fit_Param['Pearson corr']
+            dtypeDict['p_value'][ind] = Best_Fit_Param['p_value']
+            ind += 1
+            
+            minutes = np.ones(len(Actogram)) * 60.0 * (interval / 3600.0)
+            minutes[0] = 0
+        
+            dictPlot[name] = {}
+            dictPlot[name]['Actogram'] = Actogram
+            dictPlot[name]['N_Day'] = N_Day
+            dictPlot[name]['interval'] = interval
+            dictPlot[name]['kwargs'] = kwargs
+            dictPlot[name]['minutes'] = np.cumsum(minutes)
+            dictPlot[name]['Period_Array'] = Period_Array
+            dictPlot[name]['Best_Fit'] = Best_Fit_Param
+
+    DataDict = {}
+    DataDict['Single Subject Actogram'] = {}
+    DataDict['Single Subject Actogram']['Actogram'] = pd.DataFrame(dtypeDict)
+    
+    info = {}
+    info['Actogram'] = {}
+    info['Actogram']['Types']  = ['Actogram', 'Single Subject']
+    info['Actogram']['Factor'] = [0,2]
+    info['Sinfit'] = {}
+    info['Sinfit']['Types'] = ['SinFit','Single Subject']
+    info['Sinfit']['Factor'] = []
+    
+    return DataDict, dictPlot, info
 
 
 
@@ -1286,15 +1385,5 @@ def Switch_Latency():
     
     
     
-    
-    return DataDict, dictPlot, info
-def Actograms():
-    DataDict, dictPlot, info = {},{},{}
-    
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
     
     return DataDict, dictPlot, info

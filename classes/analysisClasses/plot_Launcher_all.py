@@ -56,3 +56,7 @@ def select_Function_GUI_all(funcName, *otherInputs):
     elif funcName == 'raster_plot':
         fig = plotRaster(*otherInputs)
         return fig
+    
+    elif funcName == 'Actograms':
+        fig = plotActograms(*otherInputs)
+        return fig

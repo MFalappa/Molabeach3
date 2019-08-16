@@ -20,7 +20,9 @@ from Plotting_GUI import (Plt_RawPowerDensity_Loop_GUI,Plt_MedianPowerDensity_GU
                           plot_errors,
                           plot_ait,
                           plot_peak_procedure,
-                          plot_raster)
+                          plot_raster,
+                          Print_Actogram_GUI,
+                          plt_Best_Period)
 
 def plotPowerDensity(*myinputs):
     figs  = Plt_RawPowerDensity_Loop_GUI(\
@@ -110,11 +112,32 @@ def plotRaster(*myinputs):
     figDict = {'Fig Raster':{}}
     for key in myinputs[0].keys():
         figDict['Fig Raster'][key] = plot_raster(myinputs[0][key])
-        
-        
     for key in figDict['Fig Raster'].keys():
         tmp = figDict['Fig Raster'][key]
         tmp.show()
-    
+    return figDict
+def plotActograms(*myinputs):
+    figDict = {'Fig Actogram':{},'Fig SinFit':{}}
+    data_dict = myinputs[0]
+    for dataName in list(data_dict.keys()):
+        Actogram = data_dict[dataName]['Actogram']
+        N_Day = data_dict[dataName]['N_Day']
+        interval = data_dict[dataName]['interval']
+        boolean = True
+        normStr =  'FullData'
+        hrs = 24
+        kwargs = data_dict[dataName]['kwargs']
+        fig = Print_Actogram_GUI(Actogram,N_Day,interval,boolean,*(normStr,hrs),**kwargs)
+        figName = 'Actogram_' + dataName.split('.')[0]
+        figDict['Fig Actogram'][figName] = fig
+        
+        Period_Array = data_dict[dataName]['Period_Array']
+        Best_Fit_Param = data_dict[dataName]['Best_Fit']
+        
+        
+        subject = figName
+        fig = plt_Best_Period(Period_Array,Best_Fit_Param,subject)
+        figName = 'SinFit_' + dataName.split('.')[0]
+        figDict['Fig Actogram'][figName] = fig                
     return figDict
 

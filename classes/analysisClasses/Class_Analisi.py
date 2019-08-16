@@ -62,7 +62,7 @@ class Analysis_Single_GUI(object):
         
     def getInput(self,analysisName):
         self.inputCreator.refresh()
-        if analysisName == 'Actogram':
+        if analysisName == 'Actograms':
             comboInput = [createComboTuple('min','Time binning:',\
                 (10,15,20,30,60),[10,15,20,30,60],1)]
             Hours = []

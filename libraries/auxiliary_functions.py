@@ -18,10 +18,220 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 
 from copy import deepcopy
 from scipy.signal import filtfilt,ellip
+from scipy.optimize import curve_fit
+import scipy.stats as sts
 import numpy as np
 import datetime as dt
 import warnings
 
+
+def F_FitSin_FixPeriod(Vector,amplitude0,phase0,translation0, function):
+    """
+    Function Target:
+    ================
+        This function computes a sin fit of the vector Vector.
+        
+    Input:
+    ======
+        - Vector : numpy array, shape 1 x n
+            The 1D array we want to fit
+        - amplitude0 : int
+            Starting amplitude for the approx. algorithm
+        - phase0 : int
+            Starting phase for the approx. algorithm
+        - translation0 : int
+            Starting horizontal translation for the approx. algorithm
+        - period0 : int
+            Starting period for the approx. algorithm
+        - MaxIter : integer
+            Max iteration for the approx. algorithm
+            
+    Output:
+    =======
+        - F : numpy array, shape 1 x n
+            Sinusoidal fit
+        - popt : list
+            All the fitted paramethers (amplitude, period, phase,translation)
+        - corr : float
+            Pearson correlaiton coefficient between sinfit and Vector
+        - p_value : floar
+            p-value relative to the pearson coefficient corr 
+    """
+    x = np.arange(0,len(Vector),1)
+    p0 = [amplitude0, phase0, translation0] 
+
+    popt, pcov = curve_fit(function, x, Vector, p0,absolute_sigma=True,maxfev=10**3)
+    
+    
+    
+    popt, pcov = curve_fit(function, x, Vector, popt,absolute_sigma=True,maxfev=10**3)
+    
+    F = function(x,popt[0],popt[1],popt[2])
+    corr,p_value=sts.pearsonr(Vector,F)
+    
+    return F,popt,corr,p_value
+
+def fit_sin_GUI(x,b1,b2,b3,b4):
+    return b1*np.sin(2*np.pi*(1/b2)*x+b3)+b4
+
+def Fit_Sin_BestPeriod(Array, p_min, p_max, start_hour, step_num = 100,
+                       Light_start = 7, interval = 3600):
+    Period_Array = np.zeros(step_num, dtype = {
+                            'names':('Period','Phase','Amplitude',
+                            'Translation','Pearson corr','p_value'),
+                            'formats':(float, float, float,
+                                       float, float, float)}
+                             )
+    day_length = (24 * 3600 / interval)
+    a0  = (max(Array) - min(Array))/2
+    ph0 = 2 * np.pi / 24 * ((start_hour - Light_start) % day_length)
+    t0  = min(Array)
+    Periods = np.linspace(p_min, p_max, step_num)
+    Period_Array['Period'] = Periods
+    ind = 0
+    BestCorr = -1
+    for period in Periods:
+        p0 = period * (3600 / interval)
+        function = lambda x, b1, b3, b4 : fit_sin_GUI(x, b1, p0, b3, b4)
+        F, popt, corr, p_value = F_FitSin_FixPeriod(Array, a0, ph0, t0,
+                                                    function)
+        Period_Array['Amplitude'][ind]    = popt[0]
+        Period_Array['Phase'][ind]        = popt[1]
+        Period_Array['Translation'][ind]  = popt[2]
+        Period_Array['Pearson corr'][ind] = corr
+        Period_Array['p_value'][ind]      = p_value
+        if corr > BestCorr:
+            BestCorr = corr
+            Best_Fit = F
+        ind += 1
+    Best_Fit_Param = Period_Array[np.argmax(Period_Array['Pearson corr'])]
+    return Period_Array, Best_Fit_Param, Best_Fit
+
+def StartDate_GUI(Data,TimeStamps):
+    """
+    Function Target:  This function returns the date in which exp starts
+    
+    Input:            -Data=nx2 dataset
+    
+    Output:           -Month,Day,Year=tuple, starting exp date
+    """
+    Month=int(Data['Time'][np.where(Data['Action']==TimeStamps['Start Month'])[0][0]])
+    Day=int(Data['Time'][np.where(Data['Action']==TimeStamps['Start Day'])[0][0]])
+    Year=int(Data['Time'][np.where(Data['Action']==TimeStamps['Start Year'])[0][0]])
+    return Month,Day,Year
+    
+def EndDate_GUI(Data,TimeStamps):
+    """
+    Function Target:  This function returns the date in which exp ends
+    Input:            -Data=nx2 dataset
+    Output:           -Month,Day,Year=tuple, ending exp date
+    """
+    Month=int(Data['Time'][np.where(Data['Action']==TimeStamps['End Month'])[0][0]])
+    Day=int(Data['Time'][np.where(Data['Action']==TimeStamps['End Day'])[0][0]])
+    Year=int(Data['Time'][np.where(Data['Action']==TimeStamps['End Year'])[0][0]])
+    return Month,Day,Year
+
+def F_Actogram_GUI(Y,Start_Time,End_Time,interval,TimeStamps,*period,**kwargs):
+    """
+    Function targets: This function calculate the numbers of NP per interval of time
+                    (interval length is given as input).
+                     
+
+    Input ( 
+             Y=Dataset, nx2 array: first column time stamps, second column event codes
+             Start_time = start experiment (seconds from midnight of the first day of experiment)
+             End_time = last NP time (seconds from midnight of the first day of experiment)
+             interval = fraction of an hour in seconds
+             period = tuple, the periodicity of the activity we consider in hour 
+             (Optional, default is 24) 
+            ) 
+    Output (
+             Action_x_Interval = vector, containing number of NP per time interval
+             N_Day = number of days for the actogram
+            )
+
+    """
+    
+    if len(period)==0:
+        period=24
+    elif len(period)==1:
+        period=period[0]
+    else:
+        #print 'Warning! Too many input argumet...'
+        return()
+    if 3600%interval!=0:
+        #print('Warning! The interval you choose is not a fraction of an hour')
+        return()
+    if 'String' in kwargs:
+        String=kwargs['String']
+    else:
+        String='FullData'
+    
+#   NP activity indexies
+    Index_LeftNPin = np.where(Y['Action']==TimeStamps['Left NP In'])[:][0]
+    Index_LeftNPout = np.where(Y['Action']==TimeStamps['Left NP Out'])[:][0]
+    Index_RightNPin = np.where(Y['Action']==TimeStamps['Right NP In'])[:][0]
+    Index_RightNPout = np.where(Y['Action']==TimeStamps['Right NP Out'])[:][0]
+    Index_CenterNPin = np.where(Y['Action']==TimeStamps['Center NP In'])[:][0]
+    Index_CenterNPout = np.where(Y['Action']==TimeStamps['Center NP Out'])[:][0]
+
+#   Reorder NP activity indexies and save all NP times reordered.
+
+    Index_NP_All=np.sort(np.hstack((Index_LeftNPin, Index_LeftNPout, Index_RightNPin,
+                  Index_RightNPout, Index_CenterNPin, Index_CenterNPout)))
+    NP_Times_All=Y['Time'][Index_NP_All]
+
+#   Total time activity in sec from the first hour of experiment
+
+    Start_Hour = (Start_Time //  3600) * 3600
+    Total_Action_Time = End_Time-Start_Hour
+
+#   Second from the between the beginning of the first hour of activity to the
+#   Start_exp
+
+    Delta_Sec = Start_Time - Start_Hour
+    
+#   Seconds from the beginning of the hour for every nose poke time
+
+    NP_Times_All= NP_Times_All+Delta_Sec
+    
+#   Number of colums in the actogram
+
+    N_Bins = int(np.ceil(Total_Action_Time/interval))
+
+#   Vector containing the border times of our N_bins [t_0,t_0+interval,t_0+2*interval...]
+
+    Intervals_endpoints = np.hstack((interval*np.arange(0,N_Bins),NP_Times_All[-1]))
+   # #print Intervals_endpoints[40:60]
+    
+#   Action_x_Interval is a vector containing NP Totals per single time inteval
+
+    Action_x_Interval=[]
+
+#   We count how many actions happen in the same interval of time and we
+#   record this values in the vector Action_x_Interval.
+    
+
+    for i in np.arange(N_Bins):
+
+            Total=NP_Times_All[np.where(NP_Times_All>=Intervals_endpoints[i])]
+            Total=Total[np.where(Total<Intervals_endpoints[i+1])]
+            Action_x_Interval=np.hstack((Action_x_Interval,np.array([len(Total)])))        
+
+#   We divide the experiment time interval into 2*period h periods and then
+#   draw an actogram #printing in the 1st line 1st and 2nd day of experiment
+#   on the 2nd line the 2nd and 3rd day and so on...
+    
+    ##print('Added optional argument String!')
+    Activity_Duration = End_Time-Start_Time
+    if String=='FullData':
+        
+        N_Day=End_Time//(3600*period)
+    else:
+        N_Day = int(np.floor((Activity_Duration)/(period*3600)))
+    
+    return(Action_x_Interval,N_Day)
+    
 def F_PeakProbes_GUI(Y,TimeStamps,ProbesOn,ProbesOff,tend,l_r, TMAX=np.inf,
                      trial_num=-1,trial_ind=None):
     """

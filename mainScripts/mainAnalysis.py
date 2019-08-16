@@ -918,12 +918,12 @@ class MainWindow(QMainWindow):
             except IndexError:
                 print('Unable to save data:\n%s\n%s'%(analysis,dataKey))
             
-            
-            self.AddDatasetToList(dataDict[analysis][dataKey],
-                                  dataKey,info[dataKey]['Types'],
-                                  None)
-
-
+            try:
+                self.AddDatasetToList(dataDict[analysis][dataKey],
+                                      dataKey,info[dataKey]['Types'],
+                                      None)
+            except IndexError:
+                print('Unable to add labels to list')
  
     def renameData(self):
         if self.analysisThread.isRunning():
