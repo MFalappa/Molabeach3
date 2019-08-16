@@ -17,7 +17,10 @@ from Plotting_GUI import (Plt_RawPowerDensity_Loop_GUI,Plt_MedianPowerDensity_GU
                           plot_sleep_cycles,
                           plot_emg_norm,
                           plot_attentional,
-                          plot_errors)
+                          plot_errors,
+                          plot_ait,
+                          plot_peak_procedure,
+                          plot_raster)
 
 def plotPowerDensity(*myinputs):
     figs  = Plt_RawPowerDensity_Loop_GUI(\
@@ -86,5 +89,32 @@ def plotErrorRate(*myinputs):
     figDict = {'Fig Error rate':{}}
     figDict['Fig Error rate'][KeyVect['Single Subject'][1]] = fig
     fig.show()
+    return figDict
+def plotAIT(*myinputs):
+    KeyVect = myinputs[0][list(myinputs[0].keys())[0]]
+    fig = plot_ait(KeyVect)
+    figDict = {'Fig AIT':{}}
+    figDict['Fig AIT']['Single subject'] = fig
+    fig.show()
+    return figDict
+def plotPeak(*myinputs):
+    KeyVect = myinputs[0][list(myinputs[0].keys())[0]]
+    fig1,fig2 = plot_peak_procedure(KeyVect)
+    figDict = {'Fig Peak':{}}
+    figDict['Fig Peak']['Single subject'] = fig1
+    figDict['Fig Peak']['Group'] = fig2
+    fig1.show()
+    fig2.show()
+    return figDict
+def plotRaster(*myinputs):
+    figDict = {'Fig Raster':{}}
+    for key in myinputs[0].keys():
+        figDict['Fig Raster'][key] = plot_raster(myinputs[0][key])
+        
+        
+    for key in figDict['Fig Raster'].keys():
+        tmp = figDict['Fig Raster'][key]
+        tmp.show()
+    
     return figDict
 

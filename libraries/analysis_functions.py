@@ -25,8 +25,15 @@ from auxiliary_functions import (powerDensity_function,
                                  ellip_bandpass_filter,
                                  normalize_emg,
                                  compute_perc,
-                                 extract_start
-                                 )
+                                 extract_start,
+                                 AITComputation_GUI,
+                                 TimeUnit_to_Hours_GUI,
+                                 Time_Details_GUI,
+                                 F_OnSet_GUI,
+                                 F_OffSet_GUI,
+                                 F_Probes_x_TimeInterval_GUI,
+                                 F_PeakProbes_GUI)
+
 def Power_Density(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
@@ -814,8 +821,8 @@ def Group_Error_Rate(*myInput):
     Dark_length = Input[0]['Combo'][1]
     StatIndex = Input[0]['Combo'][2]
     TimeInterval = Input[0]['Combo'][3]
-    Dataset_Dict = {}
-    TimeStamps_Dict = {}
+#    Dataset_Dict = {}
+#    TimeStamps_Dict = {}
     
     types = Input[0]['Combo'][4]
     if types == 0:
@@ -891,6 +898,365 @@ def Group_Error_Rate(*myInput):
     info['Error Rate']['Factor'] = [0,1]
     
     return DataDict, dictPlot, info
+
+def AIT(*myInput):
+    DataDict, dictPlot, info = {},{},{}
+    
+    Datas      = myInput[0]
+    Input      = myInput[1]
+    DataGroup  = myInput[2]
+    TimeStamps = myInput[3]
+#    lock       = myInput[4]
+    
+    
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+            
+            
+    count_sub = 0        
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            count_sub += 1
+    
+    """
+        Ait computation from std input dlg
+    """
+    
+    TimeInterval  = Input[0]['Combo'][0]
+    Dark_start    = Input[0]['Combo'][1]
+    Dark_length   = Input[0]['Combo'][2]
+#    inputForPlots = {}
+#    dataDict      = {}
+   
+    
+    first = True
+    rc = 0
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            data = Datas[name]
+            OrdMedian,OrdMean,OrdStd,perc25,perc75,\
+            Hour_Dark,Hour_Light,HourStart_AIT = AITComputation_GUI(data.Dataset, 
+                                                                    Dark_start,
+                                                                    TimeStamps, 
+                                                                    Dark_length,
+                                                                    TimeInterval=TimeInterval)
+            
+            
+            Hours=np.hstack((Hour_Dark,Hour_Light))
+            dark_bin = (((Dark_start-12) * 3600.)%(3600.*24))/TimeInterval
+            Hlabel = TimeUnit_to_Hours_GUI(Hours+dark_bin,TimeInterval)
+            LenDark = Hour_Dark.shape[0]
+            
+            if first:
+                
+                types_lab = np.array(Hlabel,dtype=np.str_)
+                types = np.hstack((['Group','Subject'],types_lab))
+                
+                df_mean = np.zeros((count_sub,),dtype={'names':types,
+                                  'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_lab.shape[0]})
+    
+                df_median = np.zeros((count_sub,),dtype={'names':types,
+                                  'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_lab.shape[0]})
+                
+                df_Standard_Error = np.zeros((count_sub,),dtype={'names':types,
+                                  'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_lab.shape[0]})
+                
+                df_Perc_25 = np.zeros((count_sub,),dtype={'names':types,
+                                  'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_lab.shape[0]})
+                
+                df_Perc_75 = np.zeros((count_sub,),dtype={'names':types,
+                                  'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_lab.shape[0]})
+                
+                first = False
+                
+            
+            cc = 0
+            for col in types_lab:
+                df_mean[col][rc] = OrdMean[cc]
+                df_median[col][rc] = OrdMedian[cc]
+                df_Standard_Error[col][rc] = OrdStd[cc]
+                df_Perc_25[col][rc] = perc25[cc]
+                df_Perc_75[col][rc] = perc75[cc]
+                cc += 1
+                
+            
+            df_mean['Subject'][rc] = name
+            df_mean['Group'][rc] = key
+            df_median['Subject'][rc] = name
+            df_median['Group'][rc] = key
+            df_Standard_Error['Subject'][rc] = name
+            df_Standard_Error['Group'][rc] = key
+            df_Perc_25['Subject'][rc] = name
+            df_Perc_25['Group'][rc] = key
+            df_Perc_75['Subject'][rc] = name
+            df_Perc_75['Group'][rc] = key
+            rc += 1
+            
+    
+    
+    DataDict['AIT MEAN'] = pd.DataFrame(df_mean)
+    DataDict['AIT MEDIAN'] = pd.DataFrame(df_median)
+    DataDict['AIT STD ERROR'] = pd.DataFrame(df_Standard_Error)
+    DataDict['AIT 25 PERC'] = pd.DataFrame(df_Perc_25)
+    DataDict['AIT 75 PERC'] = pd.DataFrame(df_Perc_75)
+
+                
+                
+   
+
+    inputForPlots = {}
+    inputForPlots['Fig_AIT'] = (DataDict,
+                                Hlabel,
+                                'b', 'r', 
+                                LenDark, 0.3,
+                                'Actual Inter Trial',
+                                'AIT Duration (min)')
+
+    
+    info = {}
+    info['AIT'] = {}
+    info['AIT']['Types']  = ['AIT', 'Single Subject']
+    info['AIT']['Factor'] = [0,5]
+    
+    DD = {}
+    DD['AIT'] = {}
+    DD['AIT']['MEAN'] = DataDict['AIT MEAN']
+    DD['AIT']['MEDIAN'] = DataDict['AIT MEDIAN']
+    DD['AIT']['STDERR'] = DataDict['AIT STD ERROR']
+    DD['AIT']['25PERC'] = DataDict['AIT 25 PERC']
+    DD['AIT']['75PERC'] = DataDict['AIT 75 PERC']
+    
+    return DD, inputForPlots, info
+    
+    return DataDict, dictPlot, info
+def peak_procedure(*myInput):
+    DataDict, dictPlot, info = {},{},{}
+    
+    Datas      = myInput[0]
+    Input      = myInput[1]
+    DataGroup  = myInput[2]
+    TimeStamps = myInput[3]
+
+    if Input[0]['Combo'][0] == 'Probe Left':
+        HopperSide = 'l'
+    elif Input[0]['Combo'][0] == 'Probe Right':
+        HopperSide = 'r'   
+    if Input[0]['Combo'][1] == 'Left':
+        LocName  = 'left hopper'
+        loc_for_Pk = 'l'
+    else:
+        LocName  = 'right hopper'
+        loc_for_Pk = 'r'
+
+    t_first = Input[0]['TimeSpinBox'][0][0]*3600 +\
+              Input[0]['TimeSpinBox'][0][1]*60
+    t_last  = Input[0]['TimeSpinBox'][1][0]*3600 +\
+              Input[0]['TimeSpinBox'][1][1]*60
+    tend    = Input[0]['DoubleSpinBox'][1]
+    centiSec = np.arange(0,tend,0.01)
+    
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+            
+            
+    count_sub = 0        
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            count_sub += 1
+            
+    first = True
+    rc = 0
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            data = Datas[name].Dataset
+            
+            Start_exp,Start_Time,End_Time = Time_Details_GUI(data,TimeStamps)
+            
+            if Input[0]['Combo'][0] == 'All':
+                TrialOnset = np.where(data['Action']==TimeStamps['ACT_START_TEST'])[0]
+                TrialOffset = np.where(data['Action']==TimeStamps['End Intertrial Interval'])[0]
+                TrialOnset = F_OnSet_GUI(TrialOffset,TrialOnset)
+                TrialOffset = F_OffSet_GUI(TrialOnset,TrialOffset)
+                if len(TrialOnset)>len(TrialOffset):
+                    TrialOnset=TrialOnset[:-1]
+                index = np.where((data['Time'][TrialOnset] + Start_exp)%24 <= t_last)[0] 
+                index_2 = np.where((data['Time'][TrialOnset][index] + Start_exp)%24 >= t_first)[0]
+                TrialOnset = TrialOnset[index][index_2]
+                TrialOffset = TrialOffset[index][index_2]
+                Pks = TrialOnset,TrialOffset
+            
+            else:
+                Pks = F_Probes_x_TimeInterval_GUI(data, TimeStamps, Start_exp,
+                                             End_Time, HopperSide, tend = tend,
+                                          Floor=True,  t_first = t_first, 
+                                          t_last = t_last)
+  
+            
+            Pk = F_PeakProbes_GUI(data, TimeStamps, Pks[0], Pks[1], tend,loc_for_Pk)
+            
+            if first:
+                types_lab = np.array(centiSec,dtype=np.str_)
+                types = np.hstack((['Group','Subject'],types_lab))
+                
+                res = np.zeros((count_sub,),dtype={'names':types,
+                                  'formats':('U%d'%lenGroupName,'U%d'%lenName,)+(float,)*types_lab.shape[0]})
+    
+                first = False
+                
+            cc = 0
+            for col in types_lab:
+                res[col][rc] = Pk[1][cc]
+                cc += 1
+                
+            
+            res['Subject'][rc] = name
+            res['Group'][rc] = key
+            rc += 1
+    
+        
+
+    DataDict = {}
+    DataDict['Single Subject Peak'] = {}
+    DataDict['Single Subject Peak']['Peak_%s'%LocName] = pd.DataFrame(res)
+    
+    dictPlot = {}
+    dictPlot['Fig: Peak Procedure'] = {}
+    dictPlot['Fig: Peak Procedure']['all Subject'] = (pd.DataFrame(res),
+                                                      LocName,
+                                                      centiSec,
+                                                      'Time [s]',
+                                                      'Normalized Response Rate' )  
+    
+    info = {}
+    info['Peak %s'%LocName] = {}
+    info['Peak %s'%LocName]['Types']  = ['Peak Procedure', 'Single Subject']
+    info['Peak %s'%LocName]['Factor'] = [0,2]
+    
+    return DataDict, dictPlot, info
+def raster_plot(*myInput):
+    DataDict, dictPlot, info = {},{},{}
+    
+    Datas      = myInput[0]
+    Input      = myInput[1]
+    DataGroup  = myInput[2]
+    TimeStamps = myInput[3]    
+    
+    if Input[0]['Combo'][0] == 'Probe Left':
+        HopperSide = 'l'
+    elif Input[0]['Combo'][0] == 'Probe Right':
+        HopperSide = 'r'
+    
+    if Input[0]['Combo'][1] == 'Left':
+        loc_for_Pk = 'l'
+        LocName  = 'Left'
+    elif Input[0]['Combo'][1] == 'Right':
+        LocName  = 'Right'
+        loc_for_Pk = 'r'
+    else:
+        LocName = 'Both'
+        
+    t_first = Input[0]['TimeSpinBox'][0][0]*3600 +\
+              Input[0]['TimeSpinBox'][0][1]*60
+    t_last  = Input[0]['TimeSpinBox'][1][0]*3600 +\
+              Input[0]['TimeSpinBox'][1][1]*60
+    tend    = Input[0]['DoubleSpinBox'][0]
+    if Input[0]['Combo'][1] == 'Both':
+        printBoth = True
+        loc_for_Pk = 'l'
+        loc_for_Pk1 = 'r'
+    else:
+        printBoth = False
+    
+    
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+            
+            
+    count_sub = 0        
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            count_sub += 1
+
+    for key in list(DataGroup.keys()):
+        for name in DataGroup[key]:
+            data = Datas[name].Dataset
+            
+            Start_exp,Start_Time,End_Time = Time_Details_GUI(data,TimeStamps)
+    
+            if Input[0]['Combo'][0] == 'All':
+                TrialOnset = np.where(data['Action']==TimeStamps['Center Light On'])[0]
+                TrialOffset = np.where(data['Action']==TimeStamps['End Intertrial Interval'])[0]
+                TrialOnset = F_OnSet_GUI(TrialOffset,TrialOnset)
+                TrialOffset = F_OffSet_GUI(TrialOnset,TrialOffset)
+                if len(TrialOnset)>len(TrialOffset):
+                    TrialOnset=TrialOnset[:-1]
+                index = np.where((data['Time'][TrialOnset] + Start_exp)%24 <= t_last)[0] 
+                index_2 = np.where((data['Time'][TrialOnset][index] + Start_exp)%24 >= t_first)[0]
+                TrialOnset = TrialOnset[index][index_2]
+                TrialOffset = TrialOffset[index][index_2]
+                Pks = TrialOnset,TrialOffset
+                Pk = F_PeakProbes_GUI(data, TimeStamps, Pks[0], Pks[1], tend,loc_for_Pk)
+           
+                if printBoth:
+                    Pk1 = F_PeakProbes_GUI(data, TimeStamps, Pks[0], Pks[1], tend,loc_for_Pk1)
+                
+            
+              
+            else:
+                Pks_0,Pks_1,indTrOn,trNum = F_Probes_x_TimeInterval_GUI(data, 
+                                              TimeStamps, Start_exp,
+                                              End_Time, HopperSide, tend = tend,
+                                              Floor=True,  t_first = t_first, 
+                                              t_last = t_last,
+                                              return_IndProbe=True)
+                
+                Pks = (Pks_0,Pks_1)
+                Pk = F_PeakProbes_GUI(data, TimeStamps, Pks[0], Pks[1], tend,
+                                      loc_for_Pk,trial_num=trNum,trial_ind=indTrOn)
+                if printBoth:
+                    Pk1 = F_PeakProbes_GUI(data, TimeStamps, Pks[0], Pks[1], tend,
+                                           loc_for_Pk1,trial_num=trNum,
+                                           trial_ind=indTrOn)
+            
+            if Input[0]['Combo'][1] == 'Both':
+                DataDict[name] = {}
+                DataDict[name][loc_for_Pk] = pd.DataFrame(Pk[0])
+                DataDict[name][loc_for_Pk1] = pd.DataFrame(Pk1[0])
+                
+                dictPlot[name] = {}
+                dictPlot[name][loc_for_Pk] = Pk[0]
+                dictPlot[name][loc_for_Pk1] = Pk1[0]
+                
+            else:
+                DataDict[name] = {}
+                DataDict[name][loc_for_Pk] = pd.DataFrame(Pk[0])
+                
+                dictPlot[name] = {}
+                dictPlot[name][loc_for_Pk] = Pk[0]
+
+
+    info['Raster'] = {}
+    info['Raster']['Types']  = ['Raster', LocName]
+    info['Raster']['Factor'] = [0,5]
+                
+    return DataDict, dictPlot, info
+
+
+
+
+
 def LDA(*myInput):
     DataDict, dictPlot, info = {},{},{}
     
@@ -932,158 +1298,3 @@ def Actograms():
     lock       = myInput[4]
     
     return DataDict, dictPlot, info
-def AIT():
-    DataDict, dictPlot, info = {},{},{}
-    
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
-    
-    return DataDict, dictPlot, info
-def raster_plot():
-    DataDict, dictPlot, info = {},{},{}
-    
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
-    
-    return DataDict, dictPlot, info
-def peak_procedure():
-    DataDict, dictPlot, info = {},{},{}
-    
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
-    
-    return DataDict, dictPlot, info
-
-
-def Switch_Latency_TEST(*myInput):
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
-    Tend = Input[0]['DoubleSpinBox'][0]
-    group_list = DataGroup.keys()
-    group_list.sort()
-    long_side_dict = {}
-    k = 0
-    for gr in group_list:
-        long_side_dict[gr] = Long_Side
-        k += 1
-    Mouse_Name = np.hstack(DataGroup.values())
-    lenName = 0
-    lenGroupName = 0
-    for key in DataGroup.keys():
-        lenGroupName = max(lenGroupName,len(key))
-        for name in DataGroup[key]:
-            lenName = max(lenName,len(name))
-    Mouse_Grouped = DataGroup
-    AllData = OrderedDict()
-    TimeStamps_Dict = {}
-    DataDict = {}
-    DataDict['Group Switch Latency'] = {}
-    long_side_sub = {}
-    print('CREATING TIMESTAMPS DICT')
-    for gr in Mouse_Grouped.keys():
-        for dataName in Mouse_Grouped[gr]:
-            try:
-                lock.lockForRead()
-                AllData[dataName] = copy(Datas.takeDataset(dataName))
-                if Datas.getTimeStamps(dataName):
-                    TimeStamps_Dict[dataName] = Datas.getTimeStamps(dataName)
-                else:
-                    TimeStamps_Dict[dataName] = TimeStamps
-            finally:
-                lock.unlock()
-    for gr in Mouse_Grouped.keys():
-        for dataName in Mouse_Grouped[gr]:
-            long_side_sub[dataName] = long_side_dict[gr]
-    print('\n\nGR SWITCH LAT\n\n')          
-    table,left,right,Record_Switch,HSSwitch = F_New_Gr_Switch_Latency_GUI(AllData,TimeStamps_Dict,Mouse_Name,ts=ts,tl=tl,scale=1,Tend=Tend,Long_Side=long_side_sub,type_tr=type_tr)
-    for name in Record_Switch.keys():
-        if Record_Switch[name].shape[0] < 10:
-            message = '%s less then 10 trials...'%name
-            Record_Switch.pop(name)
-            HSSwitch.pop(name)
-            right.pop(name)
-            left.pop(name)
-            table.pop(name)
-            AllData.pop(name)
-            for gr in Mouse_Grouped.keys():
-                if name in Mouse_Grouped[gr]:
-                    Mouse_Grouped[gr].remove(name)
-    prev_groups = Mouse_Grouped.keys()
-    for gr in prev_groups:
-        if not len(Mouse_Grouped[gr]):
-            s = Mouse_Grouped.pop(gr)
-    func = lambda h : h.hour
-    v_func = np.vectorize(func)
-    tmp = {}
-    for name in Record_Switch.keys():
-        tmp[name] = v_func(HSSwitch[name])
-    HSSwitch = tmp
-    Hour_Dark,Hour_Light=Hour_Light_and_Dark_GUI(Dark_start,Dark_length)
-    Best_Model,Pdf,Cdf,EmCdf=F_Gr_Fit_GMM_GUI(Record_Switch,Mouse_Grouped,n_gauss=1)
-    Median,Mean,Std=Subj_Median_Mean_Std_GUI(Record_Switch,HSSwitch)
-    Hour_label = TimeUnit_to_Hours_GUI(np.hstack((Hour_Dark,Hour_Light)),3600)
-    DataLen    = len(Hour_label) * len(Record_Switch.keys())
-    print('\n\nGMM FIT\n\n')  
-    std_Switch, GMM_Fit = std_Switch_Latency_GUI(Record_Switch, HSSwitch,
-                                                 Mouse_Grouped, Dark_start=Dark_start, 
-                                                 Dark_length=Dark_length)
-    EXP, MAX = F_ExpGain_GUI(Short, Long, ProbeShort, Cond_SProbe, Cond_LProbe,
-                             MeanRange=Mean_minmax,CVRange=Cv_minmax)
-    std_Exp_Gain = Exp_Gain_Matrix_GUI(GMM_Fit, Short, Long, Mouse_Grouped, 
-                                       ProbeShort, Cond_SProbe,
-                                       Cond_LProbe)
-    std_Exp_Gain['Value'] = std_Exp_Gain ['Value']/np.max(EXP)
-    DataDict['Group Switch Latency']['Group Switch Latency'] = np.zeros(DataLen, dtype = {
-        'names':('Group','Subject','Time','Mean','Median','SEM'),
-        'formats':('|S%d'%lenGroupName,'|S%d'%lenName,'|S5',float,
-                   float,float)})
-    DataDict['Group Switch Latency']['Group Switch Latency']['Time'] = list(Hour_label) * len(Record_Switch.keys())
-    ind = 0
-    for key in Mouse_Grouped.keys():
-        for name in Mouse_Grouped[key]:
-            DataDict['Group Switch Latency']['Group Switch Latency']['Group'][ind:len(Hour_label)+ind]\
-                = [key] * len(Hour_label)
-            DataDict['Group Switch Latency']['Group Switch Latency']['Subject'][ind:len(Hour_label)+ind]\
-                = [name] * len(Hour_label)
-            DataDict['Group Switch Latency']['Group Switch Latency']['Mean'][ind:len(Hour_label)+ind]\
-                = Mean[name]
-            DataDict['Group Switch Latency']['Group Switch Latency']['Median'][ind:len(Hour_label)+ind]\
-                = Median[name]
-            DataDict['Group Switch Latency']['Group Switch Latency']['SEM'][ind:len(Hour_label)+ind]\
-                = Std[name]
-            ind += len(Hour_label)
-    DataDict['Group Switch Latency']['Expected Gain'] = std_Exp_Gain
-    Gr_Mean,Gr_Std=Gr_Mean_Std_GUI(Median,Mouse_Grouped)
-    Group_Name = Mouse_Grouped.keys()
-    dictPlot = {}
-    dictPlot['Fig:Group Switch Latency'] = {}
-    dictPlot['Fig:Group Switch Latency']['Boxplot'] = Gr_Mean,Hour_Light,Hour_Dark,\
-                                            Group_Name
-    dictPlot['Fig:Group Switch Latency']['Gaussian Fit'] = Cdf, EmCdf, Group_Name,\
-                                            Mouse_Grouped, ts, tl
-    dictPlot['Fig:Group Switch Latency']['Optimal Surface'] =\
-        (EXP, MAX, Mean_minmax, Cv_minmax,
-         std_Exp_Gain, 40, 12)
-    dictPlot['Fig:Group Switch Latency']['Expected Gain'] =\
-        (std_Exp_Gain, 'Expected Gain', 20, 1, 3, 1, 0.95,
-        'Normalized Exp. Gain', 12, 15)
-    info = {}
-    info['Group Switch Latency'] = {}
-    info['Group Switch Latency']['Types']  = ['Group', 'Switch Latency']
-    info['Group Switch Latency']['Factor'] = [0,1,2]
-    info['Expected Gain'] = {}
-    info['Expected Gain']['Types']  = ['Single Subject', 'Expected Gain']
-    info['Expected Gain']['Factor'] = [0,1]
-    return DataDict,dictPlot,info

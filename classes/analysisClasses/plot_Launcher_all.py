@@ -44,3 +44,15 @@ def select_Function_GUI_all(funcName, *otherInputs):
     elif funcName == 'Group_Error_Rate':
         fig = plotErrorRate(*otherInputs)
         return fig
+        
+    elif funcName == 'AIT':
+        fig = plotAIT(*otherInputs)
+        return fig   
+     
+    elif funcName == 'peak_procedure':
+        fig = plotPeak(*otherInputs)
+        return fig
+    
+    elif funcName == 'raster_plot':
+        fig = plotRaster(*otherInputs)
+        return fig

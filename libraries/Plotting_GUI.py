@@ -19,6 +19,164 @@ import numpy as np
 import datetime as dt
 import scipy.stats as sts
 
+def plot_raster(Input):
+    
+    for kk in Input.keys():
+        Raster = Input[kk]
+        XMIN,XMAX,YMIN,YMAX = np.inf, 0, np.inf, 0
+        strn = kk
+
+        end=Raster-np.hstack((Raster[:,1:],np.zeros((np.size(Raster,axis=0),1))))
+        Ind=np.where(end==-1)
+        Ind=(Ind[0],Ind[1]+1)
+        v0=np.zeros((np.size(Raster,axis=0),np.size(Raster,axis=1)))
+        v0[Ind]=1
+        
+        Ind=np.where(end==1)
+        v1=np.zeros((np.size(Raster,axis=0),np.size(Raster,axis=1)))
+        v1[Ind]=1
+        
+        I0=np.where(v0==1)
+        I1=np.where(v1==1)
+        
+        if strn=='l':
+            print('left')
+            color1='r'
+            color2='or'
+            label = 'NP right'
+        else:
+            print('right')
+            color1='b'
+            color2='ob'
+            label = 'NP left'
+        
+        scale = 10
+        fig = plt.figure()
+        plt.plot(I1[1]/float(scale),I1[0]+1,'ow')
+        plt.plot(I0[1]/float(scale),I0[0]+1,color2)
+        plt.hlines(I0[0]+1,I0[1]/float(scale),I1[1]/float(scale),color1,label=label)
+        xmin,xmax = plt.xlim()
+        ymin,ymax = plt.ylim()
+        XMIN = min(XMIN,xmin)
+        XMAX = max(XMAX,xmax)
+        YMIN = min(YMIN,ymin)
+        YMAX = max(YMAX,ymax)
+    
+    plt.xlim(XMIN,XMAX)
+    plt.ylim(YMIN,YMAX)
+
+    plt.title('Raster plot')
+    plt.legend()
+    plt.ylabel('Trial number')
+    plt.xlabel('Time(sec)')
+    
+    return fig
+
+def plot_peak_procedure(Input):
+    
+    df = Input['all Subject'][0]
+    loc = Input['all Subject'][1]
+    xlab = Input['all Subject'][2]
+    x_axis = Input['all Subject'][3]
+    y_axis = Input['all Subject'][4]
+    
+    groups = np.unique(df['Group'])
+    subject = len(df)
+    fr = df.T
+    x_group = np.zeros((subject,len(fr[0][2:])),dtype=float)
+    x_label = np.zeros((subject),dtype=int)
+    gg = 1
+    sb = 0
+    for kk in groups:
+        for sbj in range(subject):
+            if fr[sbj]['Group'] == kk:
+                x_group[sb,:] = np.array(fr[sbj][2:])
+                x_label[sb] = gg
+                sb +=1        
+        gg +=1
+    
+    fig1 = plt.figure()
+    plt.title(loc)
+    for kk in range(len(groups)):
+        sbj_tr = x_label == kk+1
+        m = np.nanmean(x_group[sbj_tr,:],axis = 0)
+        s = np.nanstd(x_group[sbj_tr,:],axis = 0)/np.sqrt(np.sum(sbj_tr))
+        plt.errorbar(xlab,y = m, yerr = s,  elinewidth=2.5,
+                                                         linewidth=2,
+                                                         marker='o',
+                                                         markersize=8,
+                                                         label = groups[kk])
+    
+#    ind = np.arange(m.shape[0])
+#    plt.xticks(ind, xlab)
+    plt.legend()
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
+    
+    fig2 = plt.figure()
+    plt.title(loc)
+    gg = 1
+    for kk in groups:
+        plt.subplot(len(groups),1,gg)
+        for sbj in range(subject):
+            if fr[sbj]['Group'] == kk:
+                plt.plot(xlab,np.array(fr[sbj][2:]))
+                
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
+    
+    return fig1,fig2
+
+def plot_ait(Input):
+    
+    df_m = Input[0]['AIT MEAN']
+    df_s = Input[0]['AIT STD ERROR']
+    labs = Input[1]
+    title = Input[6]
+    y_label = Input[7]
+    x_label = 'Time [h]'
+    
+    hlab = np.array([])
+    for kk in labs:
+        hlab = np.hstack((hlab,kk[:2]))      
+        
+    labels = tuple(np.array(hlab))
+    groups = np.unique(df_m['Group'])
+   
+    gg = 1
+    fig = plt.figure(title)
+    for gr in groups:
+        plt.subplot(len(groups),1,gg)
+        idx = df_m['Group'] == gr
+        df_M = df_m[idx]
+        df_S = df_s[idx]
+        plt.title(gr)
+        for sb in np.unique(df_M['Subject']):
+            
+            df_m_sub = df_M[df_M['Subject']==sb]
+            df_s_sub = df_S[df_S['Subject']==sb]
+            m = np.array([])
+            s = np.array([])
+            for kk in df_m_sub.keys()[2:]:
+                m = np.hstack((m,df_m_sub[kk]))
+                s = np.hstack((s,df_s_sub[kk]))
+                
+            plt.errorbar(range(m.shape[0]),y = m, yerr = s,elinewidth=2.5,
+                                                           linewidth=2,
+                                                           marker='o',
+                                                           markersize=8,
+                                                           label = sb)
+            
+        gg += 1
+        ind = np.arange(m.shape[0])
+        plt.xticks(ind, labels)
+        plt.legend()
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.tight_layout()
+    
+    return fig
+
 def plot_errors(Input):
     
     df = Input[0]

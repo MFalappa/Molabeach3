@@ -103,13 +103,13 @@ class Analysis_Single_GUI(object):
                 self.inputCreator.addNewInput('DoubleSpinBox',doubleList)
             self.inputCreator.addNewInput('SavingDetails',True)
             
-        elif analysisName in ['Peak_Procedure', 'Raster_Plot']:
+        elif analysisName in ['peak_procedure', 'raster_plot']:
             comboBox = [('Trial type:',['All','Probe left','Probe right'],
                          ['All','Probe Left','Probe Right'],0),
                         ('Print location:', ['Both', 'Left','Right'],
                          ['Both', 'Left','Right'], 0),
                          ]
-            if analysisName == 'Peak_Procedure':
+            if analysisName == 'peak_procedure':
                 comboBox = [('Trial type:',['All','Probe left','Probe right'],
                          ['All','Probe Left','Probe Right'],0),
                         ('Print location:', ['Left','Right'],
