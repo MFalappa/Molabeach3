@@ -22,7 +22,11 @@ from Plotting_GUI import (Plt_RawPowerDensity_Loop_GUI,Plt_MedianPowerDensity_GU
                           plot_peak_procedure,
                           plot_raster,
                           Print_Actogram_GUI,
-                          plt_Best_Period)
+                          plt_Best_Period,
+                          Gr_BoxPlot_LD_GUI,
+                          CDF_Gr_Plot_GUI,
+                          F_ExpGain_Plt_GUI,
+                          std_Bar_Plot_GUI)
 
 def plotPowerDensity(*myinputs):
     figs  = Plt_RawPowerDensity_Loop_GUI(\
@@ -139,5 +143,21 @@ def plotActograms(*myinputs):
         fig = plt_Best_Period(Period_Array,Best_Fit_Param,subject)
         figName = 'SinFit_' + dataName.split('.')[0]
         figDict['Fig Actogram'][figName] = fig                
+    return figDict
+def plotSwitch_Latency(*myinputs):
+    figs  = Gr_BoxPlot_LD_GUI(*myinputs[0]['Fig:Group Switch Latency']['Record switch time'])
+    fig1 = CDF_Gr_Plot_GUI(*myinputs[0]['Fig:Group Switch Latency']['Gaussian Fit'])
+    figDict = {'Fig Switch Latency':{}}
+    figDict['Fig Switch Latency']['Gaussian Fit'] = fig1
+    fig2 = F_ExpGain_Plt_GUI(*myinputs[0]['Fig:Group Switch Latency']['Optimal Surface'])
+    fig3 = std_Bar_Plot_GUI(*myinputs[0]['Fig:Group Switch Latency']['Expected Gain'])
+    for key in figs.keys():
+        figDict['Fig Switch Latency']['Boxplot_%s'%key] = figs[key]
+        figs[key].show()
+    fig1.show()
+    fig2.show()
+    fig3.show()
+    figDict['Fig Switch Latency']['Expected Gain'] = fig3
+    figDict['Fig Switch Latency']['Optimal Surface'] = fig2
     return figDict
 

@@ -14,16 +14,1099 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-#from copy import copy
-
 from copy import deepcopy
 from scipy.signal import filtfilt,ellip
 from scipy.optimize import curve_fit
+from PyQt5.QtWidgets import QInputDialog
+from bisect import bisect_left
 import scipy.stats as sts
+import sklearn.mixture as mxt
 import numpy as np
 import datetime as dt
 import warnings
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as lda
+from matplotlib.mlab import PCA as PCA_mpl
 
+def F_Activity_x_Hour_GUI(TrialHour,**kwargs):
+    """
+    Function Target:    This function calculate how many trials are in a certain
+                        hour.
+                        
+    Input:              -TrialHour = vector that contains the hour of each trial.
+    
+    Output:             -Act_x_Hour = vector,number of activity for each hour of the day.
+    """
+    Act_x_hour=[]
+    if 'period' in kwargs:
+        period=kwargs['period']
+    else:
+        period=24
+    TrialHour_period=TrialHour%period
+    if 'Hours' in kwargs:
+        for h in kwargs['Hours']:
+            Act_x_hour=Act_x_hour+[len(np.where(TrialHour_period==h)[0])]
+    else:        
+        for h in range(period):
+            Act_x_hour=Act_x_hour+[len(np.where(TrialHour_period==h)[0])]  
+    return(Act_x_hour)
+
+def rotazione(v_ort):
+    angle = np.arctan2(-v_ort[0],v_ort[1])
+    Rot = np.zeros((2,2))
+    Rot[0,0] = np.cos(angle)
+    Rot[1,1] = np.cos(angle)
+    Rot[0,1] = -np.sin(angle)
+    Rot[1,0] = np.sin(angle)
+
+    Rot2 = np.zeros((2,2))
+    Rot2[0,0] = np.cos(angle - np.pi*0.5)
+    Rot2[1,1] = np.cos(angle-np.pi*0.5)
+    Rot2[0,1] = -np.sin(angle-np.pi*0.5)
+    Rot2[1,0] = np.sin(angle-np.pi*0.5)
+    
+    return Rot,Rot2  
+
+def traslazione(v,par=3.5):
+    transl = par*v
+    if  v[1] < 0 and v[0]>0 and np.abs(v[0]) < np.abs(v[1]):
+        transl = -transl
+    elif v[1] < 0 and v[0]<0 :
+        transl = -transl
+        
+    elif  v[0] < 0 and v[0]<0 and np.abs(v[0]) > np.abs(v[1]):
+        transl = -transl
+        
+    return transl
+
+def computeSleepPerHrs(sleepData,epType ='NR'):
+    epoch = sleepData.Stage
+    if epType == 'S':
+       epoch[np.where(epoch=='NR')[0]] = 'S'
+       epoch[np.where(epoch=='NR*')[0]] = 'S'
+       epoch[np.where(epoch=='R')[0]] = 'S'
+       epoch[np.where(epoch=='R*')[0]] = 'S'
+    else: 
+        epoch[np.where(epoch == (epType+'*'))[0]] = epType
+    time = sleepData.Timestamp
+    func = lambda h : h.hour
+    v_func = np.vectorize(func)
+    hours = v_func(time)
+    perc_vect = np.zeros(24) * np.nan
+    for h in range(24):
+        index = np.where(hours == h)[0]
+        if index.shape[0] == 0:
+            continue
+        res = np.where(epoch[index] == epType)[0]
+        perc = float(res.shape[0]) / index.shape[0] * 100
+        perc_vect[h] = perc
+    
+    return perc_vect
+
+def F_Correct_Rate_GUI(Y,Start_exp,period,TimeStamps,*tend):
+    
+    """
+    Function Target:    This function calculate the rate of correct responses
+                        hour by hour.
+                        
+    Input:              -Y = Dataset, nx2 matrix.
+                        -Start_exp = start time of the experiment (seconds
+                        form midnight before the analisis begins)
+                        -tend[0] = scalar, max time of a trial.(optional,
+                        default=30).
+
+                        
+    Output:             -Correct_Rate = vector, element i of this vector contains
+                        the correct rate of hour i.
+                        -Act_x_Hour = dictionary containing number of trials per
+                        type of trial for each hour of the day.
+    """
+    
+    if len(tend)<1:
+        tend=30
+    else:
+        tend=tend[0]
+
+    try:
+        TrialOnSet=np.where(Y['Action']==TimeStamps['ACT_START_TEST'])[0]
+    except:
+        TrialOnSet=np.where(Y['Action']==TimeStamps['Center Light On'])[0]
+        
+    TrialOffSet=np.where(Y['Action']==TimeStamps['End Intertrial Interval'])[0]
+    StartITI=np.where(Y['Action']==TimeStamps['Start Intertrial Interval'])[0]
+    
+#    if len(TrialOnSet)>len(TrialOffSet):
+#        TrialOnSet=TrialOnSet[:-1]
+    
+    if TrialOnSet[0]>TrialOffSet[0]:
+        TrialOffSet=TrialOffSet[1:]
+        
+    elif TrialOnSet[-1]>TrialOffSet[-1]: 
+        TrialOnSet=TrialOnSet[:-1]
+    if StartITI[-1]>TrialOffSet[-1]:
+        StartITI=StartITI[:-1]
+    if StartITI[0]<TrialOnSet[0]:
+        StartITI=StartITI[1:]
+#    if len(StartITI)>len(TrialOffSet):
+#        StartITI=StartITI[:-1]
+  
+#    KeepIndex=np.where(Y['Time'][StartITI]-Y['Time'][TrialOnSet]<=tend)[0]
+#    TrialOnSet=TrialOnSet[KeepIndex]
+#    TrialOffSet=TrialOffSet[KeepIndex]
+    Act_x_Hour={}
+    for lettera in 'arlp':
+        TrialHour=F_Hour_Trial_GUI(Y,TimeStamps,Start_exp,
+                              TrialOnSet,TrialOffSet,lettera,tend,period)[1]
+        if len(TrialHour)>0:
+            Act_x_Hour[lettera]=np.array(F_Activity_x_Hour_GUI(TrialHour),dtype=float)
+        else:
+            Act_x_Hour[lettera]=np.zeros(24,dtype=float)
+    Correct_Rate=(
+        Act_x_Hour['r']+Act_x_Hour['l']+Act_x_Hour['p'])/Act_x_Hour['a']
+
+    
+    return(Act_x_Hour,Correct_Rate)
+
+def daily_Median_Mean_Std_GUI(Vector,HDay,HBin=3600):
+    """
+    Function Targets:   This function computes the median/mean/std dev of quantities
+                        in Vectors for each relative hour of the day
+    
+    Input:              -Vectors=dictionary, Vectors[key]=vector, timestamps of a
+                        certain action
+                        -HDay=dictionary, HDay[key][i] = hour from 00:00 of first day of exp
+                        in which the action happened
+                        
+    Output:             -Median/Mean/Std=vector, len =24 ,median/mean/std error of values
+                        in Vecors. Median[key][i]=median of all Vector[key] action happened
+                        at hour i.
+    """
+    if 3600%HBin!=0:
+        raise ValueError('3600 must be an integer multiple of HBin')
+    Fraction = 3600//HBin
+    
+    Median = np.zeros(24*Fraction)
+    Mean = np.zeros(24*Fraction)
+    Std = np.zeros(24*Fraction)
+    for h in range(24*Fraction):
+        Index = np.where((HDay%(24*Fraction))==h)[0]
+        Median[h] = np.nanmedian(Vector[Index])
+        Mean[h] = np.nanmean(Vector[Index])
+        Std[h] = np.nanstd(Vector[Index])/np.sqrt(len(Vector[Index]))
+    return(Median,Mean,Std)
+
+def F_Hour_Trial_GUI(Y,TimeStamps,Start_exp,TrialOnset,TrialOffset,l_r_p_a,tend,period):
+    """
+    Function Target: 	  This Function calculate the Trial start (long-short-probe-all)
+                        indexes and the Hour of each trial start.
+
+    Input: 			  -Y = Dataset, nx2 matrix.
+                        -Start_exp = start time of the experiment (seconds
+                        form midnight before the analysis begins).
+                        -TrialOnset = vector containing the indexes of Central
+                        Light On (Trail Start)
+                        -TrialOffset = Vector containing the indexes of end ITI
+                        (Trial End).
+                        -l_r_p_a = string that indicates which kind of trials to
+                        consider. 
+                        -tend = scalar, max time of a trial.
+                        -period=scalar, the period you're considering
+
+    Output:		      -TrialOn = vector, indexes of every start of
+                        trial.
+                        -HourStartTime = hour of the day in which every
+                        Trial begins. 
+    """
+    
+    period=float(period)
+
+    
+    if l_r_p_a=='l':
+        Off=TimeStamps['Give Pellet Left']
+    elif l_r_p_a=='r':
+        Off=TimeStamps['Give Pellet Right']
+    elif l_r_p_a=='p':
+        Off=TimeStamps['Probe Trial']
+    
+    if l_r_p_a=='a':
+        InTr=Y['Time'][TrialOnset]
+        
+        HourStartTime=np.floor(((InTr+Start_exp)/3600)*period/24)
+        
+        TrialOn=TrialOnset
+    else:
+        TrialOff=np.where(Y['Action']==Off)[0]
+        if len(TrialOff)!=0:
+
+            IndOn=[]
+            for i in range(len(TrialOff)):
+                IndOn = list(np.hstack((IndOn,
+                                    np.where(TrialOnset <= TrialOff[i])[0][-1])))
+            IndOn = np.array(IndOn,dtype=int)                    
+            TrialOn = TrialOnset[IndOn]
+            
+            TrialOn=TrialOn[:np.where(TrialOn<TrialOffset[-1])[0][-1]+1]
+            IndInTr=np.where(Y['Time'][TrialOff]-Y['Time'][
+                TrialOn[0:len(TrialOff)]]<tend)[0]
+            InTr=Y['Time'][TrialOn[IndInTr]]
+            HourStartTime=np.floor(((InTr+Start_exp)/3600)*period/24)
+        else:
+            TrialOn=[]
+            HourStartTime=[]
+    return(TrialOn,HourStartTime)
+
+def computeReactionTime(Y,TimeStamps):
+#    
+    try:
+        onset = np.where(Y['Action']==TimeStamps['ACT_START_TEST'])[0]
+    except:
+        onset = np.where(Y['Action']==TimeStamps['Center Light On'])[0]
+            
+    offset = np.where(Y['Action']==TimeStamps['Start Intertrial Interval'])[0]
+    if onset[0] > offset[0]:
+        offset = offset[1:]
+    if onset[-1] > offset[-1]:
+        onset = onset[:-1]
+    if onset.shape[0] != offset.shape[0]:
+        raise ValueError('onset and offset must have same dimention')
+    react_time = np.zeros(onset.shape[0]) * np.nan
+    actionList = Y['Action'].tolist()
+    for k in range(onset.shape[0]):
+        i = onset[k]
+        end = offset[k]
+        try:
+            left_in = actionList[i+1:end].index(TimeStamps['Left NP In'])
+        except ValueError:
+            left_in = np.inf
+        try:
+            right_in = actionList[i+1:end].index(TimeStamps['Right NP In'])
+        except ValueError:
+            right_in = np.inf
+        if left_in > right_in:
+            react_time[k] = Y['Time'][i+right_in] - Y['Time'][i]
+        elif left_in < right_in:
+            react_time[k] = Y['Time'][i+left_in] - Y['Time'][i]
+        k += 1
+    mask = True ^ np.isnan(react_time)
+    react_time = react_time[mask]
+    onset = onset[mask]
+    Start_exp = F_Start_exp_GUI(Y,TimeStamps)
+    trialHour=F_Hour_Trial_GUI(Y,TimeStamps,Start_exp, onset,None,'a',None,24)[1]
+    return react_time,onset,trialHour
+
+def performLDA_Analysis(behaviorData, sleepData, TimeStamps, parBeh, parSleep, dark_start,dark_len):
+    hd,hl = Hour_Light_and_Dark_GUI(dark_start,dark_len,TimeInterval=3600)
+    
+    dailyScore_beh,dailyScore_sleep = computeDailyScore(behaviorData, sleepData, TimeStamps, parBeh, parSleep)
+    
+#    print(dailyScore_beh)
+    X = np.zeros((24,2))
+    X[:,0] = dailyScore_beh
+    X[:,1] = dailyScore_sleep
+    
+    y = np.ones(24)
+    
+    y[hl] = 0 # zeros mark light phase values
+    y_pred,prob_pred,score_list,v,X_norm,lda_res = compute_LDA(X,y)
+    std_weights,Struct_mat,explained_variance,v_ort,Index_for_color = compute_structure_matrix(y,X,X_norm,v)
+    res = gaussian_fit(X_norm,v,hd,hl)
+    
+    return res,X_norm,Struct_mat,explained_variance,v_ort,v,y_pred,lda_res,Index_for_color,y
+
+def computeDailyScore(behaviorData, sleepData, TimeStamps, parBeh, parSleep):
+    if parBeh == 'Reaction Time':
+        behav_val, onset, trialHour = computeReactionTime(behaviorData,TimeStamps)
+        dailyScore_beh = daily_Median_Mean_Std_GUI(behav_val,trialHour,HBin=3600)[1]
+    elif parBeh == 'Error Rate':
+        dailyScore_beh = F_Correct_Rate_GUI(behaviorData,24,TimeStamps)[1]
+        dailyScore_beh = (1 - dailyScore_beh) * 100
+      
+    if parSleep == 'Sleep Total':
+        dailyScore_sleep = computeSleepPerHrs(sleepData,'S')
+    elif parSleep == 'NREM Total':
+        dailyScore_sleep = computeSleepPerHrs(sleepData,'NR')
+    elif parSleep == 'REM Total':
+        dailyScore_sleep = computeSleepPerHrs(sleepData,'R')
+    elif parSleep == 'Wake Total':
+        dailyScore_sleep = computeSleepPerHrs(sleepData,'W')
+    return dailyScore_beh,dailyScore_sleep
+
+def compute_LDA(x,y):
+    pca_res = PCA_mpl(x)
+    X_norm = pca_res.a
+
+    
+    LDA = lda(n_components = 1)
+#    lda_res = LDA.fit(X_norm, y, store_covariance=True)
+    lda_res = LDA.fit(X_norm, y)
+
+    y_pred = lda_res.predict(X_norm)
+
+    score_list= lda_res.score(X_norm,y)
+    prob_pred = lda_res.predict_proba(X_norm)
+
+
+
+    params = lda_res.scalings_
+    
+    v = params / np.linalg.norm(params)
+#    v[0] = -v[0]
+    
+    
+    return(y_pred,prob_pred,score_list,v,X_norm,lda_res)
+    
+def compute_structure_matrix(y,X,X_norm,v):
+    X_norm_1 = X_norm[:,[1,0]]
+    Y = y.reshape((y.shape[0],1))
+    
+    S_11 = np.matrix((X_norm_1-np.mean(X_norm_1,axis=0))).T * np.matrix((X_norm_1-np.mean(X_norm_1,axis=0)))
+    S_12 = np.matrix((X_norm_1-np.mean(X_norm_1,axis=0))).T * np.matrix((Y - np.mean(Y,axis=0)))
+    S_21 = np.matrix((Y - np.mean(Y,axis=0))).T * np.matrix((X_norm_1-np.mean(X_norm_1,axis=0)))
+    S_22 = np.matrix((Y - np.mean(Y,axis=0))).T * np.matrix((Y - np.mean(Y,axis=0)))
+    
+    Q_h = S_12 * np.linalg.inv(S_22) * S_21
+    Q_t = S_11
+    Q_e = Q_t - Q_h
+
+    eig,eig_v = np.linalg.eig(np.linalg.inv(Q_e)*Q_h)
+    
+    v_ort = v[[1,0]]
+    v_ort[0] = v_ort[0]*-1
+    
+    if (np.abs(eig_v[0,0]) - np.abs(v_ort[0][0])) < 10**-12 and (np.abs(eig_v[1,0]) - np.abs(v_ort[1][0])) < 10**-12:
+       Index_for_color = 0
+    else:
+        Index_for_color = 1
+    
+    LAMBDA_2, A = np.linalg.eig( np.linalg.inv(S_11) * S_12 * np.linalg.inv(S_22) * S_21)
+    
+    if Index_for_color:
+        LAMBDA_2 = LAMBDA_2[[1,0]]
+    
+    for k in range(A.shape[1]):
+        A[:,k] = A[:,k] / np.sqrt(A[:,k] .T * Q_e * A[:,k])
+   
+    std_weights = np.diag(np.sqrt(np.diagonal(Q_e))) *A
+    Struct_mat = np.linalg.inv(np.diag(np.sqrt(np.diagonal(Q_e)))) * Q_e * A
+    
+    if np.abs( eig_v[0,1]-eig_v[1,1] ) <10**(-12):
+        explained_variance = LAMBDA_2[0]
+    else:
+        explained_variance = LAMBDA_2[0]
+        
+    return std_weights,Struct_mat,explained_variance,v_ort,Index_for_color
+                                 
+def gaussian_fit(X_norm,v_ort,hd,hl):
+    # per ruotare perpendicolamente devo passare v_ort
+    v = v_ort[[1,0]]
+    v[0] = -v[0]
+    
+    
+    v_ort = v_ort / np.linalg.norm(v_ort)
+    projected = np.dot(X_norm,v_ort)
+#    projected = np.dot(X_norm[:,[1,0]],v_ort.T)
+#    proj = np.zeros((x.shape[0],2))
+#    proj[:,0] = res[:,0] * v[0]
+#    proj[:,1] = res[:,0] * v[1]
+#    projected = np.dot(X_norm[:,[1,0]],v_ort)
+#    projected = projected.reshape((projected.shape[0],1))
+    g_fit_Dark = mxt.GMM(1).fit(projected[hd])
+    g_fit_Light = mxt.GMM(1).fit(projected[hl])
+    gauss_dark = sts.norm(loc = g_fit_Dark.means_[0][0],scale = g_fit_Dark.covars_[0][0])
+    gauss_light = sts.norm(loc = g_fit_Light.means_[0][0],scale = g_fit_Light.covars_[0][0])
+    
+    Rot,Rot2 = rotazione(v)
+    transl = traslazione(v)
+    transl = transl.reshape((transl.shape[0],1))
+
+    x_light = np.linspace(gauss_light.ppf(0.01), gauss_light.ppf(0.99), 100)
+    x_dark = np.linspace(gauss_dark.ppf(0.01), gauss_dark.ppf(0.99), 100)
+    y_light = gauss_light.pdf(x_light)
+    y_dark =  gauss_dark.pdf(x_dark)
+    y_dark= y_dark / np.max([np.max(y_dark),np.max(y_light)])
+    y_light = y_light / np.max([np.max(y_dark),np.max(y_light)])
+    v_light = np.zeros((2,len(x_light)))
+    v_light[0,:] = x_light
+    v_light[1,:] = y_light
+    v_dark = np.zeros((2,len(x_light)))
+    v_dark[0,:] = x_dark
+    v_dark[1,:] = y_dark
+    
+    line_v = np.zeros((2,2))
+    line_v[1,0] = np.min((x_light[0],x_dark[0])) 
+    line_v[1,1] = np.max((x_light[-1],x_dark[-1])) 
+#    rot_line = np.dot(Rot2,line_v) + transl
+    rot_v_light = np.dot(Rot,v_light) + transl
+    rot_v_dark = np.dot(Rot,v_dark) + transl
+    line_light = (rot_v_light[0,:] - transl [0]- np.mean(X_norm,axis=0)[0])/v_ort[0]*v_ort[1]+np.mean(X_norm,axis=0)[1]  +transl[1]
+    line_dark =  (rot_v_dark[0,:] - transl [0]- np.mean(X_norm,axis=0)[0])/v_ort[0]*v_ort[1]+np.mean(X_norm,axis=0)[1]  +transl[1]
+    return line_light,line_dark,rot_v_light,rot_v_dark
+    
+    
+    
+def Gr_Mean_Std_GUI(Vector,Groups):
+    """
+    Function Target: 
+    ----------------
+       This function calculates the mean and std dev of values in Vector.
+                            
+    Input:                  -Vector = dictionary, keys = mouse name
+                                Vector[name] = array of length 24
+                            -Groups = dictionary, keys = group names
+                                Groups[group] = list, names of mice in each group
+                        
+    Output:                 -Mean= dictionary, keys = group names
+                                -Mean[groupname]=means relative to the group "groupname"
+                            -Std=dictionary, keys = group names
+                                -Std[groupname]=biased empirical std error 
+                                (divided by N) relative to the group "groupname"
+    """
+    Matrix={}
+    Mean={}
+    Std={}
+    for name in list(Groups.keys()):
+        if not len(Groups[name]):
+            continue
+        Matrix[name]=np.zeros(len(Vector[list(Vector.keys())[0]]))
+        for subject in Groups[name]:
+            Matrix[name]=np.vstack((Matrix[name],Vector[subject]))
+        Matrix[name]=Matrix[name][1:,:]
+        Mean[name]=np.nanmean(Matrix[name],axis=0)
+        Std[name]=np.nanstd(Matrix[name],axis=0)
+    return(Mean,Std)
+
+def Exp_Gain_Matrix_GUI(GMM_Fit, Short, Long, Group_dict, ProbeShort, 
+                        Cond_SProbe, Cond_LProbe):
+    """
+        Function Target:
+        ================
+            This function create a matrix of the std format for the GMM_Fit
+            containing exp gain value for each subject as well as extimated
+            parameters from the gaussian fit
+        Input:
+        ======
+            - GMM_Fit : dictionary, keys = 'Pdf', 'Best_Model', 'Cdf', 'EmCdf'
+                - GMM_Fit['Best_model'] : dictionary, keys = subject names
+                    Objects of the class GMM with the best fit for each subject
+            - Short : float
+                Short signal duration
+            - Long : float
+                Long signal duration
+            - Group_dict : dictionary, keys = group names
+                Contains a list of subject for each group
+            - ProbeShort : float, range = (0, 1)
+                Probability of having a short problem
+            - Cond_SProbe : int, range = (0, 1)
+                Conditional probability of having a probe given that
+                the signal is short
+            - Cond_LProbe : int, range = (0, 1)
+                Conditional probability of having a probe given that
+                the signal is long
+        Output:
+        =======
+            - std_Exp_Gain : numpy structured array
+                Matrix containing information about the gaussian best fit for
+                each mouse and the expected gain obtained from the fit value
+                and the parameters used in the switch latency protocol
+    """
+    nameLen = 0
+    for name in list(GMM_Fit['Best_Model'].keys()):
+        nameLen = max(nameLen,len(name))
+    groupLen = 0
+    for group in list(Group_dict.keys()):
+        groupLen = max(groupLen, len(group))
+    ProbeLong = 1 - ProbeShort
+    std_Exp_Gain =\
+        np.zeros(len(list(GMM_Fit['Best_Model'].keys())),
+                 dtype = {'names':('Group', 'Subject', 'Value', 'Fit Mean', 
+                 'Fit CV'),'formats':('|S%d'%groupLen, '|S%d'%nameLen,
+                 float, float, float)})
+    ind = 0
+    for group in list(Group_dict.keys()):
+        for name in Group_dict[group]:
+            m = GMM_Fit['Best_Model'][name].means_[0][0]
+            var = GMM_Fit['Best_Model'][name].covariances_[0][0]
+            CV = np.sqrt(var) / np.abs(m)
+            PS = sts.norm.cdf(Short, m , var)
+            PL =  sts.norm.cdf(Long, m, var)
+            std_Exp_Gain['Group'][ind] = group
+            std_Exp_Gain['Subject'][ind] = name
+            std_Exp_Gain['Value'][ind] = (ProbeShort * (1 - Cond_SProbe)) *\
+                (1 - PS) + (ProbeLong * (1 - Cond_LProbe)) * PL
+            std_Exp_Gain['Fit Mean'][ind] = m
+            std_Exp_Gain['Fit CV'][ind] = CV
+            ind += 1
+    return std_Exp_Gain
+
+def F_ExpGain_GUI(Short, Long, ProbeShort, Cond_SProbe, Cond_LProbe, 
+                  MeanRange=(1, 9), CVRange=(0.05,0.5), Mesh=600):
+    """
+    Function Target: 
+    ================
+        This function calculates the expected gains of mice with
+        different average time of switch latencies and different
+        variation coefficient (CV) and the best mean switch latencies
+        for every fixed CV.
+                        
+    
+    Input:
+    ======
+        - Short/Long : float
+            Duration of light signal in time for short and long trials
+        - ProbeShort  : float
+            Probability of short probe
+        - Cond_SProbe : float
+            Probability of short probe given a short trial
+        - Cond_LProbe : float
+            Probability of short probe given a Long trial
+        - Mesh : int
+            Dimension of explog matrix.
+                        
+    Output:
+    =======
+        -ExpLog : numpy array, shape = Mesh x Mesh
+            Expected gain matrix, element (i,j) is the exp gain
+            for Mean[j] and variance Cv[i]*Mean[j]
+        - MaxRowl : numpy array, shape = Mesh x 1
+            Max exp gain for every fixed mean, variating the Cv.
+    """
+    Cv = np.linspace(CVRange[0],CVRange[1],Mesh)
+    Mean = np.linspace(MeanRange[0],MeanRange[1],Mesh)
+    ExpLog = np.zeros((Mesh,Mesh),dtype=float)
+    ProbeLong = 1-ProbeShort
+    Matrix_Mean=np.zeros((Mesh,Mesh))
+    Matrix_Std=np.zeros((Mesh,Mesh))
+
+    for i in range(Mesh):
+        Matrix_Mean[i,:]=Mean
+        Matrix_Std[:,i]=Mean[i]*Cv
+
+    PS = sts.norm.cdf(Short,Matrix_Mean,Matrix_Std)
+    PL =  sts.norm.cdf(Long,Matrix_Mean,Matrix_Std)
+    ExpLog = (ProbeShort*(1 - Cond_SProbe)) * (1 - PS) +\
+        (ProbeLong * (1 - Cond_LProbe)) * PL
+    ExpLog[np.isnan(ExpLog)] = np.nanmin(ExpLog)
+    MaxRowl = np.nanargmax(ExpLog, axis=1)
+
+    return(ExpLog, MaxRowl)
+
+def F_Fit_GMM_GUI(Sample,n_gauss=1,FindBest=False,Ind0=0,SampleSize=10**4):
+    """
+    Function Target:    This function find the best Gaussian Mixture fit of fixed
+                        or variable order (n° of gaussian in the model). It returns
+                        the fitted dsitr (object of the class GMM), pdf, cdf and
+                        empiric cdf.
+    
+    Input:              -Sample=vector,the sample we want to approximate
+                        -n_gauss=number of gaussian we want to use in the model.
+                            if FindBest==False,(default) we fit with a n_gauss GMM
+                            if FindBest==True, we fit with the best GMM with 
+                            number of gaussians <= n_gauss.
+                            (we choose the one that minimize AIC coeff.)
+                        - FindBest=boolean, default False, to choose if we want
+                        to fix the number of gaussians to n_gauss or if we want
+                        to find the best model
+                        -Ind0=positive integer, first index of the sample we consider
+                        -SampleSize=positive integer, default is 1000, number of samples
+                        we want from the fitted distr to find the theoretical cdf.
+    """
+    Sample=Sample[Ind0:]
+    Sample = Sample.reshape((Sample.shape[0],1))
+#    print(Sample.shape)
+    if FindBest:    
+        N = np.arange(1, n_gauss)
+    else:
+        N=[n_gauss]
+    models = [None for i in range(len(N))]
+    
+    for i in range(len(N)):
+#        models[i] = mxt.GMM(N[i]).fit(Sample)
+        models[i] = mxt.GaussianMixture(N[i]).fit(Sample)
+    
+    # compute the AIC and the BIC
+    AIC = [m.aic(Sample) for m in models]
+    #BIC = [m.bic(X) for m in models]
+    # find the best models (the one that minimize AIC)
+    Best_Model=models[np.argmin(AIC)]
+    
+    x=np.linspace(min(Sample)-0.1*np.abs(min(Sample)),max(Sample)+0.1*np.abs(max(Sample)),1000)
+    x = x.reshape((x.shape[0],1))    
+    # compute log probabilities
+    logprob = np.zeros(x.shape[0])
+    for k in range(x.shape[0]):
+        logprob [k] = Best_Model.score(x[k].reshape((1,1)))
+    # compute theoretical pdf 
+    Pdf={}
+    Pdf['x']=x.flatten()
+    Pdf['y']=np.exp(logprob)
+    # compute theoretical cdf
+    Cdf={}
+    Model_Sample=Best_Model.sample(SampleSize)[0].reshape(-1,)
+    Model_Sample_Ord=np.sort(Model_Sample)
+
+    NormCum = np.arange(len(Model_Sample_Ord),dtype=float)/len(Model_Sample_Ord)
+    Cdf['x']=Model_Sample_Ord
+    Cdf['y']=NormCum
+    # compute empiric Cdf
+    EmCdf={}
+    Sample_Ord=np.sort(Sample.flatten())
+
+    NormCum = np.arange(len(Sample_Ord),dtype=float)/len(Sample_Ord)
+    EmCdf['x']=Sample_Ord
+    EmCdf['y']=NormCum 
+    return(Best_Model,Pdf,Cdf,EmCdf)
+    
+def std_Switch_Latency_GUI(Record_Switch, HSSwitch, DataGroup, Dark_start=20, Dark_length=12):
+    Tot_Subjects = 0
+    lenName = 0
+    for name in list(Record_Switch.keys()):
+        Tot_Subjects += 1
+        lenName = max(lenName, len(name))
+#    for k in list(Record_Switch.keys()):
+#        print(k, len(Record_Switch[k]))
+    Hour_Dark,Hour_Light = Hour_Light_and_Dark_GUI(Dark_start, Dark_length)
+    Best_Model, Pdf, Cdf, EmCdf = F_Gr_Fit_GMM_GUI(Record_Switch, DataGroup,
+                                              n_gauss=1)
+    GMM_Fit = {'Best_Model' : Best_Model,
+               'Pdf' : Pdf, 'Cdf' : Cdf,
+               'EmCdf' : EmCdf}
+    Median, Mean, Std = Subj_Median_Mean_Std_GUI(Record_Switch, HSSwitch)
+    Hour_label = TimeUnit_to_Hours_GUI(np.hstack((Hour_Dark,Hour_Light)),3600)
+    DataLen = len(Hour_label) * Tot_Subjects
+
+    ind = 0
+    std_Matrix = np.zeros(DataLen, dtype = {
+        'names':('Subject', 'Time','Mean', 'Median', 'SEM'),
+        'formats':('|U%d'%lenName, '|U5',float, float, float)})
+    for name in list(Record_Switch.keys()):
+        std_Matrix['Subject'][ind:len(Hour_label)+ind] = name
+        std_Matrix['Mean'][ind:len(Hour_label)+ind] = Mean[name]
+        std_Matrix['Median'][ind:len(Hour_label)+ind] = Median[name]
+        std_Matrix['SEM'][ind:len(Hour_label)+ind] = Std[name]
+        std_Matrix['Time'][ind:len(Hour_label)+ind] = Hour_label
+        ind += len(Hour_label)
+
+    return std_Matrix, GMM_Fit
+
+def Subj_Median_Mean_Std_GUI(Vectors,HDay,Bias=True,HBin=3600):
+    """
+    Function Targets:   This function computes the median/mean/std dev of quantities
+                        in Vectors for each relative hour of the day
+    
+    Input:              -Vectors=dictionary, Vectors[key]=vector, timestamps of a
+                        certain action
+                        -HDay=dictionary, HDay[key][i] = hour from 00:00 of first day of exp
+                        in which the action happened
+                        
+    Output:             -Median/Mean/Std=vector, len =24 ,median/mean/std error of values
+                        in Vecors. Median[key][i]=median of all Vector[key] action happened
+                        at hour i.
+    """
+    Median={}
+    Mean={}
+    Std={}
+    if 3600%HBin!=0:
+        raise ValueError('3600 must be an integer multiple of HBin')
+    Fraction = 3600//HBin
+    for key in list(Vectors.keys()):
+        Median[key] = np.zeros(24*Fraction)
+        Mean[key] = np.zeros(24*Fraction)
+        Std[key] = np.zeros(24*Fraction)
+        for h in range(24*Fraction):
+            Index = np.where((HDay[key]%(24*Fraction))==h)[0]
+            Median[key][h] = np.nanmedian(Vectors[key][Index])
+            Mean[key][h] = np.nanmean(Vectors[key][Index])
+            Std[key][h] = np.nanstd(Vectors[key][Index])/np.sqrt(len(Vectors[key][Index]))
+    return(Median,Mean,Std)
+    
+def F_Gr_Fit_GMM_GUI(Record_Switch,Mouse_Grouped,n_gauss=10,FindBest=False):
+    """
+    Function Target: This function fits the swich latencies of every mice with
+                     a mixed gaussian and returns the mixture distr., pdf, cdf, 
+                     and empiric cdf.
+    
+    Input:           -Record_Switch=vector, switch latencies in sec from the trial start
+                     -Mouse_Grouped=dictionary, key= group names
+                         -Mouse_Grouped[group]=list of mouse names in the group
+                     -n_gauss=number of gaussian in the fit you want to use
+                     -FindBest=boolean:
+                         -True if you look for the best fit
+                         between n_gauss summed gaussian 
+                         -False if you fix the number of gaussian in the fit
+    
+    Output:         -Best_Model=dictionary, keys= mouse name
+                        Best_Model[name]=object of the class GMM. Gaussian mixture model
+                        it fits the Record_Switch[name] vector
+                    -Pdf=dictionary, keys = mouse name
+                        -Pdf[name]=theorical pdf function for the mixture model
+                    -Cdf=dictionary, keys = mouse name
+                        -Cdf[name]=theorical cdf function for the mixture model
+                    -EmCdf=dictionary, keys = mouse name
+                        -EmCdf[name]=vector,empiric cumulative function values
+    """
+    Best_Model,Pdf,Cdf,EmCdf={},{},{},{}
+    for group in list(Mouse_Grouped.keys()):
+        for name in Mouse_Grouped[group]:
+            Best_Model[name],Pdf[name],Cdf[name],EmCdf[name]=F_Fit_GMM_GUI(Record_Switch[name],n_gauss=n_gauss,FindBest=FindBest) 
+    return(Best_Model,Pdf,Cdf,EmCdf)
+
+def Hour_Light_and_Dark_GUI(Dark_start,Len_Dark,TimeInterval=3600):
+    """
+    Function Target:    This Function calculate hour light and dark if you 
+                        specify dark start hour and the number of dark hour.
+                        
+    Input:              -Dark_Start=scalar, hour of thr day in which dark phase
+                        starts
+                        -Len_Dark=scalar,length of dark phase in hours
+                        -TimeInterval=interval of time, in second. must divide 3600
+                        
+    Output:             -Vector contained ordered TimeInterval light and dark,if TimeInterval=3600
+                        Vector elements are hours 
+    """
+    if 3600.0%TimeInterval!=0:
+        raise ValueError('TimeInterval must divide 3600')
+    NumInterval=(3600*24)//TimeInterval
+    Len_Light_Interval=NumInterval-Len_Dark*(3600//TimeInterval)
+    Len_Dark_Interval=Len_Dark*(3600//TimeInterval)
+    Dark_start_Interval=Dark_start*(3600//TimeInterval)
+    Hour_Dark=np.arange(Dark_start_Interval,Dark_start_Interval+Len_Dark_Interval)%(24*(3600//TimeInterval))
+    Hour_Light=np.arange(Dark_start_Interval+Len_Dark_Interval,Dark_start_Interval+Len_Dark_Interval+Len_Light_Interval)%(24*(3600//TimeInterval))
+    return(Hour_Dark,Hour_Light)
+
+def createAbsoluteTime(Y,indexVect,Timestamps):
+    day = Y['Time'][np.where(Y['Action']==Timestamps['Start Day'])[0][0]]
+    month = Y['Time'][np.where(Y['Action']==Timestamps['Start Month'])[0][0]]
+    year = Y['Time'][np.where(Y['Action']==Timestamps['Start Year'])[0][0]]
+    
+    hour = Y['Time'][np.where(Y['Action']==Timestamps['Start Hour'])[0][0]]
+    minute = Y['Time'][np.where(Y['Action']==Timestamps['Start Minute'])[0][0]]
+    second = Y['Time'][np.where(Y['Action']==Timestamps['Start Second'])[0][0]]
+    
+    secs = Y['Time'][indexVect]
+    delta_sec = np.zeros(secs.shape[0],dtype=dt.timedelta)
+    for k in range(secs.shape[0]):
+        delta_sec[k] = dt.timedelta(0,secs[k])
+    abstime = dt.datetime(int(year),int(month),int(day),int(hour),int(minute),int(second))
+    func = lambda dti : abstime + dti
+    vec_func = np.vectorize(func)
+    return vec_func(delta_sec)
+
+def switch_probe_check(start, performance, rewarded_start):
+    correct = np.where(performance)[0]
+    probe = np.zeros(performance.shape[0],dtype=bool)
+  
+    for k in correct:
+        if not (start[k] in rewarded_start):
+            probe[k] = True
+      
+    return probe
+
+def switch_performance(trial_type,left_in,right_in,ts,tl,long_side='r'):
+    
+    if long_side == 'r':
+        short_np = left_in
+        long_np = right_in  
+    else:
+        short_np = right_in
+        long_np = left_in
+        
+    
+    performance = np.zeros(trial_type.shape[0],dtype = bool)
+    
+    for k in range(trial_type.shape[0]):
+        if trial_type[k]==0: 
+            try:
+                tmp_short = np.where( short_np[k][:,1] >= ts)[0][0]
+            except IndexError:
+                continue
+            
+            try:
+                tmp_long = np.where( long_np[k][:,1] >= ts)[0][0]
+                if tmp_long > tmp_short:
+                    performance[k] = True
+            except IndexError:
+                performance[k] = True
+                continue
+            
+        else:
+            try:
+                tmp_long = np.where(long_np[k][:,1] >= tl)[0][0]
+            except IndexError:
+                continue
+        
+            try:
+                tmp_short = np.where(short_np[k][:,1] >= tl)[0][0]
+                if tmp_long < tmp_short: 
+                    performance[k] = True
+                    
+            except IndexError:
+                performance[k] = True
+                continue
+                
+    return(performance)
+
+def getRewardedTrial(Y,TimeStamps):
+    reward_left = np.where(Y['Action']==TimeStamps['Give Pellet Left'])[0]
+    reward_right = np.where(Y['Action']==TimeStamps['Give Pellet Right'])[0]
+    start_trial = np.where(Y['Action']==TimeStamps['Center Light On'])[0]
+    rewards = np.hstack((reward_left,reward_right))
+    rewards.sort()
+    rewarded_start = -1*np.ones(start_trial.shape[0],dtype=int)
+    ind = 0
+    for rwd in rewards:
+        i_st = bisect_left(start_trial, rwd) - 1
+        if i_st != rewarded_start[ind-1]:
+            rewarded_start[ind] = i_st
+            ind += 1
+    mask = np.zeros(rewarded_start.shape[0],dtype=bool)
+    mask[rewarded_start != -1] = 1
+    rewarded_start = rewarded_start[mask]
+    return start_trial[rewarded_start]
+
+def switch_type_trial(Y,TimeStamps,light_on,ts,tl,light_off='Center Light Off'):
+    
+    light_off = np.where(Y['Action']==TimeStamps[light_off])[0]
+    
+    while light_off[0] < light_on[0]:
+        light_off = light_off[1:]
+        
+    while light_off[-1] < light_on[-1]:
+        light_on = light_on[:-1]
+    
+    # here I'm picking the shorter index vector and pairing each of its index K
+    # with the index of the longer index vector that immediatly follows/precedes
+    # K. (follows if the longer is light_off, precedes otherwise)
+    if light_on.shape[0] < light_off.shape[0]:
+        func = np.vectorize( lambda x : bisect_left(light_off, x) )
+        light_off = light_off[func(light_on)]
+    elif light_on.shape[0] > light_off.shape[0]:
+        func = np.vectorize( lambda x : bisect_left(light_on, x) - 1)
+        light_on = light_on[func(light_off)]
+
+# check the light signaling at the beginning and and of the data
+
+    
+        
+    light_on = Y['Time'][light_on]
+    light_off =  Y['Time'][light_off]
+    
+
+    
+    duration = light_off - light_on
+    tmp = np.zeros((2,duration.shape[0]))
+    
+    tmp[0,:] = np.abs(duration-ts)
+    tmp[1,:] = np.abs(duration-tl)
+    # 0, short 1, long
+    trial_type = np.argmin(tmp,axis = 0)
+    
+    return(trial_type)
+
+def getRewardTrialMED(Y,TimeStamps,start,stop):
+    reward_start = []
+    for k in range(start.shape[0]):
+        if TimeStamps['Give Pellet Center'] in Y['Action'][start[k]:stop[k]]:
+            reward_start += [start[k]]
+    return np.array(reward_start)
+
+def create_np_activity(Y,TimeStamps,startTrial='Center Light On'):
+    
+    Left_NP_in=np.where(Y['Action']==TimeStamps['Left NP In'])[0]
+    Right_NP_in=np.where(Y['Action']==TimeStamps['Right NP In'])[0]
+    try:
+        Left_NP_out=np.where(Y['Action']==TimeStamps['Left NP Out'])[0]
+        Right_NP_out=np.where(Y['Action']==TimeStamps['Right NP Out'])[0]
+    except KeyError:
+        Left_NP_out = Left_NP_in
+        Right_NP_out = Right_NP_in
+    
+    
+    start_trial = np.where(Y['Action']==TimeStamps[startTrial])[0]
+    end_trial = np.where(Y['Action']==TimeStamps['Start Intertrial Interval'])[0] #cambiato da start a end
+    
+    left_in = {}
+    left_out = {}
+    right_in = {}
+    right_out = {}
+    
+    stop = np.ones(start_trial.shape[0],dtype = int) * -1
+    start = np.ones(start_trial.shape[0],dtype = int) * -1
+    tr_num  = 0
+    
+    while start_trial.shape[0] and end_trial.shape[0]:
+        s0 = start_trial[0]
+        e0 = end_trial[0]
+        ind = 0
+        while e0 < s0 and ind < end_trial.shape[0]:
+            e0 =  end_trial[ind]
+            ind += 1
+        if e0 < s0:
+            stop = stop[:tr_num]
+            start = start[:tr_num]
+            break
+        
+        stop[tr_num] = e0
+        start[tr_num] = s0
+        
+        start_trial = start_trial[1:]
+        end_trial = end_trial[ind+1:]
+        idx = np.where((Left_NP_in > s0)  * (Left_NP_in < e0))[0]
+        tmp = np.zeros((idx.shape[0],2))
+        tmp[:,0] = Left_NP_in[idx]
+        tmp[:,1] = Y['Time'][Left_NP_in[idx]] - Y['Time'][s0]
+        left_in[tr_num] = tmp
+        
+        idx = np.where((Left_NP_out > s0)  * (Left_NP_out < e0))[0]
+        tmp = np.zeros((idx.shape[0],2))
+        tmp[:,0] = Left_NP_out[idx]
+        tmp[:,1] = Y['Time'][Left_NP_out[idx]] - Y['Time'][s0]
+        left_out[tr_num] = tmp
+        
+        idx = np.where((Right_NP_in > s0)  * (Right_NP_in < e0))[0]
+        tmp = np.zeros((idx.shape[0],2))
+        tmp[:,0] = Right_NP_in[idx]
+        tmp[:,1] = Y['Time'][Right_NP_in[idx]] - Y['Time'][s0]
+        right_in[tr_num] = tmp
+        
+        idx = np.where((Right_NP_out > s0)  * (Right_NP_out < e0))[0]
+        tmp = np.zeros((idx.shape[0],2))
+        tmp[:,0] = Right_NP_out[idx]
+        tmp[:,1] = Y['Time'][Right_NP_out[idx]] - Y['Time'][s0]
+        right_out[tr_num] = tmp
+        
+        
+        tr_num += 1
+    boolean = stop != -1
+    stop = stop[boolean]
+    start = start[boolean]
+    
+    return(left_in,left_out,right_in,right_out,start,stop)
+    
+def condition_check(table_row,type_tr):
+    if type_tr == 'Long_Probe':
+        return table_row['type'] == b'Long' and table_row['isProbe']
+    elif type_tr == 'Long_reward':
+        return table_row['type'] == b'Long' and table_row['isCorrect'] and not table_row['isProbe']
+    elif type_tr == 'Long':
+        return table_row['type'] == b'Long' and table_row['isCorrect']
+
+def compute_latency(table,left_in,left_out,right_in,right_out,start,stop,ts,tl,type_tr,long_side='r'):
+    left = np.array([])
+    right = np.array([])
+    switch = np.array([])
+    hrs_switch = np.array([])
+    
+    if long_side == 'r':
+        np_in = left_in
+        np_out = left_out 
+        oth_in = right_in
+    else:
+        np_in = right_in
+        np_out = right_out
+        oth_in = left_in
+        
+    for k in range(table.shape[0]):
+        if condition_check(table[k],type_tr):
+                if len(oth_in[k][:,1])*len(np_in[k][:,1]) > 0:
+                    left = np.concatenate((left,left_in[k][:,1]))
+                    right = np.concatenate((right,right_in[k][:,1]))
+
+                
+                    idx = np.where(np_in[k][:,1] <= tl)[0]
+                    if idx.shape[0] and np_out[k].shape[0] > idx[-1]:
+#                        print(k)
+
+                ## MODIFICA DA IN AD OUT
+                #switch = np.concatenate((switch,[left_in[k][idx[-1],1]]))
+                        switch = np.concatenate((switch,[np_out[k][idx[-1],1]]))
+                        hrs_switch = np.concatenate((hrs_switch, [table[k]['absTime']]))
+    return left,right,switch,hrs_switch
+
+def switch_analysis_gui(Y,TimeStamps,ts,tl,long_side='r',isMED = False):    
+    if isMED:
+        left_in,left_out,right_in,right_out,start,stop = create_np_activity(Y,TimeStamps,startTrial='Start Trial')
+        rewarded_start = getRewardTrialMED(Y, TimeStamps,start,stop)
+        trial_type = switch_type_trial(Y,TimeStamps,start,ts,tl,light_off='Right Light Off')
+    else:
+        left_in,left_out,right_in,right_out,start,stop = create_np_activity(Y,TimeStamps)
+        rewarded_start = getRewardedTrial(Y, TimeStamps)
+        trial_type = switch_type_trial(Y,TimeStamps,start,ts,tl)
+    performance = switch_performance(trial_type,left_in,right_in,ts,tl,long_side)
+    probe = switch_probe_check(start, performance, rewarded_start)
+    times = createAbsoluteTime(Y,start,TimeStamps)
+    table = np.zeros(trial_type.shape[0], dtype = {'names':('absTime','start','stop','type','isCorrect','isProbe'),
+                     'formats':(dt.datetime,int,int,'S5',bool,bool)})
+    table['absTime'] = times[:trial_type.shape[0]]
+    table['start'] = start[:trial_type.shape[0]]
+    table['stop'] = stop[:trial_type.shape[0]]
+    ind_short = np.where(trial_type == 0)[0]
+    table['type'] = 'Long'
+    table['type'][ind_short] =  'Short'
+    table['isCorrect'] = performance[:trial_type.shape[0]]
+    table['isProbe'] = probe[:trial_type.shape[0]]
+    
+    return table,left_in,left_out,right_in,right_out,start,stop
+
+def Rescale_Time_GUI(Y,TimeStamps,scale=1000,header=12,footer=3):
+    """
+    Function Targets:       This function rescale the time stamps. 
+                            (our time stamps usually are in millisec).
+                            
+    Input:                  -scale = the rescaling factor
+    
+    Output:                 -Y = nx2 matrix (dictionary) containing the rescaled
+                            dataset
+    """
+#   Changing time unit from millisec to sec.
+    if len(np.where(Y['Action']==TimeStamps['End Month'])[0])>0:
+        Y['Time'][header:-footer]=Y['Time'][header:-footer]/scale
+    else:
+        Y['Time'][header:]=Y['Time'][header:]/scale
+    return(Y)
+    
+def F_New_Gr_Switch_Latency_GUI(Datas,TimeStamps,Mouse_Name,H_By_H=False,ts=3,tl=6, type_tr='Long',scale=1,Tend=15,Long_Side='r',isMEDDict={}):
+
+
+    switch_dict = {}
+    table_dict = {}
+    left_dict = {}
+    right_dict = {}
+    hrs_switch_dict = {}
+    for name in Mouse_Name:
+        if type(Long_Side) is dict:
+            l_side = Long_Side[name]
+        else:
+            l_side = Long_Side
+            
+        #=============to be tested
+        if l_side is 'm': 
+            cond_to_check = True
+            while cond_to_check:
+                reply = QInputDialog.getText(None,'Choose long location, Left (L) or Right (R)',name)
+                if reply[1]:
+                    if 'L' in reply[0].upper():
+                        l_side = 'l'
+                        cond_to_check = False
+                    elif 'R' in reply[0].upper():
+                        l_side = 'r'
+                        cond_to_check = False                    
+        #=============to be tested
+            
+#        Datas[name].Dataset = Rescale_Time_GUI(Datas[name].Dataset, TimeStamps, scale)
+    
+        table,left_in,left_out,right_in,right_out,start,stop = switch_analysis_gui(Datas[name].Dataset, 
+                                                                                   TimeStamps, 
+                                                                                   ts, 
+                                                                                   tl,
+                                                                                   long_side=l_side,
+                                                                                   isMED=isMEDDict[name])
+        
+        left,right,switch,hrs_switch = compute_latency(table,left_in,left_out,right_in,right_out,start,stop,ts,tl,type_tr,long_side=l_side)
+        switch_dict[name] = switch
+        table_dict[name] = table
+        left_dict[name] = left
+        right_dict[name] = right
+        hrs_switch_dict[name] = hrs_switch
+    return(table_dict,left_dict,right_dict,switch_dict,hrs_switch_dict)
 
 def F_FitSin_FixPeriod(Vector,amplitude0,phase0,translation0, function):
     """

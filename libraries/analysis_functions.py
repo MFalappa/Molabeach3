@@ -17,7 +17,7 @@ import pandas as pd
 #import datetime
 import numpy as np
 import datetime as dt
-from copy import copy
+from copy import copy,deepcopy
 from auxiliary_functions import (powerDensity_function,
                                  vector_hours,bin_epi,epidur_if_binAdj,
                                  extract_epi,consecutive_bins,
@@ -36,7 +36,20 @@ from auxiliary_functions import (powerDensity_function,
                                  F_Actogram_GUI,
                                  StartDate_GUI,
                                  EndDate_GUI,
-                                 Fit_Sin_BestPeriod)
+                                 Fit_Sin_BestPeriod,
+                                 F_New_Gr_Switch_Latency_GUI,
+                                 Hour_Light_and_Dark_GUI,
+                                 F_Gr_Fit_GMM_GUI,
+                                 Subj_Median_Mean_Std_GUI,
+                                 std_Switch_Latency_GUI,
+                                 F_ExpGain_GUI,
+                                 Exp_Gain_Matrix_GUI,
+                                 Gr_Mean_Std_GUI,
+                                 performLDA_Analysis,
+                                 computeDailyScore,
+                                 compute_LDA,
+                                 compute_structure_matrix,
+                                 gaussian_fit)
 
 def Power_Density(*myInput):
     DataDict, dictPlot, info = {},{},{}
@@ -1353,37 +1366,304 @@ def Actograms(*myInput):
     
     return DataDict, dictPlot, info
 
+def Switch_Latency(*myInput):
+    Datas      = myInput[0]
+    Input      = myInput[1]
+    DataGroup  = myInput[2]
+    TimeStamps = myInput[3]
+#    lock       = myInput[4]
+    
+    Tend = Input[0]['DoubleSpinBox'][0]
+    ts = Input[0]['DoubleSpinBox'][1]
+    tl = Input[0]['DoubleSpinBox'][2]
+    Short = ts
+    Long = tl
+    ProbeShort = Input[0]['DoubleSpinBox'][3]
+    Cond_SProbe = Input[0]['DoubleSpinBox'][4]
+    Cond_LProbe = Input[0]['DoubleSpinBox'][5] 
+    Mean_minmax = Input[0]['Range'][0]
+    Cv_minmax = Input[0]['Range'][1]
+    Dark_start = Input[0]['Combo'][0]
+    Dark_length   = Input[0]['Combo'][1]
+    type_tr   = Input[0]['Combo'][2]
+    Long_Side = Input[0]['Combo'][3]
+    
+    
+    group_list = list(DataGroup.keys())
+    group_list.sort()
+    long_side_dict = {}
+    k = 0
+    for gr in group_list:
+        long_side_dict[gr] = Long_Side
+        k += 1
+    Mouse_Name = np.hstack(list(DataGroup.values()))
+    lenName = 0
+    lenGroupName = 0
+    for key in list(DataGroup.keys()):
+        lenGroupName = max(lenGroupName,len(key))
+        for name in DataGroup[key]:
+            lenName = max(lenName,len(name))
+    Mouse_Grouped = DataGroup
+    
+#    AllData = {}
 
+    DataDict = {}
+    DataDict['Group Switch Latency'] = {}
+    long_side_sub = {}
+    isMEDDict = {}
 
+    for gr in list(Mouse_Grouped.keys()):
+        for dataName in Mouse_Grouped[gr]:
+#            try:
+#                lock.lockForRead()
+#                AllData[dataName] = deepcopy(Datas.takeDataset(dataName))
+                isMEDDict[dataName] = 'MED_SW' in Datas.dataType(dataName)
+#                
+#            finally:
+#                lock.unlock()
+    
+    for gr in list(Mouse_Grouped.keys()):
+        for dataName in Mouse_Grouped[gr]:
+            long_side_sub[dataName] = long_side_dict[gr]
+    
+    table,left,right,Record_Switch,HSSwitch = F_New_Gr_Switch_Latency_GUI(Datas,
+                                                                          TimeStamps,
+                                                                          Mouse_Name,
+                                                                          ts=ts,
+                                                                          tl=tl,
+                                                                          scale=1,
+                                                                          Tend=Tend,
+                                                                          Long_Side=long_side_sub,
+                                                                          type_tr=type_tr,
+                                                                          isMEDDict=isMEDDict)
+    for name in list(Record_Switch.keys()):
+        if Record_Switch[name].shape[0] < 3:
+            Record_Switch.pop(name)
+            HSSwitch.pop(name)
+            right.pop(name)
+            left.pop(name)
+            table.pop(name)
+         
+            for gr in list(Mouse_Grouped.keys()):
+                if name in Mouse_Grouped[gr]:
+                    Mouse_Grouped[gr].remove(name)
+#    prev_groups = Mouse_Grouped.keys()
+#    for gr in prev_groups:
+#        if not len(Mouse_Grouped[gr]):
+#            s = Mouse_Grouped.pop(gr)
+    func = lambda h : h.hour
+    v_func = np.vectorize(func)
+    tmp = {}
+    for name in list(Record_Switch.keys()):
+        tmp[name] = v_func(HSSwitch[name])
+    HSSwitch = tmp
+    Hour_Dark,Hour_Light=Hour_Light_and_Dark_GUI(Dark_start,Dark_length)
+    Best_Model,Pdf,Cdf,EmCdf=F_Gr_Fit_GMM_GUI(Record_Switch,Mouse_Grouped,n_gauss=1)
+    Median,Mean,Std=Subj_Median_Mean_Std_GUI(Record_Switch,HSSwitch)
+    Hour_label = TimeUnit_to_Hours_GUI(np.hstack((Hour_Dark,Hour_Light)),3600)
+    DataLen    = len(Hour_label) * len(list(Record_Switch.keys()))
+
+    std_Switch, GMM_Fit = std_Switch_Latency_GUI(Record_Switch, HSSwitch,
+                                                 Mouse_Grouped, Dark_start=Dark_start, 
+                                                 Dark_length=Dark_length)
+    EXP, MAX = F_ExpGain_GUI(Short, Long, ProbeShort, Cond_SProbe, Cond_LProbe,
+                             MeanRange=Mean_minmax,CVRange=Cv_minmax)
+    std_Exp_Gain = Exp_Gain_Matrix_GUI(GMM_Fit, Short, Long, Mouse_Grouped, 
+                                       ProbeShort, Cond_SProbe,
+                                       Cond_LProbe)
+    std_Exp_Gain['Value'] = std_Exp_Gain ['Value']/np.max(EXP)
+    DataDict['Group Switch Latency']['Group Switch Latency'] = np.zeros(DataLen, dtype = {
+        'names':('Group','Subject','Time','Mean','Median','SEM'),
+        'formats':('|S%d'%lenGroupName,'|S%d'%lenName,'|S5',float,
+                   float,float)})
+    
+    tmp_msgr = Cdf.__len__()
+    DataDict['Group Switch Latency']['CDF'] = np.zeros(tmp_msgr*(10**4), dtype = {'names':('Group','Subject','X','Y'),'formats':('|S%d'%lenGroupName,'|S%d'%lenName,float,float)})
+                   
+    DataDict['Group Switch Latency']['Group Switch Latency']['Time'] = list(Hour_label) * len(list(Record_Switch.keys()))
+    ind = 0
+    idx_cdf = 0
+    for key in list(Mouse_Grouped.keys()):
+        for name in Mouse_Grouped[key]:
+            DataDict['Group Switch Latency']['Group Switch Latency']['Group'][ind:len(Hour_label)+ind]\
+                = [key] * len(Hour_label)
+            DataDict['Group Switch Latency']['Group Switch Latency']['Subject'][ind:len(Hour_label)+ind]\
+                = [name] * len(Hour_label)
+            DataDict['Group Switch Latency']['Group Switch Latency']['Mean'][ind:len(Hour_label)+ind]\
+                = Mean[name]
+            DataDict['Group Switch Latency']['Group Switch Latency']['Median'][ind:len(Hour_label)+ind]\
+                = Median[name]
+            DataDict['Group Switch Latency']['Group Switch Latency']['SEM'][ind:len(Hour_label)+ind]\
+                = Std[name]
+                
+            DataDict['Group Switch Latency']['CDF']['Group'][idx_cdf:idx_cdf + 10**4] = [key]
+            DataDict['Group Switch Latency']['CDF']['Subject'][idx_cdf:idx_cdf + 10**4] = [name]
+            DataDict['Group Switch Latency']['CDF']['X'][idx_cdf:idx_cdf + 10**4] = Cdf[name]['x']
+            DataDict['Group Switch Latency']['CDF']['Y'][idx_cdf:idx_cdf + 10**4] = Cdf[name]['y']
+            
+            idx_cdf += 10**4
+            ind += len(Hour_label)
+    
+    DataDict['Group Switch Latency']['Expected Gain'] = std_Exp_Gain
+        
+    Gr_Mean,Gr_Std=Gr_Mean_Std_GUI(Median,Mouse_Grouped)
+    Group_Name = list(Mouse_Grouped.keys())
+    dictPlot = {}
+    dictPlot['Fig:Group Switch Latency'] = {}
+    dictPlot['Fig:Group Switch Latency']['Record switch time'] = Gr_Mean,Hour_Light,Hour_Dark,\
+                                            Group_Name
+    dictPlot['Fig:Group Switch Latency']['Gaussian Fit'] = Cdf, EmCdf, Group_Name,\
+                                            Mouse_Grouped, ts, tl
+    dictPlot['Fig:Group Switch Latency']['Optimal Surface'] =\
+        (EXP, MAX, Mean_minmax, Cv_minmax,
+         std_Exp_Gain, 40, 12)
+    dictPlot['Fig:Group Switch Latency']['Expected Gain'] =\
+        (std_Exp_Gain, 'Expected Gain', 20, 1, 3, 1, 0.95,
+        'Normalized Exp. Gain', 12, 15)
+    info = {}
+    info['Group Switch Latency'] = {}
+    info['Group Switch Latency']['Types']  = ['Group', 'Switch Latency']
+    info['Group Switch Latency']['Factor'] = [0,1,2]
+    info['Expected Gain'] = {}
+    info['Expected Gain']['Types']  = ['Single Subject', 'Expected Gain']
+    info['Expected Gain']['Factor'] = [0,1]
+    info['CDF'] = {}
+    info['CDF']['Types']  = ['Group', 'Switch Latency']
+    info['CDF']['Factor'] = [0,1]
+    
+    
+    for key in DataDict['Group Switch Latency'].keys():
+        DataDict['Group Switch Latency'][key] = pd.DataFrame(DataDict['Group Switch Latency'][key])
+
+    return DataDict,dictPlot,info
 
 def LDA(*myInput):
-    DataDict, dictPlot, info = {},{},{}
-    
     Datas      = myInput[0]
     Input      = myInput[1]
-    DataGroup  = myInput[2]
+#    DataGroup  = myInput[2]
     TimeStamps = myInput[3]
     lock       = myInput[4]
+    pairedGroups = myInput[5]
+    dark_start = Input[0]['Combo'][0]
+    dark_len   = Input[0]['Combo'][1]
+    beh_par = Input[0]['Combo'][2]
+    sleep_par   = Input[0]['Combo'][3]
+    hd,hl=Hour_Light_and_Dark_GUI(dark_start,dark_len,TimeInterval=3600)
+    num_col = 0
+    for group in list(pairedGroups.keys()):
+        num_col += len(pairedGroups[group]['Behavior'])
+    dtype = {'names':('Group','Subject',beh_par,sleep_par),
+             'formats':('S50','S100',float,float)}
+    struct_mat = np.zeros(num_col, dtype=dtype)
+    dtype = {'names':('Group','Subject','Score'),
+             'formats':('S50','S100',float)}
+    score_mat = np.zeros(num_col, dtype=dtype)
+    dtype = {'names':('Group','Subject','Hour','Prob_Dark','Prob_Light'),
+             'formats':('S50','S100','S5',float,float)}
+    prob_mat = np.zeros(num_col*24, dtype=dtype)
+    hour_str = []
+    for h in range(24):
+        hour_str += ['%d:00'%h]
+    X_norm_d,struct_mat_d,y_d,lda_res_d, gauss_light_d, gauss_dark_d,line_light_d,line_dark_d, Index_for_color_d, v_ort_d = {},{},{},{},{},{},{},{},{},{}
+    title_d = {}
+    y_gr_d = {}
+    lda_res_gr_d = {}
+    gauss_light_gr_d = {}
+    gauss_dark_gr_d = {}
+    line_light_gr_d = {}
+    line_dark_gr_d ={}
+    Index_for_color_gr_d = {} 
+    struct_mat_gr_d = {} 
+    v_ort_gr_d = {}
+    title_gr_d = {} 
+    ind_row = 0
+    score_per_group = {}
+    for group in list(pairedGroups.keys()):
+        score_per_group[group] = np.zeros((24,2))
+        beh_tmp = np.zeros((24,len(pairedGroups[group]['Sleep'])))
+        sleep_tmp = np.zeros((24,len(pairedGroups[group]['Sleep'])))
+        i_sub = 0
+        for sub_beh  in pairedGroups[group]['Behavior']:
+            sub_sleep = pairedGroups[group]['Sleep'][i_sub]
+#            print(sub_beh,sub_sleep)
+            try:
+                lock.lockForRead()
+                data_beh = deepcopy(Datas.takeDataset(sub_beh))
+                data_sleep = deepcopy(Datas.takeDataset(sub_sleep))
+#                time_stamps = Datas.getTimeStamps(sub_beh)
+            finally:
+                lock.unlock()
+            res,X_norm,Struct_mat,explained_variance,v_ort,v,y_pred,lda_res,\
+            Index_for_color,y = performLDA_Analysis(data_beh, data_sleep,
+                                                    TimeStamps, beh_par, 
+                                                    sleep_par, dark_start,dark_len)
+            dailyScore_beh,dailyScore_sleep = computeDailyScore(data_beh, data_sleep, TimeStamps, beh_par, sleep_par)
+            sleep_tmp[:,i_sub] = dailyScore_sleep
+            beh_tmp[:,i_sub] = dailyScore_beh
+            i_sub += 1
+            line_light,line_dark,rot_v_light,rot_v_dark = res
+            struct_mat['Group'][ind_row] = group
+            struct_mat['Subject'][ind_row] = sub_beh
+            struct_mat[beh_par][ind_row] = Struct_mat[1,Index_for_color]
+            struct_mat[sleep_par][ind_row] = Struct_mat[0,Index_for_color]
+            score_mat['Group'][ind_row] = group
+            score_mat['Subject'][ind_row] = sub_beh
+            score_mat['Score'][ind_row] = lda_res.score(X_norm,y)
+            prob_mat['Group'][ind_row*24:(ind_row+1)*24] = group
+            prob_mat['Subject'][ind_row*24:(ind_row+1)*24] = sub_beh
+            prob_mat['Hour'][ind_row*24:(ind_row+1)*24] = hour_str
+            p = lda_res.predict_proba(X_norm)
+            prob_mat['Prob_Dark'][ind_row*24:(ind_row+1)*24] = p[:,0]
+            prob_mat['Prob_Light'][ind_row*24:(ind_row+1)*24] = p[:,1]
+            X_norm_d[sub_beh] = X_norm
+            y_d[sub_beh] = y
+            lda_res_d[sub_beh] = lda_res
+            gauss_light_d[sub_beh] = rot_v_light
+            gauss_dark_d[sub_beh] = rot_v_dark
+            line_light_d[sub_beh] = line_light
+            line_dark_d[sub_beh] = line_dark
+            Index_for_color_d[sub_beh] = Index_for_color
+            struct_mat_d[sub_beh] = Struct_mat
+            v_ort_d[sub_beh] = v_ort
+            title_d[sub_beh] = sub_beh
+            ind_row += 1
+        score_per_group[group][:,0] = np.nanmean(beh_tmp,axis=1)
+        score_per_group[group][:,1] = np.nanmean(sleep_tmp,axis=1)
+        y_pred_gr,prob_pred_gr,score_list_gr,v_gr,X_norm_gr,lda_res_gr = compute_LDA(score_per_group[group],y)
+        std_weights_gr,Struct_mat_gr,explained_variance_gr,v_ort_gr,Index_for_color_gr = compute_structure_matrix(y,score_per_group[group],X_norm_gr,v_gr)
+        res_gr = gaussian_fit(X_norm_gr,v_gr,hd,hl)
+        score_per_group[group][:,0] = X_norm_gr[:,0]
+        score_per_group[group][:,1] = X_norm_gr[:,1]
+        y_gr_d[group] = y
+        lda_res_gr_d[group] = lda_res_gr
+        gauss_light_gr_d[group] = res_gr[2]
+        gauss_dark_gr_d[group] = res_gr[3]
+        line_light_gr_d[group] = res_gr[0]
+        line_dark_gr_d[group] = res_gr[1]
+        Index_for_color_gr_d[group] = Index_for_color_gr
+        struct_mat_gr_d[group] = Struct_mat_gr
+        v_ort_gr_d[group] = v_ort_gr
+        title_gr_d[group] = group
+    dictPlot = {}
+    dictPlot['Fig:LDA Results'] = {}
+    dictPlot['Fig:LDA Results']['Scatter'] = X_norm_d, y_d, lda_res_d, gauss_light_d, gauss_dark_d,line_light_d,line_dark_d, Index_for_color_d, struct_mat_d, v_ort_d ,hl, hd,title_d,beh_par,sleep_par
+    dictPlot['Fig:Group LDA Results'] = {}
+    dictPlot['Fig:Group LDA Results']['Scatter'] = score_per_group,y_gr_d,lda_res_gr_d,gauss_light_gr_d,gauss_dark_gr_d,line_light_gr_d,line_dark_gr_d,Index_for_color_gr_d,struct_mat_gr_d,v_ort_gr_d,hl, hd,title_gr_d,beh_par,sleep_par
+    DataDict = {}
+    DataDict['LDA Results'] = {}
+    DataDict['LDA Results']['Structure_Matrix'] = struct_mat
+    DataDict['LDA Results']['LDA_Score'] = score_mat
+    DataDict['LDA Results']['Classification_Probability'] = prob_mat
+    info = {}
+    info['Structure_Matrix'] = {}
+    info['Structure_Matrix']['Types']  = ['Structure_Matrix']
+    info['Structure_Matrix']['Factor'] = [0,1]
+    info['LDA_Score'] = {}
+    info['LDA_Score']['Types']  = ['LDA_score']
+    info['LDA_Score']['Factor'] = [0,1]
+    info['Classification_Probability'] = {}
+    info['Classification_Probability']['Types']  = ['Classification_Probability']
+    info['Classification_Probability']['Factor'] = [0,1,2]
     
-    return DataDict, dictPlot, info
     
-    
-
-
-
-def Switch_Latency():
-    DataDict, dictPlot, info = {},{},{}
-    
-    Datas      = myInput[0]
-    Input      = myInput[1]
-    DataGroup  = myInput[2]
-    TimeStamps = myInput[3]
-    lock       = myInput[4]
-    
-    return DataDict, dictPlot, info
-
-    
-    
-    
-    
-    return DataDict, dictPlot, info
+    return DataDict,dictPlot,info

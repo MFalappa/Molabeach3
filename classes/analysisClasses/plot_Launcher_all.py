@@ -60,3 +60,7 @@ def select_Function_GUI_all(funcName, *otherInputs):
     elif funcName == 'Actograms':
         fig = plotActograms(*otherInputs)
         return fig
+    
+    elif funcName == 'Switch_Latency':
+        fig = plotSwitch_Latency(*otherInputs)
+        return fig
