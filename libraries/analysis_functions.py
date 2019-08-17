@@ -1665,5 +1665,8 @@ def LDA(*myInput):
     info['Classification_Probability']['Types']  = ['Classification_Probability']
     info['Classification_Probability']['Factor'] = [0,1,2]
     
+    for key in DataDict['LDA Results'].keys():
+        DataDict['LDA Results'][key] = pd.DataFrame(DataDict['LDA Results'][key])
+    
     
     return DataDict,dictPlot,info

@@ -26,7 +26,8 @@ from Plotting_GUI import (Plt_RawPowerDensity_Loop_GUI,Plt_MedianPowerDensity_GU
                           Gr_BoxPlot_LD_GUI,
                           CDF_Gr_Plot_GUI,
                           F_ExpGain_Plt_GUI,
-                          std_Bar_Plot_GUI)
+                          std_Bar_Plot_GUI,
+                          plotLDARes_Dict)
 
 def plotPowerDensity(*myinputs):
     figs  = Plt_RawPowerDensity_Loop_GUI(\
@@ -159,5 +160,14 @@ def plotSwitch_Latency(*myinputs):
     fig3.show()
     figDict['Fig Switch Latency']['Expected Gain'] = fig3
     figDict['Fig Switch Latency']['Optimal Surface'] = fig2
+    return figDict
+def plotLDA(*myinputs):
+    figs  = plotLDARes_Dict(*myinputs[0]['Fig:LDA Results']['Scatter'])
+    figs2 = plotLDARes_Dict(*myinputs[0]['Fig:Group LDA Results']['Scatter'])
+    figDict = {'Fig LDA':{}}
+    for key in list(figs.keys()):
+        figDict['Fig LDA'][key] = figs[key]
+    for key in list(figs2.keys()):
+        figDict['Fig LDA'][key] = figs2[key]
     return figDict
 

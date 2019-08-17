@@ -21,6 +21,59 @@ import scipy.stats as sts
 import bisect
 from copy import copy
 
+def plotLDARes(X_norm, y, lda_res, gauss_light, gauss_dark,line_light,line_dark, Index_for_color, Struct_mat, v_ort ,hl, hd,
+               title,xlabel,ylabel):
+
+    fig = plt.figure()
+    #plt.hold(1)
+    plt.title(title, fontsize=20,)
+    plt.fill_betweenx([-4,4],[-4,4],[4,-4],color='k',alpha=np.abs(Struct_mat[1,Index_for_color]))
+    plt.fill_between([-4,4],[-4,4],[4,-4],color='k',alpha=np.abs(Struct_mat[0,Index_for_color]))
+    plt.scatter(X_norm[hd,0],X_norm[hd,1],color='g',s=40)
+    plt.scatter(X_norm[hl,0],X_norm[hl,1],color='r',s=40)
+    
+    m = lda_res.coef_[0][0]/lda_res.coef_[0][1]
+    m=-1/m
+    q = lda_res.intercept_
+    
+    x = np.linspace(-4,4,100)
+    f_x = m*x+q
+    plt.plot(f_x,x,color=(218./255,165./255,32./255),lw=2 ) 
+    
+    plt.fill_between(gauss_light[0,:],line_light,gauss_light[1,:],alpha=0.85,facecolor='r',edgecolor=None)
+    plt.fill_between(gauss_dark[0,:],line_dark,gauss_dark[1,:],alpha=0.85,facecolor='g',edgecolor=None)
+
+    plt.xlim(-4,4)
+    plt.ylim(-4,4)
+    
+    plt.plot(gauss_light[0,:],gauss_light[1,:],'r')
+    plt.plot(gauss_dark[0,:],gauss_dark[1,:],'g')
+    plt.xlabel(xlabel,fontsize=15)
+    plt.ylabel(ylabel,fontsize=15)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    
+    return fig
+
+def plotLDARes_Dict(X_norm_d, y_d, lda_res_d, gauss_light_d, gauss_dark_d,line_light_d,line_dark_d, Index_for_color_d, Struct_mat_d, v_ort_d ,hl, hd,title_d,xlabel,ylabel):
+    figDict = {}
+    for name in  list(X_norm_d.keys()):
+        X_norm = X_norm_d[name]
+        y = y_d[name]
+        lda_res = lda_res_d[name]
+        gauss_light = gauss_light_d[name]
+        gauss_dark = gauss_dark_d[name]
+        line_light = line_light_d[name]
+        line_dark = line_dark_d[name]
+        Index_for_color = Index_for_color_d[name]
+        Struct_mat = Struct_mat_d[name]
+        v_ort = v_ort_d[name]
+        title = title_d[name]
+        fig = plotLDARes(X_norm, y, lda_res, gauss_light, gauss_dark,line_light,line_dark, Index_for_color, Struct_mat, v_ort ,hl, hd,
+               title,xlabel,ylabel)
+        figDict['Scatter %s'%name] = fig
+    return figDict
+
 def lineFunc(x, m, q):
     return m * x + q
 

@@ -26,6 +26,7 @@ import datetime as dt
 import warnings
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as lda
 from matplotlib.mlab import PCA as PCA_mpl
+#from sklearn.decomposition import PCA as PCA_mpl
 
 def F_Activity_x_Hour_GUI(TrialHour,**kwargs):
     """
@@ -126,10 +127,7 @@ def F_Correct_Rate_GUI(Y,Start_exp,period,TimeStamps,*tend):
     else:
         tend=tend[0]
 
-    try:
-        TrialOnSet=np.where(Y['Action']==TimeStamps['ACT_START_TEST'])[0]
-    except:
-        TrialOnSet=np.where(Y['Action']==TimeStamps['Center Light On'])[0]
+    TrialOnSet=np.where(Y['Action']==TimeStamps['Center Light On'])[0]
         
     TrialOffSet=np.where(Y['Action']==TimeStamps['End Intertrial Interval'])[0]
     StartITI=np.where(Y['Action']==TimeStamps['Start Intertrial Interval'])[0]
@@ -256,10 +254,10 @@ def F_Hour_Trial_GUI(Y,TimeStamps,Start_exp,TrialOnset,TrialOffset,l_r_p_a,tend,
 
 def computeReactionTime(Y,TimeStamps):
 #    
-    try:
-        onset = np.where(Y['Action']==TimeStamps['ACT_START_TEST'])[0]
-    except:
-        onset = np.where(Y['Action']==TimeStamps['Center Light On'])[0]
+#    try:
+#        onset = np.where(Y['Action']==TimeStamps['ACT_START_TEST'])[0]
+#    except:
+    onset = np.where(Y['Action']==TimeStamps['Center Light On'])[0]
             
     offset = np.where(Y['Action']==TimeStamps['Start Intertrial Interval'])[0]
     if onset[0] > offset[0]:
@@ -317,7 +315,8 @@ def computeDailyScore(behaviorData, sleepData, TimeStamps, parBeh, parSleep):
         behav_val, onset, trialHour = computeReactionTime(behaviorData,TimeStamps)
         dailyScore_beh = daily_Median_Mean_Std_GUI(behav_val,trialHour,HBin=3600)[1]
     elif parBeh == 'Error Rate':
-        dailyScore_beh = F_Correct_Rate_GUI(behaviorData,24,TimeStamps)[1]
+        
+        dailyScore_beh = F_Correct_Rate_GUI(behaviorData,0,24,TimeStamps)[1]
         dailyScore_beh = (1 - dailyScore_beh) * 100
       
     if parSleep == 'Sleep Total':
@@ -409,10 +408,10 @@ def gaussian_fit(X_norm,v_ort,hd,hl):
 #    proj[:,1] = res[:,0] * v[1]
 #    projected = np.dot(X_norm[:,[1,0]],v_ort)
 #    projected = projected.reshape((projected.shape[0],1))
-    g_fit_Dark = mxt.GMM(1).fit(projected[hd])
-    g_fit_Light = mxt.GMM(1).fit(projected[hl])
-    gauss_dark = sts.norm(loc = g_fit_Dark.means_[0][0],scale = g_fit_Dark.covars_[0][0])
-    gauss_light = sts.norm(loc = g_fit_Light.means_[0][0],scale = g_fit_Light.covars_[0][0])
+    g_fit_Dark = mxt.GaussianMixture(1).fit(projected[hd])
+    g_fit_Light = mxt.GaussianMixture(1).fit(projected[hl])
+    gauss_dark = sts.norm(loc = g_fit_Dark.means_[0][0],scale = g_fit_Dark.covariances_[0][0])
+    gauss_light = sts.norm(loc = g_fit_Light.means_[0][0],scale = g_fit_Light.covariances_[0][0])
     
     Rot,Rot2 = rotazione(v)
     transl = traslazione(v)

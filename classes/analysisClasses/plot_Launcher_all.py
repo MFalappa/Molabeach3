@@ -64,3 +64,7 @@ def select_Function_GUI_all(funcName, *otherInputs):
     elif funcName == 'Switch_Latency':
         fig = plotSwitch_Latency(*otherInputs)
         return fig
+    
+    elif funcName == 'LDA':
+        fig = plotLDA(*otherInputs)
+        return fig
