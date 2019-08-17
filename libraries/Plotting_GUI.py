@@ -19,7 +19,255 @@ import numpy as np
 import datetime as dt
 import scipy.stats as sts
 import bisect
+from copy import copy
 
+def lineFunc(x, m, q):
+    return m * x + q
+
+def Gr_BoxPlot_LD_GUI(Means,Hour_Light,Hour_Dark,Group_Name):
+    """
+    Function Target:    This function prints boxplots divided by light and dark phase 
+                        of the vectors Means[name], for every group name.
+                        
+    Input:              -Means=dicitionary, Means[name]=vector,length 24, contains the vector
+                        that we want to print as a boxplot, the i value corrisponds to a mean 
+                        relative to hour i.
+                        -Hour_Light/Dark=vector, contains the Light/Dark hours
+                        -Group_Name=vector of strings, contains the name of each
+                        group
+                        
+    Output:             -Box0= subplot of boxplot, one plot per group, divided by 
+                        light and dark phase
+                        -Box1/Box2=boxplot,  for dark/light phase
+                        containing the boxplots of every group
+    """
+    
+    n_row=len(Group_Name)/2+len(Group_Name)%2
+    
+    Ymin=np.nanmin(list(Means.values()))*0.95
+    Ymax=np.nanmax(list(Means.values()))*1.05
+    figDict = {}
+    i=0
+    if len(Group_Name)!=1:
+        figDict[i] = plt.figure()
+        for i in range(len(Group_Name)):
+            plt.subplot(n_row,2,i+1)
+            plt.boxplot([Means[Group_Name[i]][Hour_Dark], Means[Group_Name[i]][Hour_Light]])
+            ticks,tmp=plt.xticks()
+            plt.xticks(ticks,['Dark','Light'])
+            plt.title(Group_Name[i])
+            plt.ylim(Ymin,Ymax)
+            
+    else:
+        figDict[i] = plt.figure()
+        plt.boxplot([Means[Group_Name[0]][Hour_Dark], Means[Group_Name[0]][Hour_Light]])
+        ticks,tmp=plt.xticks()
+        plt.xticks(ticks,['Dark','Light'])
+        plt.ylim(Ymin,Ymax)
+        plt.title(Group_Name[0])
+    
+    figDict[i+1] = plt.figure()
+    Mean_Light=[[]]*len(Group_Name)
+    Mean_Dark=[[]]*len(Group_Name)
+    for i in range(len(Group_Name)):
+        Mean_Light[i]=Means[Group_Name[i]][Hour_Light]
+        Mean_Dark[i]=Means[Group_Name[i]][Hour_Dark]
+    plt.subplot(1,2,1)
+    
+    plt.boxplot(Mean_Dark)
+    ticks,tmp=plt.xticks()
+    plt.xticks(ticks,Group_Name)
+    plt.title('Dark')
+    plt.ylim(Ymin,Ymax)
+    
+    plt.subplot(1,2,2)
+    
+    plt.boxplot(Mean_Light)
+    ticks,tmp=plt.xticks()
+    plt.xticks(ticks,Group_Name)
+    plt.title('Light')
+    plt.ylim(Ymin,Ymax)
+
+    return(figDict)
+    
+def CDF_Gr_Plot_GUI(Cdf,EmCdf,Group_Name,Mouse_Grouped,t0=3,t1=6):
+    """
+    Function Target:    This function prints the cdf theo and empirical.
+    
+    Input:              -Cdf=dictionary, keys=mouse name
+                            -Cdf[name]=Cdf theorical of the GMM relative to mouse name
+                        -EmCdf=dictionary, keys=mouse name
+                            -EmCdf[name]=vector, empirical cdf relative to mouse name
+                        -Group_Name=list of group names
+                        -Mouse_Grouped=dictionary, keys=group name
+                            -Mouse_Grouped[group]=list of mouse name in the group
+                        -t0/t1=sec of the switch
+                        
+    Output:             -fig=Empirical and theorical cdfs graph
+    """
+    Num_Group=len(Group_Name)
+    Row_Num=np.ceil(Num_Group/2.)
+    i=1
+    fig=plt.figure('CDF')
+
+
+    if Num_Group == 1:
+        col = 1
+    else:
+        col = 2
+    for group in Group_Name:
+        plt.subplot(Row_Num,col,i)
+        for name in Mouse_Grouped[group]:
+            plt.plot(Cdf[name]['x'],Cdf[name]['y'],'b')
+            plt.plot(EmCdf[name]['x'],EmCdf[name]['y'],'r')
+            plt.legend(['GMM Fit','Raw'])
+        plt.ylim(0,1)
+        plt.plot([t0,t0],[0,1],'--k')
+        plt.plot([t1,t1],[0,1],'--k')
+        plt.title(group)
+        plt.xlabel('Switch Latency(sec)')
+        plt.ylabel('Cumulative Probability')
+        i+=1
+    
+    return(fig)
+    
+def F_ExpGain_Plt_GUI(ExpLog, MaxRowl, Mean_minmax=(1, 9),
+                      Cv_minmax=(0.05, 0.5), std_Exp_Gain=None,
+                      marker_size=15, legend_size=12,color_std=None,
+                      new_fig=True,color_bar=False):
+    """
+    Function Target:
+    ================
+        This function print an image of the expected gain for different average 
+        switch time and Coeff. of variation (Cv) and also a plot a graph of best
+        average switch time as a function of Cv.
+                        
+    Input:
+    ======
+        - ExpLog : numpy array, shape = n x n
+            ExpLog[i,j] = exp. gain for mean switch time of i sec and Cv of j.
+        - MaxRowl : numpy array, shape = n x 1
+            Max exp gain over all Cv values for every fixed mean switch time 
+        - Mean_minmax : tuple
+            2 elements, extreme values of the mean switch time.
+            Default min is 1 sec and default max is 9 sec
+        - Cv_minmax : tuple
+            2 elements, extreme values of CV. Default min is 0.05, 
+            default max is 0.5
+                        
+    Output:
+    =======
+        - fig : figure representing the expected gain
+    """
+    Mesh = len(ExpLog[:,0])
+    Norm_ExpLog = np.zeros((Mesh,len(ExpLog[0,:])))
+    for i in range(Mesh):
+        Norm_ExpLog[i,:] = ExpLog[i,:] / max(ExpLog[i,:])
+    fig = plt.figure()
+    #plt.hold(1)
+    ax = plt.subplot(111)
+    ax.yaxis.set_major_formatter(plt.FormatStrFormatter('%.2f'))
+    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%.2f'))
+    plt.title('Expected Gain', fontsize='large')
+    img = plt.imshow(Norm_ExpLog, cmap = plt.cm.Greys_r)
+    plt.plot(MaxRowl, list(range(Mesh)), color = 'r')
+    plt.gca().invert_yaxis()
+    if color_bar:
+        plt.colorbar(img)
+    plt.xlim(0, Mesh)
+    plt.ylim(0, Mesh)
+    
+    
+    y, tmp = plt.yticks()
+    YTicks = np.linspace(Cv_minmax[0], Cv_minmax[1], len(y))
+    plt.yticks(y, YTicks)
+    xmin, xMax = plt.xlim()
+    ymin, yMax = plt.ylim()
+    m_resc_x = (xMax - xmin) / (Mean_minmax[1] -Mean_minmax[0])
+    q_resc_x = xmin -  Mean_minmax[0] * m_resc_x
+    m_resc_y = (yMax - ymin) / (Cv_minmax[1] -  Cv_minmax[0])
+    q_resc_y = ymin -  Cv_minmax[0] * m_resc_y
+    if not (std_Exp_Gain is None):
+        color = ['b', 'g', 'c', 'y', 'm', 'k',(1,69/255.,0/255.),'r']
+        Groups = np.unique(std_Exp_Gain['Group'])
+        ind = 0
+        for group in Groups:
+            IndGr = np.where(std_Exp_Gain['Group'] == group)[0]
+            xnew = lineFunc(std_Exp_Gain['Fit Mean'][IndGr], m_resc_x,
+                            q_resc_x)
+            ynew = lineFunc(std_Exp_Gain['Fit CV'][IndGr], m_resc_y,
+                            q_resc_y)
+            if not color_std is None:
+                plt.scatter(xnew, ynew, c=color_std,
+                       s=marker_size, label=group)
+            else:
+                plt.scatter(xnew, ynew, c=color[ind%len(color)],
+                       s=marker_size, label=group)
+            ind += 1
+        plt.legend(fontsize=legend_size)
+    x = np.linspace(xmin, xMax, Mean_minmax[1])
+    plt.xticks(x, np.arange(Mean_minmax[0],Mean_minmax[1]+1))
+    plt.xlabel('Mean')
+    plt.ylabel('Coefficient of Variation (CV)')
+
+    return(fig)
+    
+def std_Bar_Plot_GUI(std_Matrix_input, title, title_size=20, linewidth=1,
+                     elinewidth=3, rescaleBy=1.0, treshold=0.95, y_label='',
+                     label_size=12, tick_size=15):
+    """
+        Function Target:
+        ================
+            This function plots a bar graph with std_Matrix values
+            averaged group by group. It normalizes all values by the factor
+            rescaleBy
+        Input:
+        ======
+            - std_Matrix : numpy structured array
+                Matrix containing values we want to plot: must have a column
+                'Value' or a column 'Mean' and a clumn 'Group'.
+            - title : string
+                Title of the plot
+        Output:
+        =======
+            - Average bar graph with sem
+    """
+    std_Matrix = copy(std_Matrix_input)
+    Groups = np.unique(std_Matrix['Group'])
+    if 'Mean' in std_Matrix.dtype.names:
+        varName = 'Mean'
+    elif 'Value' in std_Matrix.dtype.names:
+        varName = 'Value'
+    else:
+        raise ValueError('stdMatrix must have column \'Mean\' or \'Value\'')
+    std_Matrix[varName] = std_Matrix[varName] / rescaleBy
+    Mean = []
+    SEM = []
+    for group in Groups:
+        grIndex = np.where(std_Matrix['Group'] == group)[0]
+        Mean += [np.nanmean(std_Matrix[varName][grIndex])]
+        SEM += [np.nanstd(std_Matrix[varName][grIndex])/np.sqrt(len(grIndex))]
+    x_axis = list(range(len(Mean)))
+    fig = plt.figure(figsize=(4.5*3.13,3.5*3.13))
+
+    colorList = ('b', 'g', 'c', 'y', 'm', 'k',(1,69/255.,0/255.),'r')
+    for k in x_axis:
+        plt.bar([k], [Mean[k]], yerr=[SEM[k]], align='center',
+                color=colorList[k],
+                linewidth=linewidth, width=0.3,
+                error_kw={'elinewidth' : elinewidth, 'ecolor' : 'r'})
+    plt.xticks(x_axis, Groups, fontsize=tick_size)
+    plt.ylabel(y_label, fontsize=label_size)
+    plt.xlim(-0.5, len(Groups) - 0.5)
+    plt.ylim(0, 1.2)
+    if 0 <= treshold <= 1:
+        plt.plot([-0.5, len(Groups) - 0.5], [treshold, treshold], '--r')
+        ticks = list(plt.yticks()[0])
+        bisect.insort_right(ticks, treshold)
+        plt.yticks(ticks,ticks)
+    plt.title(title, fontsize=title_size)
+
+    return fig
 
 def Normalize_Action_x_Interval_GUI(Action_x_Interval,period,Hour_Fraction,N_Day,string):
     """
