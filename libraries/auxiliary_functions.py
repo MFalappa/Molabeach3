@@ -103,7 +103,7 @@ def computeSleepPerHrs(sleepData,epType ='NR'):
     
     return perc_vect
 
-def F_Correct_Rate_GUI(Y,Start_exp,period,TimeStamps,*tend):
+def F_Correct_Rate_GUI(Y,Start_exp,period,TimeStamps,*tend,type_data='TSE'):
     
     """
     Function Target:    This function calculate the rate of correct responses
@@ -127,7 +127,12 @@ def F_Correct_Rate_GUI(Y,Start_exp,period,TimeStamps,*tend):
     else:
         tend=tend[0]
 
-    TrialOnSet=np.where(Y['Action']==TimeStamps['Center Light On'])[0]
+    if type_data == 'TSE':
+        start_trial = 'Center Light On'
+    elif 'AM-Microsystems':
+        start_trial = 'ACT_START_TEST'
+
+    TrialOnSet=np.where(Y['Action']==TimeStamps[start_trial])[0]
         
     TrialOffSet=np.where(Y['Action']==TimeStamps['End Intertrial Interval'])[0]
     StartITI=np.where(Y['Action']==TimeStamps['Start Intertrial Interval'])[0]
@@ -291,10 +296,10 @@ def computeReactionTime(Y,TimeStamps):
     trialHour=F_Hour_Trial_GUI(Y,TimeStamps,Start_exp, onset,None,'a',None,24)[1]
     return react_time,onset,trialHour
 
-def performLDA_Analysis(behaviorData, sleepData, TimeStamps, parBeh, parSleep, dark_start,dark_len):
+def performLDA_Analysis(behaviorData, sleepData, TimeStamps, parBeh, parSleep, dark_start,dark_len,type_data):
     hd,hl = Hour_Light_and_Dark_GUI(dark_start,dark_len,TimeInterval=3600)
     
-    dailyScore_beh,dailyScore_sleep = computeDailyScore(behaviorData, sleepData, TimeStamps, parBeh, parSleep)
+    dailyScore_beh,dailyScore_sleep = computeDailyScore(behaviorData, sleepData, TimeStamps, parBeh, parSleep,type_data)
     
 #    print(dailyScore_beh)
     X = np.zeros((24,2))
@@ -310,13 +315,13 @@ def performLDA_Analysis(behaviorData, sleepData, TimeStamps, parBeh, parSleep, d
     
     return res,X_norm,Struct_mat,explained_variance,v_ort,v,y_pred,lda_res,Index_for_color,y
 
-def computeDailyScore(behaviorData, sleepData, TimeStamps, parBeh, parSleep):
+def computeDailyScore(behaviorData, sleepData, TimeStamps, parBeh, parSleep,type_data):
     if parBeh == 'Reaction Time':
         behav_val, onset, trialHour = computeReactionTime(behaviorData,TimeStamps)
         dailyScore_beh = daily_Median_Mean_Std_GUI(behav_val,trialHour,HBin=3600)[1]
     elif parBeh == 'Error Rate':
         
-        dailyScore_beh = F_Correct_Rate_GUI(behaviorData,0,24,TimeStamps)[1]
+        dailyScore_beh = F_Correct_Rate_GUI(behaviorData,0,24,TimeStamps,type_data=type_data)[1]
         dailyScore_beh = (1 - dailyScore_beh) * 100
       
     if parSleep == 'Sleep Total':
@@ -1140,7 +1145,7 @@ def F_FitSin_FixPeriod(Vector,amplitude0,phase0,translation0, function):
             p-value relative to the pearson coefficient corr 
     """
     x = np.arange(0,len(Vector),1)
-    p0 = [amplitude0, phase0, translation0] 
+    p0 = np.hstack(([amplitude0, phase0, translation0] ))
 
     popt, pcov = curve_fit(function, x, Vector, p0,absolute_sigma=True,maxfev=10**3)
     

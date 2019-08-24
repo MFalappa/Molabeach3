@@ -43,7 +43,7 @@ def inputDlgCreator(analysisName,group_list=[]):
         return dictInput
     if analysisName == 'Sleep_Time_Course':
 #        print('Enterd sleep time course')
-        dictInput['SpinBox'] = [('Time binning:',(1,24),1),
+        dictInput['SpinBox'] = [('Time binning [hours]:',(1,24),1),
             ('Epoch duration:',(1,60),4),('Tick number:',(1,100),10),
             ('Dark phase start:',(0,23),20)]
 #        print('spin ok')
@@ -77,13 +77,7 @@ def inputDlgCreator(analysisName,group_list=[]):
         return dictInput
     
     if analysisName == 'Sleep_cycles':
-        dictInput['Combo'] = [('Epoch type:',['Sleep','Rem','NRem','Wake'],
-                  [[2,3],[2],[3],[1]],0),
-                   ('Statistical index:',['Mean','Median'],['Mean','Median'],0),
-                   ('Mean or total per time bin:',['Mean','Total'],
-                    ['Mean','Total'], 1)]
-                   
-                   
+        dictInput['DoubleSpinBox'] = [('Max sleep cycle duration:',(3,60),30)]
         dictInput['Combo'] = [('Binning:',['1 min', '2 min', '3 min', '4 min','5 min'],
                   [1,2,3,4,5],2)]
         return dictInput

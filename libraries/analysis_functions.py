@@ -1590,13 +1590,14 @@ def LDA(*myInput):
                 lock.lockForRead()
                 data_beh = deepcopy(Datas.takeDataset(sub_beh))
                 data_sleep = deepcopy(Datas.takeDataset(sub_sleep))
+                type_data = Datas[sub_beh].Types[0]
 #                time_stamps = Datas.getTimeStamps(sub_beh)
             finally:
                 lock.unlock()
             res,X_norm,Struct_mat,explained_variance,v_ort,v,y_pred,lda_res,\
             Index_for_color,y = performLDA_Analysis(data_beh, data_sleep,
                                                     TimeStamps, beh_par, 
-                                                    sleep_par, dark_start,dark_len)
+                                                    sleep_par, dark_start,dark_len,type_data)
             dailyScore_beh,dailyScore_sleep = computeDailyScore(data_beh, data_sleep, TimeStamps, beh_par, sleep_par)
             sleep_tmp[:,i_sub] = dailyScore_sleep
             beh_tmp[:,i_sub] = dailyScore_beh

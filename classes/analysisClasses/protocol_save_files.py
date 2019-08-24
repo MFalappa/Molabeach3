@@ -38,7 +38,7 @@ def load_npz(file_names,data_container):
     print('load_npz',file_names)
     dc = DatasetContainer_GUI()
     for name in file_names:
-        loaded_data = np.load(name)
+        loaded_data = np.load(name,allow_pickle=True)
         for key in list(loaded_data.keys()):
             dc.add(loaded_data[key].all())
         data_container.join(dc)

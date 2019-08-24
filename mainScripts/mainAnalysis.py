@@ -113,7 +113,7 @@ class MainWindow(QMainWindow):
         refreshTypeList(import_dir)
         # dictionary with keys group or single, contains a dict with
         # keys function names and values a list of the accepted types
-        self.AnalysisAndLabels = np.load(os.path.join(os.path.dirname(__file__),'Analysis.npy')).all()
+        self.AnalysisAndLabels = np.load(os.path.join(os.path.dirname(__file__),'Analysis.npy'),allow_pickle=True).all()
 
         
         ind=0
