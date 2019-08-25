@@ -25,8 +25,8 @@ import numpy as np
 import datetime as dt
 import warnings
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as lda
-from matplotlib.mlab import PCA as PCA_mpl
-#from sklearn.decomposition import PCA as PCA_mpl
+# from matplotlib.mlab import PCA as PCA_mpl
+from sklearn.decomposition import PCA as PCA_mpl
 
 def F_Activity_x_Hour_GUI(TrialHour,**kwargs):
     """
@@ -103,7 +103,7 @@ def computeSleepPerHrs(sleepData,epType ='NR'):
     
     return perc_vect
 
-def F_Correct_Rate_GUI(Y,Start_exp,period,TimeStamps,*tend,type_data='TSE'):
+def F_Correct_Rate_GUI(Y,Start_exp,period,TimeStamps,type_data="TSE",*tend):
     
     """
     Function Target:    This function calculate the rate of correct responses
