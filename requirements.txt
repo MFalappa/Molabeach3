@@ -1,0 +1,12 @@
+numpy
+pyserial
+subprocess32
+xbee
+PyQt5
+matplotlib
+scipy
+passlib
+pandas
+h5py
+pyedflib
+scikit-learn
