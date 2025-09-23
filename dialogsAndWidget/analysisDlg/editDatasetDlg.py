@@ -16,15 +16,19 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 import sys,os
 edit_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'edit')
-sys.path.append(edit_dir)
-from ui_editDlg import *
-import sip
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from editLauncher import *
-from editFunctions import *
+libraries_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libraries')
 
-print(edit_dir)
+sys.path.append(edit_dir)
+sys.path.append(libraries_dir)
+
+from ui_editDlg import Ui_DialogEdit
+from Modify_Dataset_GUI import DatasetContainer_GUI
+
+from PyQt5.QtWidgets import QDialog,QApplication
+from PyQt5.QtCore import Qt,pyqtSignal
+
+from editLauncher import launchEditFun
+
 
 class editDlg(QDialog,Ui_DialogEdit):
     errorImport = pyqtSignal(str,name='editErrorSignal')
@@ -45,17 +49,21 @@ class editDlg(QDialog,Ui_DialogEdit):
             self.data_container = DatasetContainer_GUI()
         
         self.descr_dict = {}
+        self.show_dict = {}
         self.path_dict = {}
         self.populateCombo()
         self.textBrowser_descr.setText(self.descr_dict[str(self.comboBox.currentText())]) 
-        self.connect(self.comboBox,SIGNAL('currentIndexChanged (const QString&)'),self.setDescription)
-        self.connect(self.pushButton_cancel,SIGNAL('clicked()'),self.close)
-        self.connect(self.pushButton_Edit,SIGNAL('clicked()'),self.editFunction)
         
+        self.comboBox.currentIndexChanged[str].connect(self.setDescription)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_Edit.clicked.connect(self.editFunction)
+        
+#        self.connect(self.comboBox,pyqtSignal('currentIndexChanged (const QString&)'),self.setDescription)
+
     
     def editFunction(self):
-        funName = self.comboBox.currentText()
-        launchEditFun(self.parent, funName)
+        showed_name = self.comboBox.currentText()
+        launchEditFun(self.parent, self.show_dict[showed_name])
         
     def setDescription(self,funName):
         self.textBrowser_descr.setText(self.descr_dict[funName])
@@ -71,7 +79,7 @@ class editDlg(QDialog,Ui_DialogEdit):
                 if funName == 'main' or funName == 'create_laucher':
                     line = fh.readline()
                     continue
-                self.comboBox.addItem(funName)
+#                self.comboBox.addItem(funName)
                 line = fh.readline()
                 if '\"\"\"' in line:
                     descr_str = line.split('\"\"\"')[1]
@@ -81,9 +89,14 @@ class editDlg(QDialog,Ui_DialogEdit):
                         line = fh.readline()
                     descr_str += line.split('\"\"\"')[0]
                     descr_str = descr_str.replace('\n',' ')
-                    self.descr_dict[funName] = descr_str
-                else:
-                    self.descr_dict[funName] = ''
+                    self.descr_dict[descr_str.split('==')[1]] = descr_str.split('==')[0]
+                    
+                    self.show_dict[descr_str.split('==')[1]] = funName
+                    self.comboBox.addItem(descr_str.split('==')[1])
+                    
+                    
+#                else:
+#                    self.descr_dict[funName] = ''
             line = fh.readline()
         fh.close()
 

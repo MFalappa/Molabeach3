@@ -123,9 +123,9 @@ class mysend_email(autentication_dlg):
             smtpObj = SMTP(host=self.server,
                            port=self.port)
 #            print self.__psw
-            print smtpObj.ehlo()
-            print smtpObj.starttls()
-            print smtpObj.login(self.sender, self.__psw)
+            print(smtpObj.ehlo())
+            print(smtpObj.starttls())
+            print(smtpObj.login(self.sender, self.__psw))
             message = MIMEMultipart()
             message['Subject'] = self.mail_object
             message['From'] = self.sender
@@ -142,9 +142,9 @@ class mysend_email(autentication_dlg):
                              self.receivers,
                              message.as_string())
             self.accept()
-        except Exception, e:
-            print e
-            print 'Unable to send email'
+        except Exception as e:
+            print(e)
+            print('Unable to send email')
             self.reject()
             pass
 
@@ -163,12 +163,12 @@ def main():
     server = 'smtp.googlemail.com'
     mail_object='prova'
     mail_body='Se non riesco non c\'e\' problema!'
-    file_attach = 'C:\Users\ebalzani\IIT\Dottorato\SCI paper\Figs\Figures-1.png'
+    file_attach = 'C:\\Users\ebalzani\IIT\Dottorato\SCI paper\Figs\Figures-1.png'
     send_email = mysend_email(sender,receiver,file_attach,server,port,mail_body,mail_object)
     send_email.show()
     app.exec_()
-    zip_file = 'C:\Users\ebalzani\IIT\myPython\\tmp\images\\prova1.zip'
-    file_list = ['C:\Users\ebalzani\IIT\myPython\\tmp\images\\autonomiceLogo.png','C:\Users\ebalzani\IIT\myPython\\tmp\images\\back.png']
+    zip_file = 'C:\\Users\ebalzani\IIT\myPython\\tmp\images\\prova1.zip'
+    file_list = ['C:\\Users\ebalzani\IIT\myPython\\tmp\images\\autonomiceLogo.png','C:\\Users\ebalzani\IIT\myPython\\tmp\images\\back.png']
     zip_my_file(file_list,zip_file)
 if __name__ == '__main__':
     main()

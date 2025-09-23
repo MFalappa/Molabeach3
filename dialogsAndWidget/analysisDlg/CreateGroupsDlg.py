@@ -9,21 +9,24 @@
 # warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
 # the GNU General Public License for more details.
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future_builtins import *
 
-import os
+# modified by Matteo in 2019 to adapt to python3
+
+
+
+
 import sys
-from PyQt4.QtCore import (Qt, SIGNAL, SLOT,QPluginLoader)
-from PyQt4.QtGui import (QApplication, QDialog, QVBoxLayout, QHBoxLayout, QIcon,
-                         QListWidget, QListWidgetItem, QSplitter, QTableWidget
-                         ,QLabel, QLineEdit, QFont, QGridLayout, QDialogButtonBox,
-                         QComboBox)
+from PyQt5.QtCore import (QPluginLoader)
+from PyQt5.QtWidgets import (QApplication, QDialog, QVBoxLayout, QHBoxLayout,
+                         QLabel, QLineEdit,QListWidgetItem, QGridLayout, 
+                         QDialogButtonBox,QComboBox)
+
+from PyQt5.QtGui import QIcon,QFont
 from copy import copy
+
 from MyDnDDialog import MyDnDListWidget
-QPlugin = QPluginLoader("qico4.dll")
+
+QPlugin = QPluginLoader("qico5.dll")
 class CreateGroupsDlg(QDialog):
 # rimuovere anDict, e' obsoleto
     def __init__(self, GroupNumber=2, DataList=[],DataContainer=None,
@@ -39,7 +42,7 @@ class CreateGroupsDlg(QDialog):
         string = ''
         if dataName:
             string += ' %s'%dataName
-        titleLabel = QLabel(u'All Dataset:' + string)
+        titleLabel = QLabel('All Dataset:' + string)
         titleLabel.setFont(font)
         VLayout.addWidget(titleLabel)
         self.dataListWidget = MyDnDListWidget()
@@ -67,16 +70,17 @@ class CreateGroupsDlg(QDialog):
                 row+=2
             self.groupListWidget[i] = MyDnDListWidget()
             if not groupName:
-                self.lineEditWidget[i] = QLineEdit(u'Group %d'%(i+1))
+                self.lineEditWidget[i] = QLineEdit('Group %d'%(i+1))
             else:
                 self.lineEditWidget[i] = QLineEdit(groupName[i])
                 self.lineEditWidget[i].setReadOnly(True)
             grid.addWidget(self.groupListWidget[i],row+1,column,1,1)
             grid.addWidget(self.lineEditWidget[i],row,column,1,1)
             if not groupName:
-                self.connect(self.lineEditWidget[i],
-                             SIGNAL('editingFinished()'),
-                             lambda number = i : self.updateEdit(number))
+                self.lineEditWidget[i].editingFinished.connect(lambda number = i : self.updateEdit(number))
+#                self.connect(self.lineEditWidget[i],
+#                             SIGNAL('editingFinished()'),
+#                             lambda number = i : self.updateEdit(number))
         self.filterComboBox=QComboBox()
         self.filterComboBox.addItems(TypeList)
         comboLabel=QLabel()
@@ -91,26 +95,40 @@ class CreateGroupsDlg(QDialog):
         VLayout.addLayout(HLayout)
         VLayout.addWidget(self.ButtonBox)
         self.setLayout(VLayout)
-        self.connect(self.ButtonBox,SIGNAL('rejected()'),self,SLOT('reject()'))
-        self.connect(self.ButtonBox,SIGNAL('accepted()'),self,SLOT('accept()'))
-        self.connect(self.filterComboBox,SIGNAL('currentIndexChanged(int)'),
-                         self.refreshDataList)
+        
+        self.ButtonBox.accepted.connect(self.accept)
+        self.ButtonBox.rejected.connect(self.reject)
+
+        
+        
+        self.filterComboBox.currentIndexChanged[int].connect(self.refreshDataList)
+#        self.connect(self.filterComboBox,SIGNAL('currentIndexChanged(int)'),
+#                         self.refreshDataList)
+        
         self.filterComboBox.setCurrentIndex(0)
         self.refreshDataList()
-        self.connect(self.dataListWidget,SIGNAL('dropped()'),lambda Key=None:self.enableOk(Key))
-        self.connect(self.dataListWidget,SIGNAL('dragged()'),self.startDrag)
-        for key in self.groupListWidget.keys():
-            self.connect(self.groupListWidget[key],SIGNAL('dropped()'), lambda Key=key:self.refreshAllData(Key))
-            self.connect(self.groupListWidget[key],SIGNAL('dragged()'),lambda Key=key:self.enableOk(Key))    
+        
+#        self.dataListWidget.dropEvent(lambda Key=None:self.enableOk(Key))
+        
+        self.dataListWidget.dropped.connect(lambda Key=None:self.enableOk(Key))
+        self.dataListWidget.dragged.connect(self.startDrag)
+#        self.connect(self.dataListWidget,SIGNAL('dropped()'),lambda Key=None:self.enableOk(Key))
+#        self.connect(self.dataListWidget,SIGNAL('dragged()'),self.startDrag)
+        for key in list(self.groupListWidget.keys()):
+            
+            self.groupListWidget[key].dropped.connect(lambda Key=key:self.refreshAllData(Key))
+            self.groupListWidget[key].dragged.connect(lambda Key=key:self.enableOk(Key))
+#            self.connect(self.groupListWidget[key],SIGNAL('dropped()'), lambda Key=key:self.refreshAllData(Key))
+#            self.connect(self.groupListWidget[key],SIGNAL('dragged()'),lambda Key=key:self.enableOk(Key))    
         self.setWindowTitle("Select Groups")
         
         
     def startDrag(self):
         print('Start Moving')
-        for Key in self.groupListWidget.keys():
+        for Key in list(self.groupListWidget.keys()):
             try:
                 last = self.groupListWidget[Key].count()-1
-                lastItemText= unicode(self.groupListWidget[Key].item(last).text())
+                lastItemText= str(self.groupListWidget[Key].item(last).text())
                 self.AllDataList.remove(lastItemText)
                 print( self.AllDataList)    
             except (ValueError,AttributeError):
@@ -127,18 +145,18 @@ class CreateGroupsDlg(QDialog):
                 self.dataListWidget.addItem(item)
                 print('added an item to datalistwidget')
                 return
-        
+            print('matte',ThisKey )
             itemInd = self.groupListWidget[ThisKey].count() - 1
             item = self.groupListWidget[ThisKey].item(itemInd)
             try:
-                print(unicode(item.text()))
-                self.AllDataList.remove(unicode(item.text()))
+                print(str(item.text()))
+                self.AllDataList.remove(str(item.text()))
                 print('Done removing')
             except (ValueError, AttributeError):
                 pass
         else:
             self.refreshAllData(None)
-        for key in self.groupListWidget.keys():
+        for key in list(self.groupListWidget.keys()):
             print(self.groupListWidget[key].count())
             if not self.groupListWidget[key].count():
                 self.ButtonBox.button(self.ButtonBox.Ok).setEnabled(False)
@@ -148,7 +166,7 @@ class CreateGroupsDlg(QDialog):
     def updateEdit(self,number):
         Name = self.lineEditWidget[number].text()
         if not Name:
-            self.lineEditWidget[number].setText(u'Group %d'%(number+1))
+            self.lineEditWidget[number].setText('Group %d'%(number+1))
             
     def refreshDataList(self):
         self.dataListWidget.clear()
@@ -168,19 +186,19 @@ class CreateGroupsDlg(QDialog):
     
     def returnSelectedNames(self):
         selectedDatas = {}
-        for k in self.groupListWidget.keys():
-            grName = unicode(self.lineEditWidget[k].text())
+        for k in list(self.groupListWidget.keys()):
+            grName = str(self.lineEditWidget[k].text())
             item = self.groupListWidget[k].takeItem(0)
             selectedDatas[grName] = []
             while item:
-                selectedDatas[grName] += [unicode(item.text())]
+                selectedDatas[grName] += [str(item.text())]
                 item = self.groupListWidget[k].takeItem(0)
         return selectedDatas
         
     def refreshAllData(self, Key):
         if Key is None:
             for k in range(self.dataListWidget.count()):
-                itemText = unicode(self.dataListWidget.item(k).text())
+                itemText = str(self.dataListWidget.item(k).text())
                 try:
                     self.AllDataList.remove(itemText)
                 except ValueError:

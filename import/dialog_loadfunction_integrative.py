@@ -18,9 +18,11 @@ import os,sys
 file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 lib_dir = os.path.join(file_path,'libraries')
 sys.path.append(lib_dir)
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from ui_import_function_integrative import *
+from PyQt5.QtWidgets import (QDialog,QApplication)
+from PyQt5.QtGui import QPixmap,QIcon,QImage
+from PyQt5.QtCore import pyqtSignal,Qt
+
+from ui_import_function_integrative import Ui_Dialog
 #from messageLib import *
 
 from automatic_input_detection import return_input_count, check_analysis_function, check_plot_function
@@ -35,7 +37,7 @@ class dialog_upload_function_integrative(QDialog, Ui_Dialog):
         self.input_dict = None
         refr = QPixmap.fromImage(QImage(os.path.join(file_path,'images','refresh.jpg')))
         icon = QIcon(refr)
-        print os.path.join(file_path,'images','refresh.jpg')
+        print(os.path.join(file_path,'images','refresh.jpg'))
         self.pushButton_refresh.setIcon(icon)
         self.pushButton_refresh.setText('')
         
@@ -46,11 +48,12 @@ class dialog_upload_function_integrative(QDialog, Ui_Dialog):
         
         self.addDetectedInput()
         self.controlFunctions()
+         
+        self.pushButton_Cancel.clicked.connect(self.close)
+        self.pushButton_Continue.clicked.connect(self.emit_signal)
+        self.pushButton_refresh.clicked.connect(self.controlFunctions)
         
-        
-        self.connect(self.pushButton_Cancel,SIGNAL('clicked()'),self.close)
-        self.connect(self.pushButton_Continue,SIGNAL('clicked()'),self.emit_signal)
-        self.connect(self.pushButton_refresh,SIGNAL('clicked()'),self.controlFunctions)
+       
         
     def addDetectedInput(self):
         if not self.pathAnalysis:
@@ -59,13 +62,13 @@ class dialog_upload_function_integrative(QDialog, Ui_Dialog):
         string = ''
         try:
             inp = return_input_count(self.pathAnalysis)
-            for key in inp.keys():
+            for key in list(inp.keys()):
                 if inp[key] > 0:
                     string += 'Found %d input of type %s\n'%(inp[key],key)
-        except NameError, e:
+        except NameError as e:
             string += 'NameError, '+ e.message
-            print e.args
-            print e.__dict__
+            print(e.args)
+            print(e.__dict__)
             inp = None
         self.textBrowser_inputDetected.setText(string)
         self.input_dict = inp
@@ -94,9 +97,10 @@ class dialog_upload_function_integrative(QDialog, Ui_Dialog):
 
 def main():
     import sys
-    fld = 'C:\Users\ebalzani\IIT\myPython\Phenopy\OldCode\New_Analysis_Gui\\upload script'
+    fld = '/Users/Matte/Python_script/Phenopy3/future'
     app = QApplication(sys.argv)
-    form = dialog_upload_function_integrative(pathAnalysis=fld+'\\new_switch.py',pathPlotting=fld+'\\new_switch_plt.py')
+    form = dialog_upload_function_integrative(pathAnalysis=os.path.join(fld,'new_switch.py'),
+                                              pathPlotting=os.path.join(fld,'new_switch_plt.py'))
     form.show()
     app.exec_()
 

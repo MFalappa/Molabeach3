@@ -23,9 +23,9 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 #
 import sys
 import os
-from PyQt4.QtCore import (QByteArray, QDataStream, QIODevice, QMimeData,
-        QPoint, Qt,SIGNAL)
-from PyQt4.QtGui import ( QDrag, QIcon, QListWidget,QListWidgetItem,QDialog,QApplication,QGridLayout,QAbstractItemView)
+from PyQt5.QtCore import (QByteArray,QDataStream,QIODevice,QMimeData,QPoint, Qt,pyqtSignal)
+from PyQt5.QtWidgets import (QDialog,QListWidget,QListWidgetItem,QApplication,QGridLayout,QAbstractItemView)
+from PyQt5.QtGui import ( QDrag, QIcon)
 
 
 
@@ -61,7 +61,7 @@ class MyDnDListWidget(QListWidget):
             data = event.mimeData().data("application/x-icon-and-text")
             stream = QDataStream(data, QIODevice.ReadOnly)
             num_drag = stream.readInt()
-            for k in xrange(num_drag):
+            for k in range(num_drag):
                 text = stream.readQString()
                 icon = QIcon()
                 stream >> icon
@@ -78,7 +78,7 @@ class MyDnDListWidget(QListWidget):
                     self.addItem(item) 
                     event.setDropAction(Qt.MoveAction)
                     event.accept()
-                    self.emit(SIGNAL('dropped()'))
+                    self.emit(pyqtSignal('dropped()'))
                 
         else:
             event.ignore()
@@ -103,7 +103,7 @@ class MyDnDListWidget(QListWidget):
         if drag.start(Qt.MoveAction) == Qt.MoveAction:
             for item in list_items:
                 self.takeItem(self.row(item))
-            self.emit(SIGNAL('dragged()'))
+            self.emit(pyqtSignal('dragged()'))
             
 class Form(QDialog):
 
@@ -111,8 +111,8 @@ class Form(QDialog):
         super(Form, self).__init__(parent)
 
         dndListWidget = MyDnDListWidget()
-        if os.path.exists('C:\Users\ebalzani\Desktop\TMP'):
-            path = 'C:\Users\ebalzani\Desktop\TMP\\'
+        if os.path.exists('C:\\Users\ebalzani\Desktop\TMP'):
+            path = 'C:\\Users\ebalzani\Desktop\TMP\\'
         else:
             path = os.path.dirname(__file__)
         i=0

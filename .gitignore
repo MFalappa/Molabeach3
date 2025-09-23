@@ -1,0 +1,6 @@
+*.pyc
+*.phz
+*.xml
+.*
+*.DS_Store
+*dialogsAndWidget/.DS_Store

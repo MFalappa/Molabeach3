@@ -2,77 +2,63 @@
 
 # Form implementation generated from reading ui file 'select_list_dlg.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
-        Dialog.setObjectName(_fromUtf8("Dialog"))
+        Dialog.setObjectName("Dialog")
         Dialog.resize(352, 423)
-        self.verticalLayout_3 = QtGui.QVBoxLayout(Dialog)
-        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
-        self.groupBox_select = QtGui.QGroupBox(Dialog)
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(Dialog)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.groupBox_select = QtWidgets.QGroupBox(Dialog)
         font = QtGui.QFont()
         font.setPointSize(10)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_select.setFont(font)
-        self.groupBox_select.setObjectName(_fromUtf8("groupBox_select"))
-        self.verticalLayout_2 = QtGui.QVBoxLayout(self.groupBox_select)
-        self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.verticalLayout = QtGui.QVBoxLayout()
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.scrollArea = QtGui.QScrollArea(self.groupBox_select)
+        self.groupBox_select.setObjectName("groupBox_select")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.groupBox_select)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.verticalLayout = QtWidgets.QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.scrollArea = QtWidgets.QScrollArea(self.groupBox_select)
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
-        self.scrollAreaWidgetContents = QtGui.QWidget()
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
         self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 302, 315))
-        self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
-        self.verticalLayout_4 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
-        self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
-        self.checkBox_select_all = QtGui.QCheckBox(self.scrollAreaWidgetContents)
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.checkBox_select_all = QtWidgets.QCheckBox(self.scrollAreaWidgetContents)
         font = QtGui.QFont()
         font.setPointSize(8)
         font.setBold(False)
         font.setWeight(50)
         self.checkBox_select_all.setFont(font)
         self.checkBox_select_all.setChecked(True)
-        self.checkBox_select_all.setObjectName(_fromUtf8("checkBox_select_all"))
+        self.checkBox_select_all.setObjectName("checkBox_select_all")
         self.verticalLayout_4.addWidget(self.checkBox_select_all)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.verticalLayout.addWidget(self.scrollArea)
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
-        self.pushButton_close = QtGui.QPushButton(self.groupBox_select)
+        self.pushButton_close = QtWidgets.QPushButton(self.groupBox_select)
         font = QtGui.QFont()
         font.setPointSize(8)
         self.pushButton_close.setFont(font)
-        self.pushButton_close.setObjectName(_fromUtf8("pushButton_close"))
+        self.pushButton_close.setObjectName("pushButton_close")
         self.horizontalLayout.addWidget(self.pushButton_close)
-        self.pushButton_apply = QtGui.QPushButton(self.groupBox_select)
+        self.pushButton_apply = QtWidgets.QPushButton(self.groupBox_select)
         font = QtGui.QFont()
         font.setPointSize(8)
         self.pushButton_apply.setFont(font)
-        self.pushButton_apply.setObjectName(_fromUtf8("pushButton_apply"))
+        self.pushButton_apply.setObjectName("pushButton_apply")
         self.horizontalLayout.addWidget(self.pushButton_apply)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_2.addLayout(self.verticalLayout)
@@ -84,9 +70,10 @@ class Ui_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog", None))
-        self.groupBox_select.setTitle(_translate("Dialog", "Select Box", None))
-        self.checkBox_select_all.setText(_translate("Dialog", "Select All", None))
-        self.pushButton_close.setText(_translate("Dialog", "Close", None))
-        self.pushButton_apply.setText(_translate("Dialog", "Apply", None))
+        _translate = QtCore.QCoreApplication.translate
+        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        self.groupBox_select.setTitle(_translate("Dialog", "Select Box"))
+        self.checkBox_select_all.setText(_translate("Dialog", "Select All"))
+        self.pushButton_close.setText(_translate("Dialog", "Close"))
+        self.pushButton_apply.setText(_translate("Dialog", "Apply"))
 

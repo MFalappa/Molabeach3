@@ -14,18 +14,19 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import (QApplication,QWidget,QButtonGroup,QDialog,
+                             QCheckBox,QSizePolicy,QSpacerItem)
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSignal,Qt,QDateTime
 import sys,os
 lib_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libraries')
 sys.path.append(lib_dir)
-from Modify_Dataset_GUI import *
+from Modify_Dataset_GUI import DatasetContainer_GUI
 from ui_select_list_dlg import Ui_Dialog
 from ui_widgetSleepRecordingPhase import Ui_Form
 import numpy as np
-import datetime as dt
 from copy import copy
+import datetime as dt
 
 class widgetSleepRecordingPhase(QWidget,Ui_Form):
     enable_continue = pyqtSignal(bool,name='enableContinue')
@@ -37,25 +38,28 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         self.Dataset = Dataset
         self.list_selected = list_selected
         self.comboBox.addItems(self.list_selected)
-                
+
         self.label_warning.setText('')
         
         self.setInitialPhase()
+        self.setTimeLims(self.list_selected[0])
         self.setDateInitialTimes(self.list_selected[0],phase='bs')
         self.setDateInitialTimes(self.list_selected[0],phase='sd')
         self.setDateInitialTimes(self.list_selected[0],phase='rc')
         self.setDateInitialTimes(self.list_selected[0],phase='nm')
-        self.setTimeLims(self.list_selected[0])
+        
         
         
         self.checkBox_bs.setChecked(1)
+        self.checkBox_noNorm.setChecked(1)
         
         bs_func = lambda : self.checkerBoxChanged('BS')
         sd_func = lambda : self.checkerBoxChanged('SD')
         rc_func = lambda : self.checkerBoxChanged('RC')
-        self.connect(self.checkBox_bs, SIGNAL('stateChanged (int)'), bs_func)
-        self.connect(self.checkBox_sd, SIGNAL('stateChanged (int)'), sd_func)
-        self.connect(self.checkBox_rc, SIGNAL('stateChanged (int)'), rc_func)
+        self.checkBox_bs.stateChanged[int].connect(bs_func)
+        self.checkBox_sd.stateChanged[int].connect(sd_func)
+        self.checkBox_rc.stateChanged[int].connect(rc_func)
+      
         
         bs0 = lambda dd:self.changeDate(dd,'bs0')
         bs1 = lambda dd:self.changeDate(dd,'bs1')
@@ -77,8 +81,8 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         self.dateTimeEdit_norm0.dateTimeChanged.connect(nm0)
         self.dateTimeEdit_norm1.dateTimeChanged.connect(nm1)
         
-        self.connect(self.comboBox,SIGNAL("currentIndexChanged (const QString&)"),self.refreshDate)
-        
+#        self.connect(self.comboBox,SIGNAL("currentIndexChanged (const QString&)"),self.refreshDate)
+        self.comboBox.currentIndexChanged[str].connect(self.refreshDate)
         self.pushButton.clicked.connect(self.applyTo)
     
     
@@ -88,15 +92,26 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         """
         if phase == 'BS':
             isChecked = self.checkBox_bs.isChecked()
+            if isChecked:
+                self.checkBox_sd.setChecked(False)
+                self.checkBox_rc.setChecked(False)
             idx = 0
         elif phase == 'SD':
             isChecked = self.checkBox_sd.isChecked()
+            if isChecked:
+                self.checkBox_bs.setChecked(False)
+                self.checkBox_rc.setChecked(False)
             idx = 1
         else:
             isChecked = self.checkBox_rc.isChecked()
+            if isChecked:
+                self.checkBox_bs.setChecked(False)
+                self.checkBox_sd.setChecked(False)
             idx = 2
+        
         for label in self.list_selected:
             self.phase_dict[label]['isChecked'][idx] = isChecked
+            self.phase_dict[label]['normFactor'][idx] = self.checkBox_noNorm.isChecked()
         self.checkPhases()
         
     def refreshDate(self,label):
@@ -104,9 +119,9 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
             Refresh with the info regarding the new subject
         """
 
-        print self.phase_dict[label]
+#        print(self.phase_dict[label])
         self.setTimeLims(label)
-        print self.phase_dict[label]
+#        print(self.phase_dict[label])
         isChecked = self.phase_dict[label][0]['isChecked']
         date0 = self.phase_dict[label][0]['dayStart']
         date1 = self.phase_dict[label][0]['dayEnd']
@@ -134,19 +149,21 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         self.dateTimeEdit_rc_1.setDateTime(qDate1)
         self.checkBox_rc.setChecked(isChecked)
         
+        isChecked = self.checkBox_noNorm.isChecked()
         date0 = self.phase_dict[label][0]['normStart']
         date1 = self.phase_dict[label][0]['normEnd']
         qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
         qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
         self.dateTimeEdit_norm0.setDateTime(qDate0)
         self.dateTimeEdit_norm1.setDateTime(qDate1)
-       
+        self.checkBox_noNorm.setChecked(isChecked) 
+        
     def setTimeLims(self,label):
-        print self.tmp,'SETLIM'
+#        print(self.tmp,'SETLIM')
         self.tmp+=1
         minDT = self.Dataset.takeDataset(label).Timestamp[0]
         maxDT = self.Dataset.takeDataset(label).Timestamp[-1]
-        
+                
         minDT = QDateTime(minDT)
         maxDT = QDateTime(maxDT)
                 
@@ -178,8 +195,8 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         """
         self.phase_dict = {}
         for label in self.list_selected:
-            self.phase_dict[label] = np.zeros(3,dtype={'names':('phase','dayStart','dayEnd','normStart','normEnd','isChecked'),
-                                                        'formats':('S2',datetime.datetime,datetime.datetime,datetime.datetime,datetime.datetime,bool)})
+            self.phase_dict[label] = np.zeros(3,dtype={'names':('phase','dayStart','dayEnd','normStart','normEnd','isChecked','normFactor'),
+                                                        'formats':('S2',dt.datetime,dt.datetime,dt.datetime,dt.datetime,bool,bool)})
             self.phase_dict[label]['phase'][0] = 'BS'
             self.phase_dict[label]['dayStart'][0] = self.Dataset.takeDataset(label).Timestamp[0]
             self.phase_dict[label]['dayEnd'][0] = self.Dataset.takeDataset(label).Timestamp[-1]
@@ -195,26 +212,41 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
             self.phase_dict[label]['dayEnd'][2] = self.Dataset.takeDataset(label).Timestamp[-1]
             self.phase_dict[label]['isChecked'][2] = False
             
-            self.phase_dict[label]['normStart'][:] = self.Dataset.takeDataset(label).Timestamp[0]
-            self.phase_dict[label]['normEnd'][:] = self.Dataset.takeDataset(label).Timestamp[-1]
+            self.phase_dict[label]['normStart'][:] = self.Dataset.takeDataset(label).Timestamp[0] + dt.timedelta(hours = 12)
+            self.phase_dict[label]['normEnd'][:] = self.Dataset.takeDataset(label).Timestamp[-1] - dt.timedelta(hours = 8)
+            self.phase_dict[label]['normFactor'][:] = True
             
     def setDateInitialTimes(self,label,phase):
         if phase == 'bs':
             dateTimeEdt_0 = self.dateTimeEdit_bs_0
             dateTimeEdt_1 = self.dateTimeEdit_bs_1
+            date0 = self.Dataset.takeDataset(label).Timestamp[0]
+            date1 = self.Dataset.takeDataset(label).Timestamp[-1]
+            qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
+            qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
         elif phase == 'sd':
             dateTimeEdt_0 = self.dateTimeEdit_sd_0
             dateTimeEdt_1 = self.dateTimeEdit_sd_1
+            date0 = self.Dataset.takeDataset(label).Timestamp[0]
+            date1 = self.Dataset.takeDataset(label).Timestamp[-1]
+            qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
+            qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
         elif phase == 'rc':
             dateTimeEdt_0 = self.dateTimeEdit_rc_0
             dateTimeEdt_1 = self.dateTimeEdit_rc_1
+            date0 = self.Dataset.takeDataset(label).Timestamp[0]
+            date1 = self.Dataset.takeDataset(label).Timestamp[-1]
+            qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
+            qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
         elif phase == 'nm':
             dateTimeEdt_0 = self.dateTimeEdit_norm0
             dateTimeEdt_1 = self.dateTimeEdit_norm1
-        date0 = self.Dataset.takeDataset(label).Timestamp[0]
-        date1 = self.Dataset.takeDataset(label).Timestamp[-1]
-        qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
-        qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
+            date0 = self.Dataset.takeDataset(label).Timestamp[0] + dt.timedelta(hours = 12)
+            date1 = self.Dataset.takeDataset(label).Timestamp[-1] - dt.timedelta(hours = 4)
+            qDate0 = QDateTime(date0.year,date0.month,date0.day,date0.hour,date0.minute,date0.second)
+            qDate1 = QDateTime(date1.year,date1.month,date1.day,date1.hour,date1.minute,date1.second)
+        
+        
         dateTimeEdt_0.setDateTime(qDate0)
         dateTimeEdt_1.setDateTime(qDate1)
         
@@ -264,6 +296,7 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         else:
             self.phase_dict[label][row][key] = dateTimeEdt.dateTime().toPyDateTime()
         self.checkPhases()
+        self.phase_dict[label]['normFactor'][0] = self.checkBox_noNorm.isChecked()
         
     def checkPhases(self):
         """
@@ -324,7 +357,7 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
         self.enable_continue.emit(checkFlag)
     
     def changeDates(self,name_list):
-        print 'called change dates'
+#        print('called change dates')
         for label in name_list:
             d0 = self.dateTimeEdit_bs_0.dateTime().toPyDateTime()
             d1 = self.dateTimeEdit_bs_1.dateTime().toPyDateTime()
@@ -353,10 +386,11 @@ class widgetSleepRecordingPhase(QWidget,Ui_Form):
             d0 = self.dateTimeEdit_norm0.dateTime().toPyDateTime()
             d1 = self.dateTimeEdit_norm1.dateTime().toPyDateTime()
             
-            self.phase_dict[label]['normStart'][:] = d0
-            self.phase_dict[label]['normEnd'][:] = d1
+            self.phase_dict[label]['normStart'][:] = d0 + dt.timedelta(hours = 12)
+            self.phase_dict[label]['normEnd'][:] = d1 - dt.timedelta(hours = 4)
+            self.phase_dict[label]['normFactor'][:] = self.checkBox_noNorm.isChecked()
             
-            print label
+#            print(label)
     
     def applyTo(self):
         dlg = select_names_dlg(self.list_selected,parent=self)
@@ -392,9 +426,13 @@ class select_names_dlg(Ui_Dialog,QDialog):
         spaceritem = QSpacerItem(0,0, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout_2.addSpacerItem(spaceritem)
         
-        self.connect(self.pushButton_apply,SIGNAL('clicked()'),self.emit_signal_apply)
-        self.connect(self.pushButton_close,SIGNAL('clicked()'),self.close)
-        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.select_all_clicked)
+        self.pushButton_apply.clicked.connect(self.emit_signal_apply)
+        self.pushButton_close.clicked.connect(self.close)
+        self.checkBox_select_all.clicked[bool].connect(self.select_all_clicked)
+        
+#        self.connect(self.pushButton_apply,SIGNAL('clicked()'),self.emit_signal_apply)
+#        self.connect(self.pushButton_close,SIGNAL('clicked()'),self.close)
+#        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.select_all_clicked)
 
     def select_all_clicked(self,tof):
         if tof:
@@ -423,9 +461,9 @@ class select_names_dlg(Ui_Dialog,QDialog):
 def main():
 
     dc = DatasetContainer_GUI()
-    dd = np.load('C:\Users\ebalzani\Desktop\Data\Sleep\\workspace_2017-5-15T14_16.phz')
+    dd = np.load('/Users/Matte/Python_script/Phenopy3/data example/workspace_2019-3-7T16_22.phz')
     kl = []
-    for key in dd.keys()[:3]:
+    for key in dd.files[:3]:
         dc.add(dd[key].all())
         kl += [key]
     kl = np.sort(kl)

@@ -20,15 +20,12 @@ lib_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libr
 classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes','phenopyClasses')
 sys.path.append(lib_dir)
 sys.path.append(classes_dir)
-import pycanusb
-import canportreader
-from msgview import *
-from messageLib import *
-from PyQt4.QtCore import QTimer,Qt
-from PyQt4.QtGui import QDialog,QApplication,QLabel,QHBoxLayout,QVBoxLayout,QProgressBar
-from read_output_prg import *
-#from Parser import parsing_Funct
-#from time import sleep
+
+from messageLib import read_Size_Log_and_Prog,read_External_EEPROM
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QDialog,QApplication,QLabel,QVBoxLayout,QProgressBar
+from read_output_prg import (create_program,hexString_to_int)
+
 class readProgram(QDialog):
     def __init__(self,row_dict,transl_dict,parent=None,Id=127):
         super(readProgram, self).__init__(parent)
@@ -36,7 +33,6 @@ class readProgram(QDialog):
         self.row_dict = row_dict
         self.transl_dict = transl_dict
         
-        self.canusb = parent.parent.serialPort
         self.canReader = parent.parent.Reader
         self.parent = parent
         self.canReader.received.disconnect()
@@ -71,11 +67,11 @@ class readProgram(QDialog):
         
     
     def initialization(self,msg):
-        self.canusb.write(msg)
-        print 'Initialized'
+        self.canReader.writeSerial(msg.to_byte())
+        print('Initialized')
         
     def recieveMsg(self,msg):
-        print 'Recieved msg: %s'%msg.dataAsHexStr()
+#        print('Recieved msg matteo: %s'%msg.dataAsHexStr())
         if msg.data[3] == self.reply and self.reply==37:
             self.ProgLen = 16**2 * msg.data[5] + msg.data[4]
             self.progress.setMaximum(self.ProgLen - 1)
@@ -90,10 +86,11 @@ class readProgram(QDialog):
     def startReading(self):
         msg = read_Size_Log_and_Prog(self.Id)
         self.reply = 37
-        self.canusb.write(msg)
+        self.canReader.writeSerial(msg.to_byte())
         
     def readProg(self):
         if self.Index==self.ProgLen:
+#            print('index',self.Index)
             int_list = hexString_to_int(self.ListOfMsg_str)
             program_transl = create_program(int_list)
             self.canReader.received.disconnect()
@@ -106,24 +103,24 @@ class readProgram(QDialog):
         else:    
             msg = read_External_EEPROM(self.Id,self.Index)
             self.reply = msg.data[3]
-            self.canusb.write(msg)
+            self.canReader.writeSerial(msg.to_byte())
             self.Index +=1
             
 if __name__=='__main__':  
-    import numpy as np     
+#    from Parser import parsing_Funct
 #    CommandList = []
 #    CommandList += [switch_Lights_Msg(128,1,2,5)]
 #    CommandList += [ReleaseFood_Msg(128,'Right')]
 #    CommandList += [switch_Lights_Msg(128,0,0,0)]
-#    CommandList = parsing_Funct('C:\Users\ebalzani\Desktop\labview\Program_Example_2.prg',128)
+#    CommandList = parsing_Funct('/Users/Matte/Desktop/Program_Example.prg',128)
     app = QApplication(sys.argv)
     dlg =readProgram({},{},Id=1)
     dlg.show()
     app.exec_()
     newList=[]
-    fh = open('C:\Users\ebalzani\IIT\Dottorato\Matte\Color Preference\Data\\27-6 to 28-6\\change_color_prog_uploaded.txt','w')
+    fh = open('/Users/Matte/Desktop/Program_Example.txt','w')
     for msg in dlg.ListOfMsg:
-        print msg.dataAsHexStr(),msg.data[4]
+        print(msg.dataAsHexStr(),msg.data[4])
         fh.write(msg.dataAsHexStr()+'\n')
     fh.close()
     dlg.close()

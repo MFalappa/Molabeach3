@@ -17,7 +17,21 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 import os,sys
 lib_dir = os.path.join(os.path.abspath(os.path.join(__file__,'../../..')),'libraries')
 sys.path.append(lib_dir)
-from messageLib import *
+from messageLib import (set_Mean_Distribution_ITI,set_Max_Trial_Num,
+                        set_Probability_Array,program_Start_Trial,
+                        set_Trial_Timeout_ms,program_Reset_Trigger,program_event_Trigger,
+                        program_Start_Trial_Timer,program_if_Random_MC,program_Light_On,
+                        program_Fix_Delay,program_Light_Off,program_Loop_Local_Trial,
+                        program_If_Trigger,program_If_TimoutReached,
+                        program_Release_Pellet,program_End_Local_Trial,
+                        program_End_Block_If,program_Else_Block_If,
+                        program_End_Loop_Local_Trial,program_Fixed_Delay_ITI,
+                        program_Random_Delay_ITI,program_End_Trial,program_Counter_Init,
+                        program_If_Light,program_If_Presence,program_Counter_Inc,
+                        program_If_Counter,program_If_Random_Mc_Step,program_Dummy_Test,
+                        program_Noise_On,program_Noise_Off,log_ITI_end_Msg,
+                        program_event_Poke,program_manage_RGB,program_TTL,program_action,
+                        program_init_Random_Mc_index,program_is_Random_Mc_index)
 
 def parsing_Funct(pathToText,Id):
     """
@@ -25,11 +39,11 @@ def parsing_Funct(pathToText,Id):
     """
     messageList = []
     if not os.path.exists(pathToText):
-        raise IOError,'No such file \'%s\''%pathToText
+        raise IOError('No such file \'%s\''%pathToText)
     num_lines = sum(1 for line in open(pathToText))
     fh = open(pathToText,'r')
     row = 0
-    for fileRow in xrange(num_lines):
+    for fileRow in range(num_lines):
         line = fh.readline()
         line = line.rstrip('\n')
         for char in line:
@@ -93,7 +107,7 @@ def parsing_Funct(pathToText,Id):
             elif len(parameters) == 0:
                 messageList += [program_if_Random_MC(Id,row,0)]
             else:
-                raise ValueError,'Too many parameters for function %s'%programName
+                raise ValueError('Too many parameters for function %s'%programName)
             row += 1
         elif programName == 'RGB_LEFT_ON':
             messageList += [program_Light_On(Id,row,'L',parameters[0])]
@@ -253,9 +267,21 @@ def parsing_Funct(pathToText,Id):
             messageList += [program_TTL(Id,row,parameters[0],
                                                parameters[1])]
             row += 1
+        elif programName == 'MARK_ACTION':
+            messageList += [program_action(Id,row,parameters[0])]
+            row += 1
+        
+        elif programName == 'CO_INIT_RANDOM_MC_INDEX':
+            messageList += [program_init_Random_Mc_index(Id,row)]
+            row += 1
+        
+        elif programName == 'IS_RANDOM_MC_INDEX':
+            messageList += [program_is_Random_Mc_index(Id,row,parameters[0])]
+            row += 1
+     
         else:
-            raise ValueError, programName
-        print programName,' ',messageList[-1]
+            raise ValueError(programName)
+#        print(programName,' ',messageList[-1])
 #              messageList[-1].dataAsHexStr()[2:4],
 #              messageList[-1].dataAsHexStr()[4:8],
 #              messageList[-1].dataAsHexStr()[8:10],
@@ -270,8 +296,8 @@ if __name__=='__main__':
     from time import clock
     import numpy as np
     t0=clock()
-    command = parsing_Funct('C:\Users\ebalzani\IIT\myPython\canusb_project\Programmi\\Program_switch_TTL.prg',3)
-    print clock()-t0
+    command = parsing_Funct('/Users/Matte/Scuola/Dottorato/Projects/Tucci/switch colors/sw/preTraining_blu.txt',3)
+    print(clock()-t0)
     data_matrix = np.zeros((len(command),9),dtype='S2')
     row = 0
     for msg in command:
@@ -281,6 +307,5 @@ if __name__=='__main__':
             data_matrix[row,k] = sting_data[ind:ind+2]
             k += 1
         row+=1
-    print data_matrix
-    np.savetxt('C:\Users\ebalzani\IIT\myPython\canusb_project\Programmi\\Program_switch_TTL.txt',
-               data_matrix,fmt='%s')
+    print(data_matrix)
+    np.savetxt('/Users/Matte/Desktop/Program_switch.txt',data_matrix,fmt='%s')

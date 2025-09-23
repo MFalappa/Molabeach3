@@ -2,66 +2,52 @@
 
 # Form implementation generated from reading ui file 'select_group_num_dlg.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
-        Dialog.setObjectName(_fromUtf8("Dialog"))
+        Dialog.setObjectName("Dialog")
         Dialog.resize(367, 160)
-        self.verticalLayout_3 = QtGui.QVBoxLayout(Dialog)
-        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
-        self.verticalLayout_2 = QtGui.QVBoxLayout()
-        self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.verticalLayout = QtGui.QVBoxLayout()
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.label = QtGui.QLabel(Dialog)
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(Dialog)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.verticalLayout = QtWidgets.QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.label = QtWidgets.QLabel(Dialog)
         font = QtGui.QFont()
         font.setBold(True)
         font.setWeight(75)
         self.label.setFont(font)
-        self.label.setObjectName(_fromUtf8("label"))
+        self.label.setObjectName("label")
         self.horizontalLayout.addWidget(self.label)
-        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout)
-        self.horizontalLayout_2 = QtGui.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
-        self.spinBox = QtGui.QSpinBox(Dialog)
-        self.spinBox.setObjectName(_fromUtf8("spinBox"))
+        self.spinBox = QtWidgets.QSpinBox(Dialog)
+        self.spinBox.setObjectName("spinBox")
         self.horizontalLayout_2.addWidget(self.spinBox)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.verticalLayout_2.addLayout(self.verticalLayout)
-        self.horizontalLayout_3 = QtGui.QHBoxLayout()
-        self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
-        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem2)
-        self.pushButton_cancel = QtGui.QPushButton(Dialog)
-        self.pushButton_cancel.setObjectName(_fromUtf8("pushButton_cancel"))
+        self.pushButton_cancel = QtWidgets.QPushButton(Dialog)
+        self.pushButton_cancel.setObjectName("pushButton_cancel")
         self.horizontalLayout_3.addWidget(self.pushButton_cancel)
-        self.pushButton_ok = QtGui.QPushButton(Dialog)
-        self.pushButton_ok.setObjectName(_fromUtf8("pushButton_ok"))
+        self.pushButton_ok = QtWidgets.QPushButton(Dialog)
+        self.pushButton_ok.setObjectName("pushButton_ok")
         self.horizontalLayout_3.addWidget(self.pushButton_ok)
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
         self.verticalLayout_3.addLayout(self.verticalLayout_2)
@@ -70,8 +56,9 @@ class Ui_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(_translate("Dialog", "Group number", None))
-        self.label.setText(_translate("Dialog", "Select number of groups:", None))
-        self.pushButton_cancel.setText(_translate("Dialog", "Cancel", None))
-        self.pushButton_ok.setText(_translate("Dialog", "Ok", None))
+        _translate = QtCore.QCoreApplication.translate
+        Dialog.setWindowTitle(_translate("Dialog", "Group number"))
+        self.label.setText(_translate("Dialog", "Select number of groups:"))
+        self.pushButton_cancel.setText(_translate("Dialog", "Cancel"))
+        self.pushButton_ok.setText(_translate("Dialog", "Ok"))
 

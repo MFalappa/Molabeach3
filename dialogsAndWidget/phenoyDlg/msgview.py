@@ -18,7 +18,7 @@ along with pyQanmon.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010, Martin Gysel
 """
 
-from PyQt4 import QtCore, QtGui, uic
+from PyQt5 import QtCore, QtGui, uic
 import pycanusb
 
 class CANTableMsgGeneric(QtGui.QWidget):
@@ -52,7 +52,7 @@ class CANTableMsg(CANTableMsgGeneric):
         self.canId = 0
         
     def _cellClicked(self, x, y):
-        print x, y
+        print(x, y)
         if x == 2:
             if self.idTable.item(x,y).text() == '0':
                 self.idTable.setItem(x,y, QtGui.QTableWidgetItem('1'))
@@ -134,7 +134,7 @@ class CANMMsg(CANTableMsgGeneric):
         self.extId.setCheckState(QtCore.Qt.Checked)
         
     def _cellClicked(self, x, y):
-        print x, y
+        print(x, y)
         if x == 1 and y == 28:
             if self.idTable.item(x,y).text() == '0':
                 self.idTable.setItem(x,y, QtGui.QTableWidgetItem('1'))

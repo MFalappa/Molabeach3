@@ -19,10 +19,13 @@ lib_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libr
 classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes','phenopyClasses')
 sys.path.append(classes_dir)
 sys.path.append(lib_dir)
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import (QDialog,QButtonGroup,QCheckBox,
+                             QSpacerItem,QSizePolicy,QApplication)
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt,pyqtSignal
+
 from ui_load_program_dlg import Ui_Dialog
-from messageLib import *
+from messageLib import switch_Lights_Msg,Start_Stop_Trial_Msg
 from check_prog import *
 from Parser import parsing_Funct
 from ui_stop_box_dlg import *
@@ -39,13 +42,13 @@ class stop_box_dlg(Ui_Dialog,QDialog):
         self.IDList = IDList
         self.mode = MODE
         self.sa_dictionary = source_address
-        self.stop_signal.connect(self.test)
+#        self.stop_signal.connect(self.test)
         
         # CREATE A CHECKER BOX LIST
         self.dictChecker = {}
         self.box_group = QButtonGroup(parent=self)
         self.box_group.setExclusive(False)
-        font = QtGui.QFont()
+        font = QFont()
         font.setPointSize(8)
         font.setBold(False)
         font.setWeight(50)
@@ -59,9 +62,12 @@ class stop_box_dlg(Ui_Dialog,QDialog):
         spaceritem = QSpacerItem(0,0, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout_2.addSpacerItem(spaceritem)
         
-        self.connect(self.pushButton_stop,SIGNAL('clicked()'),self.emit_signal_stop)
-        self.connect(self.pushButton_cancel,SIGNAL('clicked()'),self.close)
-        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.select_all_clicked)
+#        self.connect(self.pushButton_stop,SIGNAL('clicked()'),self.emit_signal_stop)
+#        self.connect(self.pushButton_cancel,SIGNAL('clicked()'),self.close)
+#        self.connect(self.checkBox_select_all,SIGNAL('clicked(bool)'),self.select_all_clicked)
+        self.pushButton_stop.clicked.connect(self.emit_signal_stop)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.checkBox_select_all.clicked.connect(self.select_all_clicked)
 
     def select_all_clicked(self,tof):
         if tof:
@@ -90,9 +96,9 @@ class stop_box_dlg(Ui_Dialog,QDialog):
             msg_list += [Start_Stop_Trial_Msg(box,False,Stand_Alone=True,source_address=self.sa_dictionary[box], MODE=self.mode)]
         self.stop_signal.emit(msg_list,idList)
     
-    def test(self,l,d):
-        print l
-        print d
+#    def test(self,l,d):
+#        print(l)
+#        print(d)
 def main():
     import sys
     app = QApplication(sys.argv)

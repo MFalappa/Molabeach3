@@ -18,9 +18,10 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 # BUG1 settato con 1min di ritardo rispetto a quanto voluto
 # BUG2 timer key error
 from ui_setupLightCycle import Ui_Dialog
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-import datetime
+from PyQt5.QtCore import (QTime,QDateTime,pyqtSignal)
+from PyQt5.QtWidgets import (QDialog,QCheckBox,QComboBox,QHBoxLayout,
+                             QSpacerItem,QSizePolicy,QApplication)
+
 class setupLightCycle(QDialog,Ui_Dialog):
     applyTimerSchedule = pyqtSignal(dict, dict, dict, name='setupLightTimers')
     def __init__(self, boxid, list_box, parent=None):
@@ -76,19 +77,31 @@ class setupLightCycle(QDialog,Ui_Dialog):
                              14:self.spinBoxD15
                              }
         self.timeEdit.setTime(QTime(20,0,0))
-        self.connect(self.checkBoxSelectAll,SIGNAL('stateChanged(int)'),self.select_all_clicked)
+#        self.connect(self.checkBoxSelectAll,SIGNAL('stateChanged(int)'),self.select_all_clicked)
+        self.checkBoxSelectAll.toggle()
+        self.checkBoxSelectAll.stateChanged.connect(self.select_all_clicked)
         for k in self.checkDict.keys():
-            self.connect(self.checkDict[k],SIGNAL('stateChanged(int)'),self.checkEnableApply)
+            self.checkDict[k].stateChanged.connect(self.checkEnableApply)
+#            self.connect(self.checkDict[k],SIGNAL('stateChanged(int)'),self.checkEnableApply)
         for k in self.darkDurDict.keys():
             self.darkDurDict[k].setRange(0,24*60*10)
-            self.connect(self.darkDurDict[k],SIGNAL('valueChanged (int)'),self.checkEnableApply)
+            self.darkDurDict[k].valueChanged.connect(self.checkEnableApply)
+#            self.connect(self.darkDurDict[k],SIGNAL('valueChanged (int)'),self.checkEnableApply)
         for k in self.lightDurDict.keys():
             self.lightDurDict[k].setRange(0,24*60*10)
-            self.connect(self.lightDurDict[k],SIGNAL('valueChanged (int)'),self.checkEnableApply)
-        self.connect(self.spinBoxCL,SIGNAL('valueChanged (int)'),self.checkEnableApply)
-        self.connect(self.calendarWidget,SIGNAL('selectionChanged ()'),self.checkEnableApply)
-        self.connect(self.pushButtonApply,SIGNAL('clicked()'), self.applyCycle)
-        self.connect(self.pushButton,SIGNAL('clicked()'),self.reject)
+            self.lightDurDict[k].valueChanged.connect(self.checkEnableApply)
+#            self.connect(self.lightDurDict[k],SIGNAL('valueChanged (int)'),self.checkEnableApply)
+        
+        self.spinBoxCL.valueChanged.connect(self.checkEnableApply)
+        self.calendarWidget.selectionChanged.connect(self.checkEnableApply)
+#        self.connect(self.spinBoxCL,SIGNAL('valueChanged (int)'),self.checkEnableApply)
+#        self.connect(self.calendarWidget,SIGNAL('selectionChanged ()'),self.checkEnableApply)
+        
+   
+        self.pushButtonApply.clicked.connect(self.applyCycle)
+        self.pushButton.clicked.connect(self.reject)
+       
+        
         self.spinBoxCL.setRange(1,15)
       
     def applyCycle(self):
@@ -152,7 +165,7 @@ class setupLightCycle(QDialog,Ui_Dialog):
 def main():
     import sys
     app = QApplication(sys.argv)
-    form = setupLightCycle(3,5)
+    form = setupLightCycle([1,2],[3,5])
     form.show()
     app.exec_()
 if __name__=='__main__':

@@ -14,9 +14,10 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import(QDialog,QVBoxLayout,QHBoxLayout,QLabel,QLineEdit,
+                          QPushButton,QSpacerItem,QSizePolicy,QApplication)
+from PyQt5.QtGui import QFont,QPalette
+from PyQt5.QtCore import Qt
 import os,sys
 classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'classes','phenopyClasses')
 sys.path.append(classes_dir)
@@ -56,8 +57,11 @@ class autentication_dlg(QDialog):
         h_layout.addWidget(pushCancel)
         h_layout.addWidget(pushOk)
         v_layout.addLayout(h_layout)
-        self.connect(pushOk,SIGNAL('clicked()'),self.checkpsw)
-        self.connect(pushCancel,SIGNAL('clicked()'),self.reject)
+        
+        pushOk.clicked.connect(self.checkpsw)
+        pushCancel.clicked.connect(self.reject)
+#        self.connect(pushOk,SIGNAL('clicked()'),self.checkpsw)
+#        self.connect(pushCancel,SIGNAL('clicked()'),self.reject)
         self.setLayout(v_layout)
         
     def checkpsw(self):

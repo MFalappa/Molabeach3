@@ -82,7 +82,7 @@ class Reader(object):
         self.fileData['Variables'] = []
 
         # read variable headers and create variables
-        for varNum in xrange(self.fileData['FileHeader']['NumVars']):
+        for varNum in range(self.fileData['FileHeader']['NumVars']):
             var = {'Header': self._ReadNex5VarHeader()}
             self.fileData['Variables'].append(var)
 
@@ -101,7 +101,7 @@ class Reader(object):
                 try:
                     self.fileData['MetaData'] = json.loads(metaString)
                 except Exception as error:
-                    print('Invalid file metadata: ' + repr(error))
+                    print(('Invalid file metadata: ' + repr(error)))
 
         self.theFile.close()
         return self.fileData
@@ -154,7 +154,7 @@ class Reader(object):
         fhValues = struct.unpack(fileHeaderFormat, self.theFile.read(struct.calcsize(fileHeaderFormat)))
         keys = ['MagicNumber', 'NexFileVersion', 'Comment', 'Frequency', 'Beg', 'NumVars', 'MetaOffset', 'End',
                 'Padding']
-        fileHeader = dict(zip(keys, fhValues))
+        fileHeader = dict(list(zip(keys, fhValues)))
         del fileHeader['Padding']
 
         if fileHeader['MagicNumber'] != 894977358:
@@ -172,7 +172,7 @@ class Reader(object):
         fileHeaderFormatSize = struct.calcsize(fileHeaderFormat)
         fhValues = struct.unpack(fileHeaderFormat, self.theFile.read(struct.calcsize(fileHeaderFormat)))
         keys = ['MagicNumber', 'NexFileVersion', 'Comment', 'Frequency', 'Beg', 'End', 'NumVars', 'Padding']
-        fileHeader = dict(zip(keys, fhValues))
+        fileHeader = dict(list(zip(keys, fhValues)))
         del fileHeader['Padding']
 
         if fileHeader['MagicNumber'] != 827868494:
@@ -191,7 +191,7 @@ class Reader(object):
         vhValues = struct.unpack(varHeaderFormat, self.theFile.read(varHeaderSize))
         keys = ['Type', 'Version', 'Name', 'DataOffset', 'Count', 'Wire', 'Unit', 'Gain', 'Filter', 'XPos', 'YPos',
                 'SamplingRate', 'ADtoMV', 'NPointsWave', 'NMarkers', 'MarkerLength', 'MVOffset', 'PreThrTime', 'Padding']
-        varHeader = dict(zip(keys, vhValues))
+        varHeader = dict(list(zip(keys, vhValues)))
         del varHeader['Padding']
 
         varHeader['Name'] = varHeader['Name'].decode().strip('\x00').strip()
@@ -209,7 +209,7 @@ class Reader(object):
         keys = ['Type', 'Version', 'Name', 'DataOffset', 'Count', 'TsDataType', 'ContDataType', 'SamplingRate', 'Units',
                 'ADtoMV', 'MVOffset', 'NPointsWave', 'PreThrTime', 'MarkerDataType', 'NMarkers', 'MarkerLength',
                 'ContFragIndexType', 'Padding']
-        varHeader = dict(zip(keys, vhValues))
+        varHeader = dict(list(zip(keys, vhValues)))
         del varHeader['Padding']
 
         varHeader['Name'] = varHeader['Name'].decode().strip('\x00').strip()
@@ -247,7 +247,7 @@ class Reader(object):
         if valueType == 'q':
             # 64-bit int is NOT supported by Python array, we have to use struct
             vList = []
-            for i in xrange(count):
+            for i in range(count):
                 vList.append(struct.unpack('q', self.theFile.read(8))[0])
             if coeff == 1.0:
                 return vList
@@ -411,7 +411,7 @@ class NexWriter(object):
                                    'MetaOffset', 'EndTicks', 'Padding']
         # we will add nex5 file header keys (add MetaOffset)
         fhValues = [827868494, 106, '', timestampFrequency, 0, 0, 0, 0, '']
-        fileHeader = dict(zip(self.nex5fileHeaderKeys, fhValues))
+        fileHeader = dict(list(zip(self.nex5fileHeaderKeys, fhValues)))
         self.fileData = {'FileHeader': fileHeader, 'Variables': []}
 
     def AddNeuron(self, name, timestamps, wire=0, unit=0, xpos=0, ypos=0):
@@ -428,7 +428,7 @@ class NexWriter(object):
         if self.useNumpy:
             self._VerifyIsNumpyArray('Timestamps', timestamps)
         vhValues = [NexFileVarType.NEURON, 100, name, 0, len(timestamps), wire, unit, 0, 0, xpos, ypos, 0, 0, 0, 0, 0, 0, 0, '']
-        var = {'Header': dict(zip(self.varHeaderKeys, vhValues))}
+        var = {'Header': dict(list(zip(self.varHeaderKeys, vhValues)))}
         self._AddNex5VarHeaderFields(var)
         var['Timestamps'] = timestamps
         self.fileData['Variables'].append(var)
@@ -443,7 +443,7 @@ class NexWriter(object):
         if self.useNumpy:
             self._VerifyIsNumpyArray('Timestamps', timestamps)
         vhValues = [NexFileVarType.EVENT, 100, name, 0, len(timestamps), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '']
-        var = {'Header': dict(zip(self.varHeaderKeys, vhValues))}
+        var = {'Header': dict(list(zip(self.varHeaderKeys, vhValues)))}
         self._AddNex5VarHeaderFields(var)
         var['Timestamps'] = timestamps
         self.fileData['Variables'].append(var)
@@ -460,7 +460,7 @@ class NexWriter(object):
             self._VerifyIsNumpyArray('Interval starts', intStarts)
             self._VerifyIsNumpyArray('Interval ends', intEnds)
         vhValues = [NexFileVarType.INTERVAL, 100, name, 0, len(intStarts), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '']
-        var = {'Header': dict(zip(self.varHeaderKeys, vhValues))}
+        var = {'Header': dict(list(zip(self.varHeaderKeys, vhValues)))}
         self._AddNex5VarHeaderFields(var)
         var['Intervals'] = [intStarts, intEnds]
         self.fileData['Variables'].append(var)
@@ -480,7 +480,7 @@ class NexWriter(object):
             raise ValueError('invalid sampling rate in continuous')
         vhValues = [NexFileVarType.CONTINUOUS, 100, name, 0, 1, 0, 0, 0, 0, 0, 0, SamplingRate, 1.0,
                     len(values), 0, 0, 0, 0, '']
-        var = {'Header': dict(zip(self.varHeaderKeys, vhValues))}
+        var = {'Header': dict(list(zip(self.varHeaderKeys, vhValues)))}
         self._AddNex5VarHeaderFields(var)
         var['Timestamps'] = [timestampOfFirstDataPoint]
         if self.useNumpy:
@@ -525,7 +525,7 @@ class NexWriter(object):
 
         vhValues = [NexFileVarType.CONTINUOUS, 100, name, 0, 1, 0, 0, 0, 0, 0, 0, SamplingRate, 1.0,
                     totalValues, 0, 0, 0, 0, '']
-        var['Header'] = dict(zip(self.varHeaderKeys, vhValues))
+        var['Header'] = dict(list(zip(self.varHeaderKeys, vhValues)))
         self._AddNex5VarHeaderFields(var)
         var['Timestamps'] = timestamps
         self.fileData['Variables'].append(var)
@@ -547,7 +547,7 @@ class NexWriter(object):
             if len(x) != len(timestamps):
                 raise ValueError('different number of timestamps and field values in a single field')
         vhValues = [NexFileVarType.MARKER, 100, name, 0, len(timestamps), 0, 0, 0, 0, 0, 0, 0, 0, 0, len(fieldNames), 6, 0, 0, '']
-        var = {'Header': dict(zip(self.varHeaderKeys, vhValues))}
+        var = {'Header': dict(list(zip(self.varHeaderKeys, vhValues)))}
         self._AddNex5VarHeaderFields(var)
         var['Header']['MarkerDataType'] = 1
         var['Timestamps'] = timestamps
@@ -583,7 +583,7 @@ class NexWriter(object):
         if NPointsWave == 0:
             raise ValueError('invalid number of data points in wave')
         vhValues = [NexFileVarType.WAVEFORM, 100, name, 0, len(timestamps), wire, unit, 0, 0, 0, 0, SamplingRate, 1.0, NPointsWave, 0, 0, 0, PrethresholdTimeInSeconds, '']
-        var['Header'] = dict(zip(self.varHeaderKeys, vhValues))
+        var['Header'] = dict(list(zip(self.varHeaderKeys, vhValues)))
         self._AddNex5VarHeaderFields(var)
         var['Timestamps'] = timestamps
         var['WaveformValues'] = WaveformValues
@@ -872,7 +872,7 @@ class NexWriter(object):
         else:
             for x in timestamps:
                 if sys.version_info < (3,):
-                    self.theFile.write(struct.pack('q', long(round(x * self.tsFreq))))
+                    self.theFile.write(struct.pack('q', int(round(x * self.tsFreq))))
                 else:
                     self.theFile.write(struct.pack('q', int(round(x * self.tsFreq))))
 

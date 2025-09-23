@@ -15,18 +15,18 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
           
 """
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from smtplib import *
+from PyQt5.QtCore import QThread
+from smtplib import SMTP
 from copy import copy
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 class send_email_thread(QThread):
     def __init__(self, parent = None):
         super(send_email_thread, self).__init__(parent)
         self.Id = None
         self.num_blocks = None
+    
     def initialize(self,Id, num_blocks, pdict, psw):
         self.num_blocks = num_blocks
         self.Id = Id
@@ -52,7 +52,7 @@ class send_email_thread(QThread):
             smtpObj.sendmail(self.pdict['email'],
                              self.pdict['receivers'],
                              message.as_string())
-        except Exception, e:
-            print e
-            print 'Unable to send email'
+        except Exception as e:
+            print(e)
+            print('Unable to send email')
             pass

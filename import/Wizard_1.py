@@ -17,46 +17,50 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 
 import ui_Wizard_1
 import sys,os
-from PyQt4.QtCore import (pyqtSignature,SIGNAL)
-from PyQt4.QtGui import (QApplication, QDialog, QGroupBox, QFileDialog)
+from PyQt5.QtCore import (pyqtSlot)
+from PyQt5.QtWidgets import (QApplication,QDialog, QFileDialog)
 
 class Wizard_1(QDialog, ui_Wizard_1.Ui_newAnalysis):
     def __init__(self,parent=None):
         super(Wizard_1, self).__init__(parent)
         self.setupUi(self)
-        self.analysisType = 'Single'
-        self.inputType = 'Sleep'
+        
         self.radioButton.setChecked(True)
         self.pushButton.setEnabled(False)
-        self.connect(self.lineEdit_analysis,SIGNAL('textChanged(QString)'),self.checkContinue)
-        self.connect(self.lineEdit_plotting,SIGNAL('textChanged(QString)'),self.checkContinue)
-
+        self.lineEdit_analysis.textChanged[str].connect(self.checkContinue)
+        self.lineEdit_plotting.textChanged[str].connect(self.checkContinue)
+        self.radioButton.setChecked(True)
+        self.analysisType = 'Behaviour'
+       
 #   if continue is clicked return true else return false
-    @pyqtSignature('void')
+    @pyqtSlot()
     def on_pushButton_clicked(self):
         self.accept()
-    @pyqtSignature('void')
+    @pyqtSlot()
     def on_pushButton_2_clicked(self):
         self.reject()
-    @pyqtSignature('void')
+    @pyqtSlot()
     def on_pushButton_analysis_clicked(self):
-        path = QFileDialog.getOpenFileName (parent = self, caption = 'Select Analysis Script', directory = '.', filter="Python script (*.py)")
+        path,_ = QFileDialog.getOpenFileName (parent = self, caption = 'Select Analysis Script', directory = '.', filter="Python script (*.py)")
         self.lineEdit_analysis.setText(path)
     
-    @pyqtSignature('void')
+    @pyqtSlot()
     def on_pushButton_plotting_clicked(self):
-        path = QFileDialog.getOpenFileName (parent = self, caption = 'Select Plotting Script', directory = '.', filter="Python script (*.py)")
+        path,_ = QFileDialog.getOpenFileName (parent = self, caption = 'Select Plotting Script', directory = '.', filter="Python script (*.py)")
         self.lineEdit_plotting.setText(path)
     
 #   if radiobutton are clicked set analysis type to the following
-    @pyqtSignature('void')
+    @pyqtSlot()
     def on_radioButton_clicked(self):
-        self.analysisType = 'Single'
-    @pyqtSignature('void')
+        self.analysisType = 'Behaviour'
+    @pyqtSlot()
     def on_radioButton_1_clicked(self):
-        self.analysisType = 'Group'
-    @pyqtSignature('void')
+        self.analysisType = 'Sleep'
+    @pyqtSlot()
     def on_radioButton_2_clicked(self):
+        self.analysisType = 'Spike'
+    @pyqtSlot()
+    def on_radioButton_3_clicked(self):
         self.analysisType = 'Integrative'
     
     
@@ -71,6 +75,12 @@ class Wizard_1(QDialog, ui_Wizard_1.Ui_newAnalysis):
             self.pushButton.setEnabled(True)
         else:
             self.pushButton.setEnabled(False)
+
+    def get_func_info(self):
+        alias = self.lineEdit.text()
+        descr = self.textEdit.toPlainText()
+        return alias,descr
+
 def main():
     app = QApplication(sys.argv)
 
@@ -79,7 +89,7 @@ def main():
     
     #print(form.exec_())
     app.exec_() 
-    print form.inputType            
+    print(form.analysisType)            
 if __name__=='__main__':
     main()
     

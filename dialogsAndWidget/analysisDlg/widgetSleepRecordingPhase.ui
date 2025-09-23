@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>546</width>
+    <width>571</width>
     <height>358</height>
    </rect>
   </property>
@@ -93,7 +93,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Recovery</string>
+               <string>Rebound</string>
               </property>
              </widget>
             </item>
@@ -242,6 +242,13 @@
               </item>
               <item>
                <widget class="QDateTimeEdit" name="dateTimeEdit_norm1"/>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="checkBox_noNorm">
+                <property name="text">
+                 <string>No norm</string>
+                </property>
+               </widget>
               </item>
               <item>
                <spacer name="horizontalSpacer_3">

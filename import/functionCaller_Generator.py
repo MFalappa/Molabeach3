@@ -14,7 +14,7 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
-### TODO IMPROVE ADDING FUNCT TO NOT LIMIT TO THE CASE OF HAVING def+space
+
 import os
 
 def cancel_comments_and_empty_lines(list_lines):
@@ -31,8 +31,10 @@ def functionCaller_Generator(pythonFilePath,newName,Dir,analysisType):
     funcNameList = []
     if not newName.endswith('.py'):
         newName = newName.split('.')[0] + '.py'
+    
     if not os.path.exists(Dir):
-        raise ValueError, 'Directory %s not found'%Dir
+        raise ValueError('Directory %s not found'%Dir)
+        
     list_lines = cancel_comments_and_empty_lines(fh.readlines())
     for indent, line in list_lines:
         word  = line.split()
@@ -47,25 +49,30 @@ def functionCaller_Generator(pythonFilePath,newName,Dir,analysisType):
             break
     fh.close()
     fh = open(os.path.join(Dir, newName),'w')
-    if analysisType == 'Single':
-        String = ''
-    else:
-        String = '_Gr'
-    program = 'from custom_Analysis%s import *\n\n'%String
-    program += 'def function_Launcher%s(name,*myInput):\n'%String
+    
+
+    
+    program = 'from analysis_functions import *\n\n'
+    program += 'def function_Launcher(name,*myInput):\n'
+    
     for name in funcNameList:
-        program += '    if name == \'%s\':\n'%name
+        if name == funcNameList[0]:
+            program += '    if name == \'%s\':\n'%name
+        else:
+            program += '    elif name == \'%s\':\n'%name
+            
         program += '        outputData, inputForPlots, info = %s(*myInput)\n'%name
         program += '        return outputData, inputForPlots, info\n'
     fh.write(program)
     fh.close()
     return
 
-def add_To_Custom_Analysis(PathToAutonomice,PathToPythonFun,AddTo = 'custom_Analysis.py'):
+def add_To_Custom_Analysis(PathToAutonomice,PathToPythonFun,AddTo = 'analysis_functions.py'):
     fh = open(PathToPythonFun,'U')
     ProgString = ''
     StartCopy = False
     list_lines = cancel_comments_and_empty_lines(fh.readlines())
+    
     for indent, line in list_lines:
         splitLine = line.split()
         if splitLine[0] == 'def' and not StartCopy:
@@ -76,13 +83,16 @@ def add_To_Custom_Analysis(PathToAutonomice,PathToPythonFun,AddTo = 'custom_Anal
         if StartCopy:
             ProgString += line
     fh.close()
+    
     if not ProgString.endswith('\n'):
         ProgString += '\n'
     ProgString = '\n' + ProgString
+    
     if os.path.exists(os.path.join(PathToAutonomice, AddTo)):
         fh = open(os.path.join(PathToAutonomice, AddTo),'a')
     else:
-        raise ValueError,'Invalid path: \"%s\"'%(PathToAutonomice + AddTo)
+        raise ValueError('Invalid path: \"%s\"'%(PathToAutonomice + AddTo))
+        
     fh.write(ProgString)
     fh.close()
     return functionName
@@ -186,7 +196,7 @@ def add_To_Plot_Launcher(PathToAutonomice,funName,ifCond,
     try:
         fh = open(os.path.join(PathToAutonomice, AddTo),'a')
     except:
-        print 'Unable to open \"%s\"'%(os.path.join(PathToAutonomice, AddTo))
+        print('Unable to open \"%s\"'%(os.path.join(PathToAutonomice, AddTo)))
     fh.write(String)
     fh.close()
     
@@ -205,7 +215,7 @@ def get_Function_List(PathToPythonFile):
     """
     if not (PathToPythonFile.endswith('.py') or
             PathToPythonFile.endswith('.pyw')):
-        raise ValueError,'Must inser a path to a python file'
+        raise ValueError('Must inser a path to a python file')
     fh = open(PathToPythonFile,'U')
     functionList = []
     for line in fh.readlines():
@@ -223,7 +233,7 @@ def getPlotFunctName(PathToPltLauncher,anFunName):
     for line in fh.readlines():
         if line.startswith(('def ','def\t')):
             FNAME = line[3:].lstrip().split('(')[0].rstrip()
-            if FNAME in ['select_Function_GUI','select_Function_GUI_Gr']:
+            if FNAME in ['select_Function_GUI']:
                 inFunct = True
                 continue
             else:
@@ -245,33 +255,32 @@ def getPlotFunctName(PathToPltLauncher,anFunName):
         
             
 
-def remove_Functions(PathToAutonomice,functionList,String):
+def remove_Functions(PathToAutonomice,functionList,analysis_dict):
     path_to_launcher = os.path.join(os.path.dirname(PathToAutonomice),'classes','analysisClasses')
-    PathToCustomAnalysis = os.path.join(PathToAutonomice, 'custom_Analysis%s.py'%String)
-    PathToCustomPlots    = os.path.join(PathToAutonomice, 'custom_Plots%s.py'%String)
-    PathToLauncher       = os.path.join(path_to_launcher, 'launcher%s.py'%String)
-    PathToPltLauncher    = os.path.join(path_to_launcher, 'plot_Launcher%s.py'%String)
+    PathToCustomAnalysis = os.path.join(PathToAutonomice, 'analysis_functions.py')
+    PathToCustomPlots    = os.path.join(PathToAutonomice, 'plots_functions.py')
+    PathToLauncher       = os.path.join(path_to_launcher, 'launcher_all.py')
+    PathToPltLauncher    = os.path.join(path_to_launcher, 'plot_Launcher_all.py')
     PathToInputCreator   = os.path.join(path_to_launcher, 'inputDlgCreator.py')
     
     for func in functionList:
-        remove_A_Funct(PathToCustomAnalysis, func)
-        pltfunc = getPlotFunctName(PathToPltLauncher,func)
-        remove_A_Funct(PathToCustomPlots, pltfunc)
-        remove_An_If_Close(PathToLauncher,'function_Launcher%s'%String,func)
-        remove_An_If_Close(PathToInputCreator,'inputDlgCreator',func)
-        remove_An_If_Close(PathToPltLauncher,'select_Function_GUI%s'%String,func)
+        an_func = analysis_dict[func]['analysis_function']
+        plt_func = analysis_dict[func]['plot_function']
+        remove_A_Funct(PathToCustomAnalysis, an_func)
+        remove_A_Funct(PathToCustomPlots, plt_func)
+        remove_An_If_Close(PathToLauncher,'function_Launcher',an_func)
+        remove_An_If_Close(PathToInputCreator,'inputDlgCreator',an_func)
+        remove_An_If_Close(PathToPltLauncher,'select_Function_GUI',an_func)
     print('Functions Removed')
     return
 
 if __name__ == '__main__':
-#    PathToPltLauncher='C:/Users/ebalzani/IIT/myPython/Autonomice-Git/plot_Launcher_Gr.py'
 #    anFunName = 'Sleep_Time_Course'
 #    print getPlotFunctName(PathToPltLauncher,anFunName)
-    PathToAutonomice = 'C:\Users\ebalzani\IIT\myPython\Autonomice-Git'
-    PathToPythonFun = 'C:\Users\ebalzani\IIT\myPython\Autonomice-Git\New_Analysis_Gui\Program upload\TEST_tmp.py'
+    PathToAutonomice = '/Users/Matte/Python_script/Phenopy3/old/Autonomice-Git'
+    PathToPythonFun = '/Users/Matte/Python_script/Phenopy3/future/TEST_tmp.py'
     add_To_Custom_Analysis(PathToAutonomice,PathToPythonFun,AddTo = 'custom_Analysis_Gr_tmp.py')
 #    ifCond = 'Power_Density'
 #    funcName = 'function_Launcher_Gr'
-#    PathToPythonFile = 'C:\\Users\\ebalzani\\IIT\\myPython\\Autonomice-Git\\launcher_Gr_tmp.py'
 #    remove_A_Funct(PathToPythonFile,funcName)
     

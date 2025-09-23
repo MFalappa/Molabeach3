@@ -20,18 +20,24 @@ classes_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'
 sys.path.append(classes_dir)
 sys.path.append(lib_dir)
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-import ui_datainfodlg
+from PyQt5.QtWidgets import (QDialog,QHBoxLayout,QLabel,QPushButton,QVBoxLayout,
+                             QTextBrowser,QTextEdit,QListWidget,QSpacerItem,QSizePolicy,
+                             QApplication)
+from PyQt5.QtCore import (Qt,QReadWriteLock,pyqtSignal)
+from PyQt5.QtGui import QFont
+
 from MyDnDDialog import MyDnDListWidget
 from copy import copy
-from abstractmodel_for_table_repr import *
-from Modify_Dataset_GUI import *
-from Analyzing_GUI import *
+from abstractmodel_for_table_repr import table_view_setter
+#from Modify_Dataset_GUI import *
+#from Analyzing_GUI import *
+import ui_datainfodlg
+
 MAC = 'qt_mac_set_native_menubar' in dir()
 
 
 class EditTypesDlg(QDialog):
+    updateTypes = pyqtSignal()
     def __init__(self,Dataset,AllTypes=[],lock=None,parent=None):
         super(EditTypesDlg,self).__init__(parent)
         self.__Dataset=Dataset
@@ -40,14 +46,14 @@ class EditTypesDlg(QDialog):
         font = QFont()
         font.setBold(True)
         font.setWeight(75)
-        LabelDataType = QLabel(u'Dataset Type',parent=self)
+        LabelDataType = QLabel('Dataset Type',parent=self)
         LabelDataType.setFont(font)
-        LabelRestOfTypes = QLabel(u'Other Types',parent=self)
+        LabelRestOfTypes = QLabel('Other Types',parent=self)
         LabelRestOfTypes.setFont(font)
         self.listDataType = MyDnDListWidget(parent=self)
         self.listRestOfTypes = MyDnDListWidget(parent=self)
-        self.applyButton = QPushButton(u'Apply',parent=self)
-        closeButton = QPushButton(u'Close',parent=self)
+        self.applyButton = QPushButton('Apply',parent=self)
+        closeButton = QPushButton('Close',parent=self)
         Hlayout1 = QHBoxLayout()
         Vlayout1 = QVBoxLayout()
         Vlayout2 = QVBoxLayout()
@@ -74,11 +80,14 @@ class EditTypesDlg(QDialog):
         self.listDataType.addItems(Dataset.Types)
         self.listRestOfTypes.addItems(AllTypes)
         self.setLayout(layout)
-        self.connect(closeButton,SIGNAL('clicked()'),self.close)
-        self.connect(self.applyButton,SIGNAL('clicked()'),self.Apply)
-        self.connect(self.listRestOfTypes,SIGNAL('dropped()'),lambda TorF=False: self.enableApply(TorF))
-        self.connect(self.listDataType,SIGNAL('dropped()'),lambda TorF=True: self.enableApply(TorF))
+        closeButton.clicked.connect(self.close)
+        self.applyButton.clicked.connect(self.Apply)
+
+#        self.connect(self.listRestOfTypes,SIGNAL('dropped()'),lambda TorF=False: self.enableApply(TorF))
+#        self.connect(self.listDataType,SIGNAL('dropped()'),lambda TorF=True: self.enableApply(TorF))
        
+        self.listRestOfTypes.dropped.connect(lambda TorF=False: self.enableApply(TorF))
+        self.listDataType.dropped.connect(lambda TorF=True: self.enableApply(TorF))
         
     def Apply(self):
         ItemList=[]
@@ -86,12 +95,12 @@ class EditTypesDlg(QDialog):
         MaxInd=self.listDataType.count()
         for ind in range(MaxInd):
             Item = self.listDataType.item(ind)
-            ItemList+=[unicode(Item.text())]
+            ItemList+=[str(Item.text())]
         RestList=[]
         MaxInd=self.listRestOfTypes.count()
         for ind in range(MaxInd):
             Item = self.listRestOfTypes.item(ind)
-            RestList+=[unicode(Item.text())]
+            RestList+=[str(Item.text())]
         
         self.__RestOfType = RestList
         self.__TypeList = ItemList
@@ -100,7 +109,8 @@ class EditTypesDlg(QDialog):
             self.__Dataset.Types = ItemList
         finally:
             self.lock.unlock()
-        self.emit(SIGNAL('updateTypes()'))
+        self.updateTypes.emit()
+#        self.emit(SIGNAL('updateTypes()'))
     
     def close(self):
         self.listDataType.clear()
@@ -159,8 +169,8 @@ class datainfodlg(QDialog):
         try:
             self.updateTypes()
             self.information(Path)
-        except Exception,e:
-            print('Unable to collect dataset info. %s'%e)
+        except Exception as e:
+            print(('Unable to collect dataset info. %s'%e))
             self.reject()
             
         vlayout = QVBoxLayout()
@@ -198,10 +208,11 @@ class datainfodlg(QDialog):
         
         self.setLayout(vlayout)
         
-        self.connect(self.dialog,SIGNAL('updateTypes()'),self.updateTypes)
-        self.connect(pushButtonEdit,SIGNAL('clicked()'),self.pushButtonEdit_clicked)
-        self.connect(pushButtonRestore,SIGNAL('clicked()'),self.pushButtonRestore_clicked)
-        self.connect(pushButtonClose,SIGNAL('clicked()'),self.close)
+        self.dialog.updateTypes.connect(self.updateTypes)
+        pushButtonEdit.clicked.connect(self.pushButtonEdit_clicked)
+        pushButtonRestore.clicked.connect(self.pushButtonRestore_clicked)
+        pushButtonClose.clicked.connect(self.close)
+     
         
     
     
@@ -228,10 +239,11 @@ class datainfodlg(QDialog):
         
 def main():
     import sys
+    import numpy as np
     app = QApplication(sys.argv)
     lock = QReadWriteLock()
-    datas = np.load('C:\Users\ebalzani\IIT\Dottorato\Marta_Pace\Pitolisant\\binned_2017-2-21T15_28.phz')
-    data_1 = datas['PW_00621_baseline_cFFT.txt'].all()
+    datas = np.load('/Users/Matte/Desktop/test_data.phz')
+    data_1 = datas['5.tmpcsv'].all()
     
 #    data_1.Dataset = ['ciaspole']
     dlg = datainfodlg(data_1,TimeStamps=None,TypeList=['Ciao','Cacao'],lock=lock)

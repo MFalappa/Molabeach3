@@ -22,11 +22,10 @@ import pycanusb
 import canportreader
 from msgview import *
 from messageLib import *
-from PyQt4.QtCore import QTimer,Qt
-from PyQt4.QtGui import QDialog,QApplication,QLabel,QHBoxLayout
+from PyQt5.QtCore import QTimer,Qt
+from PyQt5.QtGui import QDialog,QApplication,QLabel,QHBoxLayout
 
-#from Parser import parsing_Funct
-#from time import sleep
+
 class readProgram(QDialog):
     def __init__(self,parent=None,Id=127):
         super(readProgram, self).__init__(parent)
@@ -49,23 +48,23 @@ class readProgram(QDialog):
             Connecting to the adapter via pycanusb.py 
         """
         self.canusb = pycanusb.CanUSB(bitrate='500')
-        print('CanUSB: ',self.canusb)
+        print(('CanUSB: ',self.canusb))
         Msg = Switch_to_Operational_State_Msg()
         QTimer.singleShot(50,lambda msg = Msg : self.initialization(Msg))
         
     
     def initialization(self,msg):
         self.canusb.write(msg)
-        print 'Initialized'
+        print('Initialized')
         self.Label.setText('Initialized')
         
     def recieveMsg(self,msg):
-        print 'Recieved msg: %s'%msg.dataAsHexStr()
+        print('Recieved msg: %s'%msg.dataAsHexStr())
 #        print msg.data[3],msg.data[4],msg.data[5]
         self.Label.setText('Recieved msg: %s'%msg.dataAsHexStr())
         if msg.data[3] == self.reply and self.reply==37:
             self.ProgLen = 16**2 * msg.data[5] + msg.data[4]
-            print self.ProgLen
+            print(self.ProgLen)
             return
             self.readProg()
         elif msg.data[3] == self.reply:
@@ -78,7 +77,7 @@ class readProgram(QDialog):
         self.canusb.write(msg)
         
     def readProg(self):
-        print self.ProgLen,self.Index
+        print(self.ProgLen,self.Index)
         if self.Index==self.ProgLen:
             self.accept()
             self.reply = None
@@ -99,9 +98,9 @@ if __name__=='__main__':
     dlg.show()
     app.exec_()
     newList=[]
-    fh = open('C:\Users\ebalzani\IIT\Dottorato\Matte\Color Preference\Data\\27-6 to 28-6\\change_color_prog_uploaded.txt','w')
+    fh = open('C:\\Users\ebalzani\IIT\Dottorato\Matte\Color Preference\Data\\27-6 to 28-6\\change_color_prog_uploaded.txt','w')
     for msg in dlg.ListOfMsg:
-        print msg.dataAsHexStr(),msg.data[4]
+        print(msg.dataAsHexStr(),msg.data[4])
         fh.write(msg.dataAsHexStr()+'\n')
     fh.close()
     dlg.close()

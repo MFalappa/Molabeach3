@@ -2,7 +2,7 @@ import numpy as np
 from importDataset import *
 
 def launchLoadingFun(fhname,funName):
-	print 'Importing function launchehd: ', funName
+	print('Importing function launchehd: ', funName)
 	if funName == 'loadTimeActionData_TSE':
 		return loadTimeActionData_TSE(fhname)
 
@@ -29,4 +29,7 @@ def launchLoadingFun(fhname,funName):
 
 	if funName == 'loadTimeActionData_MED_SW':
 		return loadTimeActionData_MED_SW(fhname)
+
+	if funName == 'load_EDF_data':
+		return load_EDF_data(fhname)
 

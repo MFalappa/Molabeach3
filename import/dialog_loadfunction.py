@@ -19,12 +19,16 @@ import os,sys
 file_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 lib_dir = os.path.join(file_path,'libraries')
 sys.path.append(lib_dir)
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from ui_import_function import *
-#from messageLib import *
+from PyQt5.QtWidgets import (QDialog,QAbstractItemView,QListWidgetItem,
+                             QListWidget,QLabel,QSizePolicy,QSpacerItem,QHBoxLayout,
+                             QVBoxLayout,QPushButton,QApplication)
+from PyQt5.QtGui import QPixmap,QIcon,QImage
+from PyQt5.QtCore import pyqtSignal,Qt
+from ui_import_function import Ui_Dialog
 
-from automatic_input_detection import return_input_count, check_analysis_function, check_plot_function
+
+from automatic_input_detection import (return_input_count, check_analysis_function, 
+                                       check_plot_function)
 
 
 class dialog_upload_function(QDialog, Ui_Dialog):
@@ -36,7 +40,7 @@ class dialog_upload_function(QDialog, Ui_Dialog):
         self.input_dict = None
         refr = QPixmap.fromImage(QImage(os.path.join(file_path,'images','refresh.jpg')))
         icon = QIcon(refr)
-        print os.path.join(file_path,'images','refresh.jpg')
+        print(os.path.join(file_path,'images','refresh.jpg'))
         self.pushButton_refresh.setIcon(icon)
         self.pushButton_refresh.setText('')
         
@@ -52,11 +56,13 @@ class dialog_upload_function(QDialog, Ui_Dialog):
         self.controlFunctions()
         self.addDetectedInput()
         
-        self.connect(self.pushButton_addType,SIGNAL('clicked()'),self.addType)
-        self.connect(self.pushButton_Cancel,SIGNAL('clicked()'),self.close)
-        self.connect(self.pushButton_Continue,SIGNAL('clicked()'),self.emit_signal)
-        self.connect(self.pushButton_remove,SIGNAL('clicked()'),self.removeType)
-        self.connect(self.pushButton_refresh,SIGNAL('clicked()'),self.controlFunctions)
+        self.pushButton_addType.clicked.connect(self.addType)
+        self.pushButton_Cancel.clicked.connect(self.close)
+        self.pushButton_Continue.clicked.connect(self.emit_signal)
+        self.pushButton_remove.clicked.connect(self.removeType)
+        self.pushButton_refresh.clicked.connect(self.controlFunctions)
+       
+        
         
     def addDetectedInput(self):
         if not self.pathAnalysis:
@@ -65,13 +71,13 @@ class dialog_upload_function(QDialog, Ui_Dialog):
         string = ''
         try:
             inp = return_input_count(self.pathAnalysis)
-            for key in inp.keys():
+            for key in list(inp.keys()):
                 if inp[key] > 0:
                     string += 'Found %d input of type %s\n'%(inp[key],key)
-        except NameError, e:
+        except NameError as e:
             string += 'NameError, '+ e.message
-            print e.args
-            print e.__dict__
+            print(e.args)
+            print(e.__dict__)
             inp = None
         self.textBrowser_inputDetected.setText(string)
         self.input_dict = inp
@@ -89,7 +95,7 @@ class dialog_upload_function(QDialog, Ui_Dialog):
         self.controlFunctions()   
         
     def addType(self):
-        print 'Adding'
+        print('Adding')
         self.type_list_available += self.type_list_selected
         self.type_list_selected = []
         dialog = listTypeDlg(self.type_list_available,parent=self)
@@ -132,7 +138,7 @@ class listTypeDlg(QDialog):
         for lab in self.list_types:
             item = QListWidgetItem(lab)
             self.listWidget.addItem(item)
-#        self.listWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.listWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
         label = QLabel('Input Type List:')
         spaceritem = QSpacerItem(20,20,QSizePolicy.Expanding,QSizePolicy.Minimum)
         hlayout = QHBoxLayout()
@@ -151,8 +157,10 @@ class listTypeDlg(QDialog):
         hlayout.addWidget(pushButtonAdd)
         vlayout.addLayout(hlayout)
         self.setLayout(vlayout)
-        self.connect(pushButtonAdd,SIGNAL('clicked()'),self.addTypes)
-        self.connect(pushButtonCancel,SIGNAL('clicked()'),self.reject)
+        pushButtonAdd.clicked.connect(self.addTypes)
+        pushButtonCancel.clicked.connect(self.reject)
+      
+        
         
     def addTypes(self):
         list_items = self.listWidget.selectedItems()
@@ -165,10 +173,11 @@ class listTypeDlg(QDialog):
 
 def main():
     import sys
-    fld = 'C:\Users\ebalzani\IIT\myPython\Phenopy\OldCode\New_Analysis_Gui\\upload script'
+    import os
+    fld = '/Users/Matte/Python_script/Phenopy3/future'
     app = QApplication(sys.argv)
-    form = dialog_upload_function(pathAnalysis=fld+'\\new_switch.py',pathPlotting=fld+'\\new_switch_plt.py',
-                                  type_list=['siamo troppo fighi','abbasso bj']*40)
+    form = dialog_upload_function(pathAnalysis=os.path.join(fld,'new_switch.py'),pathPlotting=os.path.join(fld,'new_switch_plt.py'),
+                                  type_list=['siamo troppo fighi','abbasso bk']*40)
     form.show()
     app.exec_()
 

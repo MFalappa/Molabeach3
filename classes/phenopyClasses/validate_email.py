@@ -36,7 +36,6 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 
 import re
 import smtplib
-import socket
 
 try:
     import DNS
@@ -133,8 +132,3 @@ def validate_email(email, check_mx=False,verify=False):
     except (AssertionError, ServerError): 
         return False
     return True
-
-# import sys
-
-# sys.modules[__name__],sys.modules['validate_email_module'] = validate_email,sys.modules[__name__]
-# from validate_email_module import *

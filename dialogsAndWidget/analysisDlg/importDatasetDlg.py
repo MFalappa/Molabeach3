@@ -16,16 +16,24 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 import os,sys
 import_fld = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'import')
+libraries_fld = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")),'libraries')
+
 sys.path.append(import_fld)
-from ui_importDlg import *
-import sip
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from importDataset import *
-from importLauncher import *
+sys.path.append(libraries_fld)
+
+
+from PyQt5.QtWidgets import (QDialog,QFileDialog,QApplication,QListWidgetItem)
+from PyQt5.QtCore import (pyqtSignal,Qt)
+from PyQt5.QtGui import QIcon
+
+from Modify_Dataset_GUI import DatasetContainer_GUI
+from ui_importDlg import Ui_Dialog
+#from importDataset import *
+from importLauncher import launchLoadingFun
 
 
 class importDlg(QDialog,Ui_Dialog):
+    closeSig = pyqtSignal(str,name='importSig')
     errorImport = pyqtSignal(str,name='importErrorSignal')
     def __init__(self, parent=None):
         
@@ -43,18 +51,26 @@ class importDlg(QDialog,Ui_Dialog):
             self.data_container = DatasetContainer_GUI()
         self.setupUi(self)
         self.descr_dict = {}
+        self.show_dict = {}
         self.path_dict = {}
         self.populateCombo()
         self.textBrowser_descr.setText(self.descr_dict[str(self.comboBox.currentText())]) 
-        self.connect(self.comboBox,SIGNAL('currentIndexChanged (const QString&)'),self.setDescription)
-        self.connect(self.pushButton_cancel,SIGNAL('clicked()'),self.close)
-        self.connect(self.pushButton,SIGNAL('clicked()'),self.getFiles)
-        self.connect(self.pushButton_load,SIGNAL('clicked()'),self.loadData)
+        
+        self.comboBox.currentIndexChanged[str].connect(self.setDescription)
+        self.pushButton_cancel.clicked.connect(self.closeTab)
+        self.pushButton.clicked.connect(self.getFiles)
+        self.pushButton_load.clicked.connect(self.loadData)
+        
+#        self.connect(self.comboBox,pyqtSignal('currentIndexChanged (const QString&)'),self.setDescription)
+#        self.connect(self.pushButton_cancel,pyqtSignal('clicked()'),self.close)
+#        self.connect(self.pushButton,pyqtSignal('clicked()'),self.getFiles)
+#        self.connect(self.pushButton_load,pyqtSignal('clicked()'),self.loadData)
+        
         self.pushButton_load.setEnabled(False)
         
     def getFiles(self):
         dire = os.path.dirname(os.path.abspath(os.path.join(__file__ ,"../..")))
-        Qfnames=QFileDialog.getOpenFileNames(self,
+        Qfnames,_ = QFileDialog.getOpenFileNames(self,
                     "Phenopy - Load Dataset", dire)
         self.listWidget.clear()
         self.pushButton_load.setEnabled(False)
@@ -71,9 +87,10 @@ class importDlg(QDialog,Ui_Dialog):
         for item in items:
             path = self.path_dict[item.text()]
             try:
-                imported = launchLoadingFun(path,self.comboBox.currentText())
-            except IndexError, e:
-                print e
+                showed_name = self.comboBox.currentText()
+                imported = launchLoadingFun(path,self.show_dict[showed_name])
+            except IndexError as e:
+                print(e)
                 self.errorImport.emit('Import of %s failed. %s'%(item.text(),e))
                 continue
             if self.parent:
@@ -86,13 +103,12 @@ class importDlg(QDialog,Ui_Dialog):
             else:
                 self.data_container.add(imported)
                 
-                
-            
+                     
     def setDescription(self,funName):
         self.textBrowser_descr.setText(self.descr_dict[funName])
         
     def populateCombo(self):
-        fh = open(os.path.join(import_fld,'importDataset.py'),'U')
+        fh = open(os.path.join(import_fld,'importDataset.py'))
         line = fh.readline()
 
         while line:
@@ -102,7 +118,7 @@ class importDlg(QDialog,Ui_Dialog):
                 if funName == 'main' or funName == 'create_laucher':
                     line = fh.readline()
                     continue
-                self.comboBox.addItem(funName)
+#                self.comboBox.addItem(funName)
                 line = fh.readline()
                 if '\"\"\"' in line:
                     descr_str = line.split('\"\"\"')[1]
@@ -112,12 +128,21 @@ class importDlg(QDialog,Ui_Dialog):
                         line = fh.readline()
                     descr_str += line.split('\"\"\"')[0]
                     descr_str = descr_str.replace('\n',' ')
-                    self.descr_dict[funName] = descr_str
-                else:
-                    self.descr_dict[funName] = ''
+                    self.descr_dict[descr_str.split('==')[1]] = descr_str.split('==')[0]
+                    
+                    self.show_dict[descr_str.split('==')[1]] = funName
+                    self.comboBox.addItem(descr_str.split('==')[1])
+#                else:
+#                    self.descr_dict[funName] = ''
+                
             line = fh.readline()
         fh.close()
 
+    def closeTab(self):
+        self.close()
+        self.closeSig.emit('close_import_data')
+        super(importDlg, self).close()
+        
 def main():
     import sys
     

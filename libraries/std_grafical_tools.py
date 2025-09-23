@@ -197,7 +197,7 @@ def title_std(ax,text,family='Times New Roman',
 
 
 def adjust_spines(ax,spines,pos=0):
-    for loc, spine in ax.spines.items():
+    for loc, spine in list(ax.spines.items()):
         if loc in spines:
 #            spine.set_position(('outward',10)) # outward by 10 points
             spine.set_position(('outward',pos)) # outward by 10 points
@@ -241,6 +241,6 @@ if __name__ == '__main__':
     ax = fig.add_subplot(2,2,4)
     ax.plot(x,y)
     adjust_spines(ax,['bottom'])
-    xticks_std(ax,range(8),range(8+10,8+8+10))
+    xticks_std(ax,list(range(8)),list(range(8+10,8+8+10)))
     title_std(ax,'Ilariovich rulez')
     show()

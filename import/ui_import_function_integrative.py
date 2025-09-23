@@ -2,94 +2,81 @@
 
 # Form implementation generated from reading ui file 'import_function_integrative.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
-        Dialog.setObjectName(_fromUtf8("Dialog"))
+        Dialog.setObjectName("Dialog")
         Dialog.resize(587, 374)
-        self.verticalLayout_5 = QtGui.QVBoxLayout(Dialog)
-        self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
-        self.verticalLayout_4 = QtGui.QVBoxLayout()
-        self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
-        self.horizontalLayout_5 = QtGui.QHBoxLayout()
-        self.horizontalLayout_5.setObjectName(_fromUtf8("horizontalLayout_5"))
-        self.verticalLayout_2 = QtGui.QVBoxLayout()
-        self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.label_detected = QtGui.QLabel(Dialog)
+        self.verticalLayout_5 = QtWidgets.QVBoxLayout(Dialog)
+        self.verticalLayout_5.setObjectName("verticalLayout_5")
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.label_detected = QtWidgets.QLabel(Dialog)
         font = QtGui.QFont()
         font.setBold(True)
         font.setWeight(75)
         self.label_detected.setFont(font)
-        self.label_detected.setObjectName(_fromUtf8("label_detected"))
+        self.label_detected.setObjectName("label_detected")
         self.verticalLayout_2.addWidget(self.label_detected)
-        self.textBrowser_inputDetected = QtGui.QTextBrowser(Dialog)
-        self.textBrowser_inputDetected.setObjectName(_fromUtf8("textBrowser_inputDetected"))
+        self.textBrowser_inputDetected = QtWidgets.QTextBrowser(Dialog)
+        self.textBrowser_inputDetected.setObjectName("textBrowser_inputDetected")
         self.verticalLayout_2.addWidget(self.textBrowser_inputDetected)
         self.horizontalLayout_5.addLayout(self.verticalLayout_2)
-        self.verticalLayout = QtGui.QVBoxLayout()
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.horizontalLayout_4 = QtGui.QHBoxLayout()
-        self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
-        self.label_status = QtGui.QLabel(Dialog)
+        self.verticalLayout = QtWidgets.QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.label_status = QtWidgets.QLabel(Dialog)
         font = QtGui.QFont()
         font.setBold(True)
         font.setWeight(75)
         self.label_status.setFont(font)
-        self.label_status.setObjectName(_fromUtf8("label_status"))
+        self.label_status.setObjectName("label_status")
         self.horizontalLayout_4.addWidget(self.label_status)
-        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_4.addItem(spacerItem)
-        self.pushButton_refresh = QtGui.QPushButton(Dialog)
-        self.pushButton_refresh.setObjectName(_fromUtf8("pushButton_refresh"))
+        self.pushButton_refresh = QtWidgets.QPushButton(Dialog)
+        self.pushButton_refresh.setObjectName("pushButton_refresh")
         self.horizontalLayout_4.addWidget(self.pushButton_refresh)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
-        self.textBrowser_status = QtGui.QTextBrowser(Dialog)
-        self.textBrowser_status.setObjectName(_fromUtf8("textBrowser_status"))
+        self.textBrowser_status = QtWidgets.QTextBrowser(Dialog)
+        self.textBrowser_status.setObjectName("textBrowser_status")
         self.verticalLayout.addWidget(self.textBrowser_status)
         self.horizontalLayout_5.addLayout(self.verticalLayout)
         self.verticalLayout_4.addLayout(self.horizontalLayout_5)
-        self.horizontalLayout_6 = QtGui.QHBoxLayout()
-        self.horizontalLayout_6.setObjectName(_fromUtf8("horizontalLayout_6"))
-        self.verticalLayout_3 = QtGui.QVBoxLayout()
-        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout_3.addLayout(self.horizontalLayout)
-        self.horizontalLayout_2 = QtGui.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
-        self.splitter = QtGui.QSplitter(Dialog)
+        self.splitter = QtWidgets.QSplitter(Dialog)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter.setObjectName(_fromUtf8("splitter"))
-        self.layoutWidget = QtGui.QWidget(self.splitter)
-        self.layoutWidget.setObjectName(_fromUtf8("layoutWidget"))
-        self.horizontalLayout_3 = QtGui.QHBoxLayout(self.layoutWidget)
-        self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
-        self.pushButton_Cancel = QtGui.QPushButton(self.layoutWidget)
-        self.pushButton_Cancel.setObjectName(_fromUtf8("pushButton_Cancel"))
+        self.splitter.setObjectName("splitter")
+        self.layoutWidget = QtWidgets.QWidget(self.splitter)
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.layoutWidget)
+        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.pushButton_Cancel = QtWidgets.QPushButton(self.layoutWidget)
+        self.pushButton_Cancel.setObjectName("pushButton_Cancel")
         self.horizontalLayout_3.addWidget(self.pushButton_Cancel)
-        self.pushButton_Continue = QtGui.QPushButton(self.layoutWidget)
-        self.pushButton_Continue.setObjectName(_fromUtf8("pushButton_Continue"))
+        self.pushButton_Continue = QtWidgets.QPushButton(self.layoutWidget)
+        self.pushButton_Continue.setObjectName("pushButton_Continue")
         self.horizontalLayout_3.addWidget(self.pushButton_Continue)
         self.horizontalLayout_2.addWidget(self.splitter)
         self.verticalLayout_3.addLayout(self.horizontalLayout_2)
@@ -101,10 +88,11 @@ class Ui_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog", None))
-        self.label_detected.setText(_translate("Dialog", "Detected Input", None))
-        self.label_status.setText(_translate("Dialog", "Status", None))
-        self.pushButton_refresh.setText(_translate("Dialog", "Refresh", None))
-        self.pushButton_Cancel.setText(_translate("Dialog", "Cancel", None))
-        self.pushButton_Continue.setText(_translate("Dialog", "Continue", None))
+        _translate = QtCore.QCoreApplication.translate
+        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        self.label_detected.setText(_translate("Dialog", "Detected Input"))
+        self.label_status.setText(_translate("Dialog", "Status"))
+        self.pushButton_refresh.setText(_translate("Dialog", "Refresh"))
+        self.pushButton_Cancel.setText(_translate("Dialog", "Cancel"))
+        self.pushButton_Continue.setText(_translate("Dialog", "Continue"))
 

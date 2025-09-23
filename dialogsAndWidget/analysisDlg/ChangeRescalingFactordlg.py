@@ -14,33 +14,33 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
         DOI: 10.1038/nprot.2018.031
           
 """
+from PyQt5.QtWidgets import (QApplication, QDialog)
+from PyQt5.QtCore import (pyqtSlot,QPluginLoader,Qt)
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
 import ui_Change_Rascale_Factor
 MAC = 'qt_mac_set_native_menubar' in dir()
-QPlugin = QPluginLoader("qico4.dll")
+QPlugin = QPluginLoader("qico5.dll")
 
 class ChangeRescalingFactordlg(QDialog,ui_Change_Rascale_Factor.Ui_TimeScaledlg):
     def __init__(self,scale,parent=None):
         super(ChangeRescalingFactordlg,self).__init__(parent)        
         self.setupUi(self)
-        self.scaleLabel.setText(unicode(scale))
+        self.scaleLabel.setText(str(scale))
         self.pushButtonApply.setEnabled(False)
         if not MAC:
             self.pushButtonCancel.setFocusPolicy(Qt.NoFocus)
         
-    @pyqtSignature("")
+    @pyqtSlot()
     def on_pushButtonCancel_clicked(self):
         self.close()
-    @pyqtSignature("")
+    @pyqtSlot()
     def on_pushButtonApply_clicked(self):
         self.accept()
         
-    @pyqtSignature("const QString&")
+    @pyqtSlot(str)
     def on_lineEdit_textEdited(self):
         try:
-            float(unicode(self.lineEdit.text()))
+            float(str(self.lineEdit.text()))
             self.pushButtonApply.setEnabled(True)
         except ValueError:
             self.lineEdit.clear()
@@ -52,6 +52,7 @@ if __name__== '__main__':
     import sys
     app = QApplication(sys.argv)
     form = ChangeRescalingFactordlg(1000)
-    form.exec_()#.show()
+    form.exec_()
+#    form.show()
     
     
