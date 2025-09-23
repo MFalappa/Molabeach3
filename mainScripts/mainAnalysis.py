@@ -15,10 +15,13 @@ Copyright (C) 2017 FONDAZIONE ISTITUTO ITALIANO DI TECNOLOGIA
 """
 
 import sys,os
-import sip
-sip.setapi('QString', 2)
-sip.setapi('QVariant', 2)
-
+try:
+    import sip
+    sip.setapi('QString', 2)
+    sip.setapi('QVariant', 2)
+except ImportError:
+    # Modern PyQt5 doesn't need these API settings
+    pass
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 phenopy_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 file_dir = os.path.dirname(phenopy_dir)
