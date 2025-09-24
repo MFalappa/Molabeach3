@@ -3,7 +3,7 @@
 """
 Created on Wed Jan 30 09:03:32 2019
 
-@author: Matte
+@author: matteo.falappa
 """
 import sys
 import os
