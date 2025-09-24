@@ -40,7 +40,7 @@ pip install numpy pyserial subprocess32 xbee PyQt5 matplotlib scipy passlib pand
    ```
 3. Run the main application:
    ```sh
-   python Phenop3.py
+   python Phenopy.py
    ```
 
 ## Hardware Requirements
