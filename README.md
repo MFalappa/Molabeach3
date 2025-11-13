@@ -69,7 +69,7 @@ If you use this software, please cite the original publication:
 ```bibtex
 @article{balzani2018approach,
   title={An approach to monitoring home-cage behavior in mice that facilitates data sharing},
-  author={Balzani, Edoardo and Falappa, Marco and Balci, Fuat and Tucci, Valter},
+  author={Balzani, Edoardo and Falappa, Matteo and Balci, Fuat and Tucci, Valter},
   journal={Nature Protocols},
   volume={13},
   number={6},
